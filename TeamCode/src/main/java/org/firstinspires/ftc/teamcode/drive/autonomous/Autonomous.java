@@ -33,6 +33,21 @@ import java.util.Arrays;
 public class Autonomous extends LinearOpMode {
     public static class Positions {
         //TODO: CREATE NEW POSITIONAL CONSTANTS
+        public enum GOAL {
+            RED(new Pose2d(48, -48, Math.toRadians(135))),
+            BLUE(new Pose2d(-48, -48, Math.toRadians(225)));
+
+            private Pose2d pose2d;
+
+            GOAL(Pose2d _pose2d) {
+                this.pose2d = _pose2d;
+            }
+
+            public Pose2d getPose() {
+                return pose2d;
+            }
+        }
+
         public static final Pose2d BUCKET_BLUE = new Pose2d(48, -48, Math.toRadians(-45));
         public static final Pose2d BUCKET_RED = new Pose2d(-47, 49, Math.toRadians(135));
 

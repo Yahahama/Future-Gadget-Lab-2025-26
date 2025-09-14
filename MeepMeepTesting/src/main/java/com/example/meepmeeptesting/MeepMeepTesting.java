@@ -7,32 +7,36 @@ import com.noahbres.meepmeep.MeepMeep;
 import com.noahbres.meepmeep.roadrunner.DefaultBotBuilder;
 import com.noahbres.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
 
+import java.awt.Image;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+
 public class MeepMeepTesting {
 
+    // This "Positions" class is copied from Autonomous.java and should be kept up to date
+    // by copy-pasting. If you can figure out how to just import Positions from Autonomous,
+    // please do that.
     public static class Positions {
-        public static final Pose2d BUCKET_BLUE = new Pose2d(56, 56, Math.toRadians(45));
-        public static final Pose2d BUCKET_RED = new Pose2d(-56, -56, Math.toRadians(225));
+        enum GOAL {
+            RED(new Pose2d(48, -48, Math.toRadians(135))),
+            BLUE(new Pose2d(-48, -48, Math.toRadians(225)));
 
-        public static final Pose2d SAMPLE_NEUTRAL_BLUE_FAR = new Pose2d(35, 26, Math.toRadians(0));
-        public static final Pose2d SAMPLE_NEUTRAL_BLUE_MIDDLE = new Pose2d(45, 26, Math.toRadians(0));
-        public static final Pose2d SAMPLE_NEUTRAL_BLUE_CLOSE = new Pose2d(55, 26, Math.toRadians(0));
+            private Pose2d pose2d;
 
-        public static final Pose2d SAMPLE_RED_FAR = new Pose2d(35, -26, Math.toRadians(0));
-        public static final Pose2d SAMPLE_RED_MIDDLE = new Pose2d(45, -26, Math.toRadians(0));
-        public static final Pose2d SAMPLE_RED_CLOSE = new Pose2d(55, -26, Math.toRadians(0));
+            GOAL(Pose2d _pose2d) {
+                this.pose2d = _pose2d;
+            }
 
-        public static final Pose2d SAMPLE_BLUE_FAR = new Pose2d(-35, 26, Math.toRadians(180));
-        public static final Pose2d SAMPLE_BLUE_MIDDLE = new Pose2d(-45, 26, Math.toRadians(180));
-        public static final Pose2d SAMPLE_BLUE_CLOSE = new Pose2d(-55, 26, Math.toRadians(180));
-
-        public static final Pose2d SAMPLE_NEUTRAL_RED_FAR = new Pose2d(-35, -26, Math.toRadians(180));
-        public static final Pose2d SAMPLE_NEUTRAL_RED_MIDDLE = new Pose2d(-45, -26, Math.toRadians(180));
-        public static final Pose2d SAMPLE_NEUTRAL_RED_CLOSE = new Pose2d(-55, -26, Math.toRadians(180));
+            public Pose2d getPose() {
+                return pose2d;
+            }
+        }
     }
 
     public static void main(String[] args) {
         MeepMeep meepMeep = new MeepMeep(800);
-        Pose2d bucketPose = new Pose2d(55, 54, Math.toRadians(45));
         double secondsToWait = 1;
 
         RoadRunnerBotEntity robot = new DefaultBotBuilder(meepMeep)
@@ -41,28 +45,36 @@ public class MeepMeepTesting {
                 .build();
 
         // Blue close
-        Action blueBucket = robot.getDrive().actionBuilder(new Pose2d(35, 62, 0))
-                .setTangent(Math.toRadians(0))
-                .splineToLinearHeading(Positions.BUCKET_BLUE, Math.toRadians(315))
-                .setTangent(Math.toRadians(225))
-                .splineToLinearHeading(Positions.SAMPLE_NEUTRAL_BLUE_FAR, Math.toRadians(-80))
-                .setTangent(Math.toRadians(90))
-                .splineToLinearHeading(Positions.BUCKET_BLUE, Math.toRadians(45))
-                .setTangent(Math.toRadians(225))
-                .splineToLinearHeading(Positions.SAMPLE_NEUTRAL_BLUE_MIDDLE, Math.toRadians(-90))
-                .setTangent(Math.toRadians(90))
-                .splineToLinearHeading(Positions.BUCKET_BLUE, Math.toRadians(45))
-                .setTangent(Math.toRadians(225))
-                .splineToLinearHeading(Positions.SAMPLE_NEUTRAL_BLUE_CLOSE, Math.toRadians(-60))
-                .setTangent(Math.toRadians(120))
-                .splineToLinearHeading(Positions.BUCKET_BLUE, Math.toRadians(45))
-                .setTangent(Math.toRadians(180))
-                .splineToLinearHeading(new Pose2d(26, 10, Math.toRadians(180)), Math.toRadians(270))
-                .build();
+//        Action blueBucket = robot.getDrive().actionBuilder(new Pose2d(35, 62, 0))
+//                .setTangent(Math.toRadians(0))
+//                .splineToLinearHeading(Positions.BUCKET_BLUE, Math.toRadians(315))
+//                .setTangent(Math.toRadians(225))
+//                .splineToLinearHeading(Positions.SAMPLE_NEUTRAL_BLUE_FAR, Math.toRadians(-80))
+//                .setTangent(Math.toRadians(90))
+//                .splineToLinearHeading(Positions.BUCKET_BLUE, Math.toRadians(45))
+//                .setTangent(Math.toRadians(225))
+//                .splineToLinearHeading(Positions.SAMPLE_NEUTRAL_BLUE_MIDDLE, Math.toRadians(-90))
+//                .setTangent(Math.toRadians(90))
+//                .splineToLinearHeading(Positions.BUCKET_BLUE, Math.toRadians(45))
+//                .setTangent(Math.toRadians(225))
+//                .splineToLinearHeading(Positions.SAMPLE_NEUTRAL_BLUE_CLOSE, Math.toRadians(-60))
+//                .setTangent(Math.toRadians(120))
+//                .splineToLinearHeading(Positions.BUCKET_BLUE, Math.toRadians(45))
+//                .setTangent(Math.toRadians(180))
+//                .splineToLinearHeading(new Pose2d(26, 10, Math.toRadians(180)), Math.toRadians(270))
+//                .build();
+//
+//        robot.runAction(blueBucket);
 
-        robot.runAction(blueBucket);
+//        Action toRedBucketToBlueBucket = robot.getDrive().actionBuilder(new Pose2d(33, 38, 0))
+//            .splineToLinearHeading(Positions.GOAL.RED, Math.toRadians(45)))
+//            .build();
 
-        meepMeep.setBackground(MeepMeep.Background.FIELD_INTO_THE_DEEP_JUICE_DARK)
+        Image img = null;
+        try { img = ImageIO.read(new File("/Users/abibolov27/Documents/Images/Robotics/DecodeMeepMeepBackground.png")); }
+        catch (IOException e) {}
+
+        meepMeep.setBackground(img)
                 .setDarkMode(true)
                 .setBackgroundAlpha(0.95f)
                 .addEntity(robot)
