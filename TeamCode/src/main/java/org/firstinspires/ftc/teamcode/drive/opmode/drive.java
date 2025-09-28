@@ -184,18 +184,19 @@ public class drive extends LinearOpMode {
             }
 
             // Launch
-            if (gamepad1.right_trigger > 0.5f && !previousRightTrigger) {
-                previousRightTrigger = true;
-                isLaunchActive = !isLaunchActive;
-            } else if (gamepad1.right_trigger < 0.5f) {
-                previousRightTrigger = false;
-            } else {
-                isLaunchActive = gamepad1.right_bumper;
-            }
+//            if (gamepad1.right_trigger > 0.5f && !previousRightTrigger) {
+//                previousRightTrigger = true;
+//                isLaunchActive = !isLaunchActive;
+//            } else if (gamepad1.right_trigger < 0.5f) {
+//                previousRightTrigger = false;
+//                isLaunchActive = gamepad1.right_bumper;
+//            }
 
             // Power Launch
-            if (isLaunchActive) {
+            if (gamepad1.right_trigger > 0.5f) {
                 launch.setPower(parameters.LAUNCH_POWER);
+            } else {
+                launch.setPower(0);
             }
 
             // Loader Servo
