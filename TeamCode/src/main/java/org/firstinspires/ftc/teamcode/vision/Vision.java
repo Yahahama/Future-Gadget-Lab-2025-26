@@ -1,20 +1,17 @@
 package org.firstinspires.ftc.teamcode.vision;
 
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.subsystems.CameraSubsystem;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
-@Config
-@TeleOp(name = "Vision =)", group = "Vision")
-public class Vision extends LinearOpMode {
-
+@TeleOp
+public class Vision extends LinearOpMode
+{
     @Override
-    public void runOpMode() throws InterruptedException {
-
+    public void runOpMode() {
+        AprilTagProcessor myAprilTagProcessor;
+        // Create the AprilTag processor and assign it to a variable.
+        myAprilTagProcessor = AprilTagProcessor.easyCreateWithDefaults();
     }
 }
