@@ -57,9 +57,12 @@ public class drive extends LinearOpMode {
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Initialize and configure launch motor
-        DcMotorEx launch = hardwareMap.get(DcMotorEx.class, "launch");
-        launch.setDirection(DcMotorSimple.Direction.REVERSE);
-        launch.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        DcMotorEx launch1 = hardwareMap.get(DcMotorEx.class, "launch1");
+        DcMotorEx launch2 = hardwareMap.get(DcMotorEx.class, "launch2");
+        launch1.setDirection(DcMotorSimple.Direction.REVERSE);
+        launch2.setDirection(DcMotorSimple.Direction.FORWARD);
+        launch1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        launch2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         // Initialize servos
         Servo load = hardwareMap.get(Servo.class, "load");
@@ -184,18 +187,21 @@ public class drive extends LinearOpMode {
             }
 
             // Launch
-            if (gamepad1.right_trigger > 0.5f && !previousRightTrigger) {
-                previousRightTrigger = true;
-                isLaunchActive = !isLaunchActive;
-            } else if (gamepad1.right_trigger < 0.5f) {
-                previousRightTrigger = false;
-            } else {
-                isLaunchActive = gamepad1.right_bumper;
-            }
+//            if (gamepad1.right_trigger > 0.5f && !previousRightTrigger) {
+//                previousRightTrigger = true;
+//                isLaunchActive = !isLaunchActive;
+//            } else if (gamepad1.right_trigger < 0.5f) {
+//                previousRightTrigger = false;
+//                isLaunchActive = gamepad1.right_bumper;
+//            }
 
             // Power Launch
-            if (isLaunchActive) {
-                launch.setPower(parameters.LAUNCH_POWER);
+            if (gamepad1.right_trigger > 0.5f) {
+                launch1.setPower(parameters.LAUNCH_POWER);
+                launch2.setPower(parameters.LAUNCH_POWER);
+            } else {
+                launch1.setPower(0);
+                launch2.setPower(0);
             }
 
             // Loader Servo
