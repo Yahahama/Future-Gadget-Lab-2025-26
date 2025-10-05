@@ -38,10 +38,10 @@ public class drive extends LinearOpMode {
         ElapsedTime runtime = new ElapsedTime();
 
         // Initialize and configure drive motor variables
-        DcMotor leftFrontDrive = hardwareMap.get(DcMotor.class, "lfMtr");
-        DcMotor leftBackDrive = hardwareMap.get(DcMotor.class, "lbMtr");
-        DcMotor rightFrontDrive = hardwareMap.get(DcMotor.class, "rfMtr");
-        DcMotor rightBackDrive = hardwareMap.get(DcMotor.class, "rbMtr");
+        DcMotor leftFrontDrive = hardwareMap.get(DcMotor.class, "lfMtr"); // CH 2
+        DcMotor leftBackDrive = hardwareMap.get(DcMotor.class, "lbMtr"); // CH 1
+        DcMotor rightFrontDrive = hardwareMap.get(DcMotor.class, "rfMtr"); // CH 0
+        DcMotor rightBackDrive = hardwareMap.get(DcMotor.class, "rbMtr"); // CH 3
         leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
         leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
         rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -59,8 +59,8 @@ public class drive extends LinearOpMode {
         // Initialize and configure launch motor
         DcMotorEx launch1 = hardwareMap.get(DcMotorEx.class, "launch1");
         DcMotorEx launch2 = hardwareMap.get(DcMotorEx.class, "launch2");
-        launch1.setDirection(DcMotorSimple.Direction.REVERSE);
-        launch2.setDirection(DcMotorSimple.Direction.FORWARD);
+        launch1.setDirection(DcMotorSimple.Direction.FORWARD);
+        launch2.setDirection(DcMotorSimple.Direction.REVERSE);
         launch1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         launch2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
@@ -71,7 +71,7 @@ public class drive extends LinearOpMode {
         IMU imu = hardwareMap.get(IMU.class, "imu");
         IMU.Parameters myIMUparameters = new IMU.Parameters(
                 new RevHubOrientationOnRobot(
-                        RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                        RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
                         RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
                 )
         );

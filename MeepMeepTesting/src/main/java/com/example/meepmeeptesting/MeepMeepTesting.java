@@ -18,10 +18,15 @@ public class MeepMeepTesting {
     // This "Positions" class is copied from Autonomous.java and should be kept up to date
     // by copy-pasting. If you can figure out how to just import Positions from Autonomous,
     // please do that.
+
+    //IMPORTANT: READ THE ANNOTATIONS FOR THE ENUMS
     public static class Positions {
+
+        //Note: These are APPROXIMATE POSITIONS
+
         enum GOAL {
-            RED(new Pose2d(48, -48, Math.toRadians(135))),
-            BLUE(new Pose2d(-48, -48, Math.toRadians(225)));
+            RED(new Pose2d(-64, 57, Math.toRadians(135))),
+            BLUE(new Pose2d(-64, -57, Math.toRadians(225)));
 
             private Pose2d pose2d;
 
@@ -47,6 +52,64 @@ public class MeepMeepTesting {
             public Pose2d getPose() {
                 return pose2d;
             }
+        }
+
+        enum START {
+
+            //RED_CLOSE means the starting position CLOSE TO THE GOAL
+
+            RED_CLOSE(new Pose2d(-49.3f, 50.3f, Math.toRadians(315))),
+            RED_FAR(new Pose2d(62, 16, Math.toRadians(180))), //y pos + 12???
+            BLUE_CLOSE(new Pose2d(-49.3f, -50.3f, Math.toRadians(45))),
+            BLUE_FAR(new Pose2d(62, -16, Math.toRadians(180))); //y pos - 12???
+
+            private Pose2d pose2d;
+
+            START(Pose2d _pose2d) {
+                this.pose2d = _pose2d;
+            }
+
+            public Pose2d getPose() {
+                return pose2d;
+            }
+        }
+        enum ARTIFACT {
+
+            //+-5 for the other artifacts near the middle one
+
+            RED_A(new Pose2d(-11.5f, 46.5f, Math.toRadians(0))),
+            RED_B(new Pose2d(12.3f, 46.5f, Math.toRadians(0))),
+            RED_C(new Pose2d(36, 46.5f, Math.toRadians(0))),
+            BLUE_A(new Pose2d(-11.5f, -46.5f, Math.toRadians(0))),
+            BLUE_B(new Pose2d(12.3f, -46.5f, Math.toRadians(0))),
+            BLUE_C(new Pose2d(36, -46.5f, Math.toRadians(0)));
+
+            private Pose2d pose2d;
+
+            ARTIFACT(Pose2d _pose2d) {
+                this.pose2d = _pose2d;
+            }
+
+            public Pose2d getPose() {
+                return pose2d;
+            }
+        }
+    }
+    enum PARKING {
+
+        //+-5 for the other artifacts near the middle one
+
+        PARK_RED(new Pose2d(38.25f, 32, Math.toRadians(0))),
+        PARK_BLUE(new Pose2d(38.25f, -32, Math.toRadians(0)));
+
+        private Pose2d pose2d;
+
+        PARKING(Pose2d _pose2d) {
+            this.pose2d = _pose2d;
+        }
+
+        public Pose2d getPose() {
+            return pose2d;
         }
     }
 

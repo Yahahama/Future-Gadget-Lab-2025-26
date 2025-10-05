@@ -343,14 +343,18 @@ public class Autonomous extends LinearOpMode {
     }
 
     public class Launch {
-        private final DcMotorEx launch;
+        private final DcMotorEx launch1;
+        private final DcMotorEx launch2;
 
         boolean isLaunchActive = false;
 
         public Launch(HardwareMap hardwareMap) {
-            launch = hardwareMap.get(DcMotorEx.class, "launch");
-            launch.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
-            launch.setDirection(DcMotorSimple.Direction.REVERSE);
+            launch1 = hardwareMap.get(DcMotorEx.class, "launch1");
+            launch1.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+            launch1.setDirection(DcMotorSimple.Direction.FORWARD);
+            launch2 = hardwareMap.get(DcMotorEx.class, "launch2");
+            launch2.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+            launch2.setDirection(DcMotorSimple.Direction.REVERSE);
         }
 
         public class LaunchMove implements Action {
@@ -363,7 +367,7 @@ public class Autonomous extends LinearOpMode {
                 }
 
                 if (isLaunchActive) {
-                    launch.setPower(parameters.LAUNCH_POWER);
+                    launch1.setPower(parameters.LAUNCH_POWER);
                 }
 
                 return true;
