@@ -42,10 +42,10 @@ public class drive extends LinearOpMode {
         DcMotor leftBackDrive = hardwareMap.get(DcMotor.class, "lbMtr"); // CH 1
         DcMotor rightFrontDrive = hardwareMap.get(DcMotor.class, "rfMtr"); // CH 0
         DcMotor rightBackDrive = hardwareMap.get(DcMotor.class, "rbMtr"); // CH 3
-        leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
-        leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
-        rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
-        rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
+        leftFrontDrive.setDirection(DcMotor.Direction.FORWARD);
+        leftBackDrive.setDirection(DcMotor.Direction.FORWARD);
+        rightFrontDrive.setDirection(DcMotor.Direction.REVERSE);
+        rightBackDrive.setDirection(DcMotor.Direction.REVERSE);
         leftFrontDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftBackDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightFrontDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -117,8 +117,9 @@ public class drive extends LinearOpMode {
             if (myPose != null) robotAngle = myPose.heading.toDouble(); // TODO: Change to right one
 
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
-            double axial_target = gamepad1.left_stick_x;  // Note: pushing stick forward gives negative value
-            double lateral_target = -gamepad1.left_stick_y;
+            double axial_target = gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
+            double lateral_target = gamepad1.left_stick_x;
+            double yaw = gamepad1.right_stick_x;
 
             double theta = gamepad1.left_bumper ? -robotAngle : 0;
             double cosine = Math.cos(theta);
@@ -133,17 +134,16 @@ public class drive extends LinearOpMode {
             // commented out perspective driving controls
 //            double axial_real = lateral_target * Math.cos(robotAngle) + axial_target * Math.sin(robotAngle);
 //            double lateral_real = lateral_target * -Math.sin(robotAngle) + axial_target * Math.cos(robotAngle);
-            double yaw = gamepad1.right_stick_x;
 
             double right_trigger = 1 + gamepad1.right_trigger;
             double left_trigger = 1 - gamepad1.left_trigger;
 
             // Combine the joystick requests for each axis-motion to determine each wheel's power.
             // Set up a variable for each drive wheel to save the power level for telemetry.
-            double leftFrontPower = ((axial_real + lateral_real + yaw) / 2) * right_trigger * left_trigger;
-            double rightFrontPower = ((axial_real - lateral_real - yaw) / 2) * right_trigger * left_trigger;
-            double leftBackPower = ((axial_real - lateral_real + yaw) / 2) * right_trigger * left_trigger;
-            double rightBackPower = ((axial_real + lateral_real - yaw) / 2) * right_trigger * left_trigger;
+            double leftFrontPower = ((axial_target + lateral_target + yaw) / 2) * right_trigger * left_trigger;
+            double rightFrontPower = ((axial_target - lateral_target - yaw) / 2) * right_trigger * left_trigger;
+            double leftBackPower = ((axial_target - lateral_target + yaw) / 2) * right_trigger * left_trigger;
+            double rightBackPower =  ((axial_target + lateral_target - yaw) / 2) * right_trigger * left_trigger;
 
             /*leftFrontPower  = leftFrontPower>=0 ? leftFrontPower+right_trigger : leftFrontPower-right_trigger;
             rightFrontPower  = rightFrontPower>=0 ? rightFrontPower+right_trigger : rightFrontPower-right_trigger;
@@ -222,6 +222,16 @@ public class drive extends LinearOpMode {
             leftBackDrive.setPower(leftBackPower);
             rightBackDrive.setPower(rightBackPower);
 
+            if (gamepad2.a) {
+                leftFrontDrive.setPower(0.5f);
+            } else if (gamepad2.x) {
+                leftBackDrive.setPower(0.5f);
+            } else if (gamepad2.y) {
+                rightFrontDrive.setPower(0.5f);
+            } else if (gamepad2.b) {
+                rightBackDrive.setPower(0.5f);
+            }
+
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime);
             if (myPose != null) {
@@ -232,6 +242,7 @@ public class drive extends LinearOpMode {
             telemetry.addData("Launch", "Active: " + isLaunchActive);
             telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
             telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
+            telemetry.addData("Version: ", 1);
             telemetry.update();
         }
     }
