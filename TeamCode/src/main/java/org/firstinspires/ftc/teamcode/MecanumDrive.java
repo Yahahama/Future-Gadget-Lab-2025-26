@@ -98,9 +98,9 @@ public final class MecanumDrive {
         // Control Parameters
         public final int INTAKE_DIRECTION_START = 0;
         public final boolean LAUNCH_START = false;
-        public final float LOAD_INIT = 0f;
+        public final float LOAD_INIT = 0.4f;
         public final float LOAD_LOAD = 1f;
-        public final float LOAD_RESET = 0f;
+        public final float LOAD_RESET = 0.45f;
     }
 
     public static Params PARAMS = new Params();
