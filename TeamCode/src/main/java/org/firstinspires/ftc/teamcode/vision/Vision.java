@@ -80,7 +80,8 @@ public class Vision extends LinearOpMode
                     double myTagPoseRange = myAprilTagDetection.ftcPose.range;
                     double myTagPoseBearing = myAprilTagDetection.ftcPose.bearing;
                     double myTagPoseElevation = myAprilTagDetection.ftcPose.elevation;
-                } else if (pattern == "") {  // The tag spotted is an OBELISK tag and we don't know the pattern yet
+
+                } else if (pattern.isEmpty()) {  // The tag spotted is an OBELISK tag and we don't know the pattern yet
                     switch (myAprilTagIdCode) {
                         case 21:
                             pattern = "GPP";
@@ -92,7 +93,7 @@ public class Vision extends LinearOpMode
                             pattern = "PPG";
                             break;
                         default:
-                            break; /// What the helly?
+                            break; /// What the helly? We've seen a tag that isn't a GOAL or OBELISK
                     }
                 }
             }
