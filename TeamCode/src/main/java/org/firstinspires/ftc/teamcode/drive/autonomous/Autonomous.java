@@ -91,6 +91,26 @@ public class Autonomous extends LinearOpMode {
         }
     }
 
+    enum START {
+
+        //RED_CLOSE means the starting position CLOSE TO THE GOAL
+
+        RED_CLOSE(new Pose2d(-49.3f, 50.3f, Math.toRadians(315))),
+        RED_FAR(new Pose2d(62, 16, Math.toRadians(180))), //y pos + 12???
+        BLUE_CLOSE(new Pose2d(-49.3f, -50.3f, Math.toRadians(45))),
+        BLUE_FAR(new Pose2d(62, -16, Math.toRadians(180))); //y pos - 12???
+
+        private Pose2d pose2d;
+
+        START(Pose2d _pose2d) {
+            this.pose2d = _pose2d;
+        }
+
+        public Pose2d getPose() {
+            return pose2d;
+        }
+    }
+
     public class Robot {
         Intake intake;
         Launch launch;
