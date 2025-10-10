@@ -19,29 +19,21 @@ public class Vision extends LinearOpMode
 {
     @Override
     public void runOpMode() {
-        AprilTagLibrary.Builder myAprilTagLibraryBuilder;
         AprilTagProcessor.Builder myAprilTagProcessorBuilder;
-        AprilTagLibrary myAprilTagLibrary;
-        AprilTagProcessor myAprilTagProcessor;
 
-        myAprilTagLibraryBuilder = new AprilTagLibrary.Builder();
-
+        AprilTagLibrary.Builder myAprilTagLibraryBuilder = new AprilTagLibrary.Builder();
         // Add all the tags from the given AprilTagLibrary to the AprilTagLibrary.Builder.
         // Get the AprilTagLibrary for the current season.
         myAprilTagLibraryBuilder.addTags(AprilTagGameDatabase.getCurrentGameTagLibrary());
-
         // Add a tag, without pose information, to the AprilTagLibrary.Builder.
         myAprilTagLibraryBuilder.addTag(6, "A page with tag 6 in our book!", 8.5, DistanceUnit.INCH);
-
-        myAprilTagLibrary = myAprilTagLibraryBuilder.build();
+        AprilTagLibrary myAprilTagLibrary = myAprilTagLibraryBuilder.build();
 
         myAprilTagProcessorBuilder = new AprilTagProcessor.Builder();
-
         myAprilTagProcessorBuilder.setTagLibrary(myAprilTagLibrary);
 
         // Build the AprilTag processor and assign it to a variable.
-        myAprilTagProcessor = myAprilTagProcessorBuilder.build();
-
+        AprilTagProcessor myAprilTagProcessor = myAprilTagProcessorBuilder.build();
         VisionPortal myVisionPortal;
 
         // Create a VisionPortal, with the specified camera and AprilTag processor, and assign it to a variable.
@@ -52,7 +44,7 @@ public class Vision extends LinearOpMode
                 .setStreamFormat(VisionPortal.StreamFormat.YUY2)
 //                .enableCameraMonitoring(true)  // this method isn't recognized for some reason
                 .setAutoStopLiveView(true)
-                .build();
+                .build();  // .build() automatically starts streaming.
 
         List<AprilTagDetection> myAprilTagDetections;
 

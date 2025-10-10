@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.drive.opmode;
 
+import android.util.Size;
+
 import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -10,10 +12,20 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.drive.PoseStorage;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
+import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+
+import java.util.List;
 
 @TeleOp(name="Basic Drive", group="Linear OpMode")
 public class drive extends LinearOpMode {
@@ -88,6 +100,46 @@ public class drive extends LinearOpMode {
         int intakeDirection = parameters.INTAKE_DIRECTION_START;
         boolean isLaunchActive = parameters.LAUNCH_START;
         boolean previousRightTrigger = false;
+
+        // START INITIALIZING VISION
+
+        AprilTagProcessor.Builder myAprilTagProcessorBuilder;
+
+        AprilTagLibrary.Builder myAprilTagLibraryBuilder = new AprilTagLibrary.Builder();
+        // Add all the tags from the given AprilTagLibrary to the AprilTagLibrary.Builder.
+        // Get the AprilTagLibrary for the current season.
+        myAprilTagLibraryBuilder.addTags(AprilTagGameDatabase.getCurrentGameTagLibrary());
+        // Add a tag, without pose information, to the AprilTagLibrary.Builder.
+        myAprilTagLibraryBuilder.addTag(6, "A page with tag 6 in our book!", 8.5, DistanceUnit.INCH);
+        AprilTagLibrary myAprilTagLibrary = myAprilTagLibraryBuilder.build();
+
+        myAprilTagProcessorBuilder = new AprilTagProcessor.Builder();
+        myAprilTagProcessorBuilder.setTagLibrary(myAprilTagLibrary);
+
+        // Build the AprilTag processor and assign it to a variable.
+        AprilTagProcessor myAprilTagProcessor = myAprilTagProcessorBuilder.build();
+        VisionPortal myVisionPortal;
+
+        // Create a VisionPortal, with the specified camera and AprilTag processor, and assign it to a variable.
+        myVisionPortal = new VisionPortal.Builder()
+                .setCamera(hardwareMap.get(WebcamName.class, "FGLs Webcam 2025!"))
+                .addProcessor(myAprilTagProcessor)
+                .setCameraResolution(new Size(640, 480))
+                .setStreamFormat(VisionPortal.StreamFormat.YUY2)
+//                .enableCameraMonitoring(true)  // this method isn't recognized for some reason
+                .setAutoStopLiveView(true)
+                .build();  // .build() automatically starts streaming.
+
+        List<AprilTagDetection> myAprilTagDetections;
+
+        String pattern = "";  // The pattern we're aiming for: "PPG", "PGP", or "GPP".
+                              // We should have different TeleOps based on what pattern the OBELISK shows.
+        int redGoalID = 24;
+        int blueGoalID = 20;
+
+        String team = "RED";  // Change as needed?
+
+        // END INITIALIZING VISION
 
         // Robot is ready to start! Display message to screen
         telemetry.addData("Status", "Initialized");
@@ -202,6 +254,15 @@ public class drive extends LinearOpMode {
             } else {
                 launch1.setPower(0);
                 launch2.setPower(0);
+            }
+
+            // New Vision-powered launch
+            if (gamepad1.left_trigger > 0.5f) {
+                faceGoal(myPose, team);  // Face the goal based on the deadwheel-derived pose, myPose
+                myVisionPortal.resumeStreaming();
+                AprilTagDetection goalAprilTag = getGoalAprilTag(myAprilTagProcessor.getDetections());
+                faceGoal(goalAprilTag.ftcPose, team);
+                launch(getLaunchPowerNeeded(myPose, goalAprilTag.ftcPose));
             }
 
             // Loader Servo
