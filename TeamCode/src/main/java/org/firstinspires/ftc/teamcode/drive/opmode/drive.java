@@ -321,11 +321,15 @@ public class drive extends LinearOpMode {
                 launch2.setPower(0);
             }
 
+            // TO DO: Remove this AprilTag telemetry test code below
+            telemetry.addData("AprilTag", "Detections: " + myAprilTagProcessor.getDetections().size());
+            telemetry.update();
+
             // New Vision-powered launch
             if (gamepad1.left_trigger > 0.5f) {
                 //Pose2d goalPose = new Pose2d(goalAprilTag.ftcPose.x);
                 faceGoal(myPose, team);  // Face the goal based on the deadwheel-derived pose, myPose
-                myVisionPortal.resumeStreaming();
+                myVisionPortal.resumeStreaming();  // Probably unnecessary? Try removing it and see if things break.
                 AprilTagDetection goalAprilTag = getAprilTagOfID(myAprilTagProcessor.getDetections(), goalID);
                 if(goalAprilTag != null){
                     Pose2d goalPose = new Pose2d(goalAprilTag.ftcPose.x, goalAprilTag.ftcPose.y, goalAprilTag.ftcPose.bearing);
