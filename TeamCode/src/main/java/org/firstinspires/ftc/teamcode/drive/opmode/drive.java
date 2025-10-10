@@ -23,8 +23,10 @@ import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary;
+import org.firstinspires.ftc.vision.apriltag.AprilTagPoseFtc;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @TeleOp(name="Basic Drive", group="Linear OpMode")
@@ -39,11 +41,66 @@ public class drive extends LinearOpMode {
      *    ON/OFF (TOGGLE)     - Right Bumper
      *    ON/OFF (HOLD)       - Right Trigger
      * Load:
-     *    LOAD                - Dpad Right
+     *    LOAD                - Dpad Rights
      *    RESET               - Dpad Left
      * Macros:
      *    AIM + SHOOT         - Dpad Up
      */
+
+    AprilTagDetection getAprilTagOfID(List<AprilTagDetection> detections, int ID) {
+        for (AprilTagDetection detection : detections) {
+            if (detection.id == ID) {
+                return detection;
+            }
+        }
+        return null;
+    }
+    void faceGoal(Pose2d currentPose, String team) {
+        if (currentPose == null) return;
+
+        // Determine goal position based on alliance
+        double goalX, goalY;
+        if (team.equalsIgnoreCase("RED")) {
+            goalX = 72;  // adjust to your field coordinates
+            goalY = 0;
+        } else {
+            goalX = -72;
+            goalY = 0;
+        }
+
+        // Compute desired heading (radians)
+        double dx = goalX - currentPose.position.x;
+        double dy = goalY - currentPose.position.y;
+        double targetAngle = Math.atan2(dy, dx);
+
+        // Rotate robot heading toward goal
+        double currentHeading = currentPose.heading.toDouble();
+        double angleError = targetAngle - currentHeading;
+
+        // Normalize to [-π, π]
+        while (angleError > Math.PI) angleError -= 2 * Math.PI;
+        while (angleError < -Math.PI) angleError += 2 * Math.PI;
+
+        // Basic proportional turn — adjust as needed
+        double turnPower = angleError * 0.5;
+
+        telemetry.addData("faceGoal", "Turning to %.2f radians (err=%.2f)", targetAngle, angleError);
+        telemetry.update();
+    }
+
+    private void launch(double power, DcMotor launch1, DcMotor launch2) {
+        // safety bounds
+        if (power < 0) power = 0;
+        if (power > 1) power = 1;
+
+        // spin both flywheels at the given power
+        launch1.setPower(power);
+        launch2.setPower(power);
+
+        // optionally, you can add a timed firing cycle here if using a servo loader
+        telemetry.addData("Launcher", "Active at power %.2f", power);
+        telemetry.update();
+    }
 
     @Override
     public void runOpMode() {
@@ -138,8 +195,16 @@ public class drive extends LinearOpMode {
         int blueGoalID = 20;
 
         String team = "RED";  // Change as needed?
-
+        int goalID;
+        if (team == "RED") {
+            goalID = 24;
+        } else if (team == "BLUE") {
+            goalID = 20;
+        } else {
+            throw new IllegalArgumentException("Team must be \"RED\" or \"BLUE\"");
+        }
         // END INITIALIZING VISION
+
 
         // Robot is ready to start! Display message to screen
         telemetry.addData("Status", "Initialized");
@@ -258,14 +323,18 @@ public class drive extends LinearOpMode {
 
             // New Vision-powered launch
             if (gamepad1.left_trigger > 0.5f) {
+                //Pose2d goalPose = new Pose2d(goalAprilTag.ftcPose.x);
                 faceGoal(myPose, team);  // Face the goal based on the deadwheel-derived pose, myPose
                 myVisionPortal.resumeStreaming();
-                AprilTagDetection goalAprilTag = getGoalAprilTag(myAprilTagProcessor.getDetections());
-                faceGoal(goalAprilTag.ftcPose, team);
-                launch(getLaunchPowerNeeded(myPose, goalAprilTag.ftcPose));
+                AprilTagDetection goalAprilTag = getAprilTagOfID(myAprilTagProcessor.getDetections(), goalID);
+                if(goalAprilTag != null){
+                    Pose2d goalPose = new Pose2d(goalAprilTag.ftcPose.x, goalAprilTag.ftcPose.y, goalAprilTag.ftcPose.bearing);
+                    faceGoal(goalPose, team);
+                }
+                launch(getLaunchPowerNeeded(goalAprilTag.ftcPose), launch1, launch2);
             }
 
-            // Loader Servo
+            // Loader Servov
             if (gamepad1.dpad_right) {
                 load.setPosition(parameters.LOAD_LOAD);
             } else if (gamepad1.dpad_left) {
@@ -296,4 +365,26 @@ public class drive extends LinearOpMode {
             telemetry.update();
         }
     }
+
+    private double getLaunchPowerNeeded(AprilTagPoseFtc ftcPose) {
+        if (ftcPose == null) return 0.0;
+
+        // ftcPose.range is the distance from the camera to the AprilTag in meters
+        // assume we want higher launch power for farther distances
+        double distance = ftcPose.range;
+
+        // simple proportional relationship — tune coefficients as needed
+        // clip output between 0 and 1 for motor safety
+        double power = 0.1 + (distance * 0.1);
+        if (power > 1.0) power = 1.0;
+        if (power < 0.2) power = 0.2;
+
+        telemetry.addData("Launch Power Calc", "distance=%.2f m, power=%.2f", distance, power);
+        telemetry.update();
+
+        return power;
+    }
+
+
+
 }
