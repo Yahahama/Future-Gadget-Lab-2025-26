@@ -61,8 +61,8 @@ public class drive extends LinearOpMode {
         DcMotorEx launch2 = hardwareMap.get(DcMotorEx.class, "launch2");
         launch1.setDirection(DcMotorSimple.Direction.FORWARD);
         launch2.setDirection(DcMotorSimple.Direction.REVERSE);
-        launch1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        launch2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        launch1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        launch2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Initialize servos
         Servo load = hardwareMap.get(Servo.class, "load");
@@ -86,7 +86,9 @@ public class drive extends LinearOpMode {
 
         // Initialize control parameters
         int intakeDirection = parameters.INTAKE_DIRECTION_START;
+        float intakeSpeed = 0f;
         boolean isLaunchActive = parameters.LAUNCH_START;
+        boolean previousA = false;
         boolean previousRightTrigger = false;
 
         // Robot is ready to start! Display message to screen
@@ -117,8 +119,8 @@ public class drive extends LinearOpMode {
             if (myPose != null) robotAngle = myPose.heading.toDouble(); // TODO: Change to right one
 
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
-            double axial_target = gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
-            double lateral_target = gamepad1.left_stick_x;
+            double axial_target = -gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
+            double lateral_target = gamepad1.left_stick_x * 1.1;
             double yaw = gamepad1.right_stick_x;
 
             double theta = gamepad1.left_bumper ? -robotAngle : 0;
@@ -167,21 +169,24 @@ public class drive extends LinearOpMode {
             }
 
             // Intake
-            if (gamepad1.a) {
-                intakeDirection = intakeDirection == 1 ? 0 : 1;
+            if (gamepad1.a && !previousA) {
+                intakeDirection = 1;
+                intakeSpeed = parameters.INTAKE_SPEED_IN;
             } else if (gamepad1.b) {
-                intakeDirection = intakeDirection == -1 ? 0 : -1;
+                intakeDirection = -1;
+                intakeSpeed = parameters.INTAKE_SPEED_OUT;
             } else if (gamepad1.x) {
-                intakeDirection = intakeDirection == 1 ? -1 : 1;
+                intakeDirection = 1;
+                intakeSpeed = parameters.INTAKE_SPEED_LOAD;
             } else if (gamepad1.y) {
                 intakeDirection = 0;
             }
 
             // Power Intake
             if (intakeDirection == 1) {
-                intake.setPower(parameters.INTAKE_SPEED_IN);
+                intake.setPower(intakeSpeed);
             } else if (intakeDirection == -1) {
-                intake.setPower(parameters.INTAKE_SPEED_OUT);
+                intake.setPower(intakeSpeed);
             } else {
                 intake.setPower(0f);
             }
@@ -199,6 +204,9 @@ public class drive extends LinearOpMode {
             if (gamepad1.right_trigger > 0.5f) {
                 launch1.setPower(parameters.LAUNCH_POWER);
                 launch2.setPower(parameters.LAUNCH_POWER);
+            } else if (gamepad1.left_trigger > 0.5f) {
+                launch1.setPower(1f);
+                launch2.setPower(1f);
             } else {
                 launch1.setPower(0);
                 launch2.setPower(0);
@@ -217,20 +225,22 @@ public class drive extends LinearOpMode {
             }
 
             // Power Wheels
-            leftFrontDrive.setPower(leftFrontPower);
-            rightFrontDrive.setPower(rightFrontPower);
-            leftBackDrive.setPower(leftBackPower);
-            rightBackDrive.setPower(rightBackPower);
+            leftFrontDrive.setPower(-leftFrontPower);
+            rightFrontDrive.setPower(-rightFrontPower);
+            leftBackDrive.setPower(-leftBackPower);
+            rightBackDrive.setPower(-rightBackPower);
 
             if (gamepad2.a) {
-                leftFrontDrive.setPower(0.5f);
+                leftFrontDrive.setPower(-0.5f);
             } else if (gamepad2.x) {
-                leftBackDrive.setPower(0.5f);
+                leftBackDrive.setPower(-0.5f);
             } else if (gamepad2.y) {
-                rightFrontDrive.setPower(0.5f);
+                rightFrontDrive.setPower(-0.5f);
             } else if (gamepad2.b) {
-                rightBackDrive.setPower(0.5f);
+                rightBackDrive.setPower(-0.5f);
             }
+
+            previousA = gamepad1.a;
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime);
