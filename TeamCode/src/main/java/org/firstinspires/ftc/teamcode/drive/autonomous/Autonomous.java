@@ -30,7 +30,6 @@ import org.firstinspires.ftc.teamcode.drive.PoseStorage;
 import java.util.Arrays;
 
 @Config
-@Disabled
 @com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "BLUE_AUTONOMOUS", group = "Autonomous")
 public class Autonomous extends LinearOpMode {
 
@@ -230,12 +229,12 @@ public class Autonomous extends LinearOpMode {
 
     public class Intake {
 
-        private final DcMotorEx intake;
+        private final DcMotor intake;
 
         int intakeDirection = parameters.INTAKE_DIRECTION_START;
 
         public Intake(HardwareMap hardwareMap) {
-            intake = hardwareMap.get(DcMotorEx.class, "intake");
+            intake = hardwareMap.get(DcMotor.class, "intake");
             intake.setDirection(DcMotor.Direction.FORWARD);
             intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             intakeDirection = parameters.INTAKE_DIRECTION_START;
@@ -473,7 +472,7 @@ public class Autonomous extends LinearOpMode {
 
         TrajectoryActionBuilder redCloseToViewObelisk = robot.drive.actionBuilder(initialPose)
                 .setTangent(Math.toRadians(225))
-                .splineToLinearHeading(new Pose2d(-32, 32, Math.toRadians(180)), Math.toRadians(0));
+                .splineToLinearHeading(new Pose2d(-32, 32, Math.toRadians(225)), Math.toRadians(0));
 
         // Initialization Actions
         Actions.runBlocking(robot.Init());
@@ -491,7 +490,7 @@ public class Autonomous extends LinearOpMode {
         switch(startPos) {
             case RED_CLOSE:
                 actionToExecute = new SequentialAction(
-                        robot.poseToPose(redCloseToViewObelisk)
+                    robot.poseToPose(redCloseToViewObelisk)
                 );
                 break;
             case RED_FAR:

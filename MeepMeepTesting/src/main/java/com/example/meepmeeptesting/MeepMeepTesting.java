@@ -139,7 +139,7 @@ public class MeepMeepTesting {
 
         TrajectoryActionBuilder redCloseToViewObelisk = robot.getDrive().actionBuilder(initialPose)
                 .setTangent(Math.toRadians(225))
-                .splineToLinearHeading(new Pose2d(-32, 32, Math.toRadians(180)), Math.toRadians(0));
+                .splineToLinearHeading(new Pose2d(-32, 32, Math.toRadians(225)), Math.toRadians(0));
 
         robot.runAction(redCloseToViewObelisk.build());
 
