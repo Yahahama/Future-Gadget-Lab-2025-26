@@ -40,6 +40,21 @@ public class MeepMeepTesting {
         }
 
         enum START {
+            RED(new Pose2d(48, -48, Math.toRadians(135))),
+            BLUE(new Pose2d(-48, -48, Math.toRadians(225)));
+
+            private Pose2d pose2d;
+
+            START(Pose2d _pose2d) {
+                this.pose2d = _pose2d;
+            }
+
+            public Pose2d getPose() {
+                return pose2d;
+            }
+        }
+
+        enum START {
 
             //RED_CLOSE means the starting position CLOSE TO THE GOAL
 
@@ -136,7 +151,7 @@ public class MeepMeepTesting {
 //            .build();
 
         Image img = null;
-        try { img = ImageIO.read(new File("/Users/bma30/Documents/FTC/DecodeMeepMeepBackground.png")); }
+        try { img = ImageIO.read(new File("/Users/abibolov27/Documents/Images/Robotics/DecodeMeepMeepBackground.png")); }
         catch (IOException e) {}
 
         meepMeep.setBackground(img)

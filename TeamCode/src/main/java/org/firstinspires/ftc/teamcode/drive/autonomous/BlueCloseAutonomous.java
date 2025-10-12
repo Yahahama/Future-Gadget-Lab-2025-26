@@ -2,29 +2,24 @@ package org.firstinspires.ftc.teamcode.drive.autonomous;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.AngularVelConstraint;
-import com.acmerobotics.roadrunner.MinVelConstraint;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
-import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.ftc.Actions;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 
-import java.util.Arrays;
 @Config
 @com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "BLUE_BUCKET_AUTONOMOUS", group = "Autonomous")
-public class BlueBucketAutonomous extends Autonomous{
+public class BlueCloseAutonomous extends Autonomous{
 
 
     @Override
     public void runOpMode() {
-        Autonomous.StartingPosition startPos = StartingPosition.BLUE_BUCKET;
+        Autonomous.START startPos = START.BLUE_CLOSE;
 
-        Pose2d initialPose = startPos.getStartPos();
+        Pose2d initialPose = startPos.getPose();
         Autonomous.Robot robot = new Robot(
                 new Intake(hardwareMap), new Launch(hardwareMap), new Load(hardwareMap),
                 new MecanumDrive(hardwareMap, initialPose));
@@ -81,25 +76,16 @@ public class BlueBucketAutonomous extends Autonomous{
             telemetry.update();
         }
 
-        Action actionToExecute;
-
-        switch(startPos) {
-            case BLUE_BUCKET:
-                actionToExecute = new SequentialAction(
-                        robot.poseToBucket(blueInitToBucket),
-                        robot.bucketToSample(blueBucketToFarNeutralBlock),
-                        robot.poseToBucket(blueFarNeutralBlockToBucket),
-                        robot.bucketToSample(blueBucketToMiddleNeutralBlock),
-                        robot.poseToBucket(blueMiddleNeutralBlockToBucket),
-                        robot.bucketToSample(blueBucketToCloseNeutralBlock),
-                        robot.poseToBucket(blueCloseNeutralBlockToBucket),
-                        robot.bucketToSubmersible(blueBucketToSubmersible)
-                );
-                break;
-            default:
-                actionToExecute = robot.drive.actionBuilder(new Pose2d(0, 0, 0)).build();
-                break;
-        }
+        Action actionToExecute = new SequentialAction(
+                robot.poseToBucket(blueInitToBucket),
+                robot.bucketToSample(blueBucketToFarNeutralBlock),
+                robot.poseToBucket(blueFarNeutralBlockToBucket),
+                robot.bucketToSample(blueBucketToMiddleNeutralBlock),
+                robot.poseToBucket(blueMiddleNeutralBlockToBucket),
+                robot.bucketToSample(blueBucketToCloseNeutralBlock),
+                robot.poseToBucket(blueCloseNeutralBlockToBucket),
+                robot.bucketToSubmersible(blueBucketToSubmersible)
+        );
 
         telemetry.update();
         waitForStart();

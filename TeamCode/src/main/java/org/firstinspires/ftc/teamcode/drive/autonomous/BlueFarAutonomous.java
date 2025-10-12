@@ -2,28 +2,24 @@ package org.firstinspires.ftc.teamcode.drive.autonomous;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.AngularVelConstraint;
-import com.acmerobotics.roadrunner.MinVelConstraint;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
-import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.ftc.Actions;
 
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 
-import java.util.Arrays;
 @Config
 @com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "BLUE_DIVE_AUTONOMOUS", group = "Autonomous")
-public class BlueDiveAutonomous extends Autonomous{
+public class BlueFarAutonomous extends Autonomous{
 
 
     @Override
     public void runOpMode() {
-        Autonomous.StartingPosition startPos = StartingPosition.BLUE_DIVE;
+        Autonomous.START startPos = Autonomous.START.BLUE_FAR;
 
-        Pose2d initialPose = startPos.getStartPos();
+        Pose2d initialPose = startPos.getPose();
         Autonomous.Robot robot = new Robot(
                 new Intake(hardwareMap), new Launch(hardwareMap), new Load(hardwareMap),
                 new MecanumDrive(hardwareMap, initialPose));
@@ -77,24 +73,15 @@ public class BlueDiveAutonomous extends Autonomous{
             telemetry.update();
         }
 
-        Action actionToExecute;
-
-        switch(startPos) {
-            case BLUE_DIVE:
-                actionToExecute = new SequentialAction(
-                        robot.poseToClip(blueInitToClip),
-                        robot.clipToSample(blueClipToFarBlueBlock),
-                        robot.sampleToClip(farBlueBlockToBlueClip),
-                        robot.clipToSample(clipToMediumBlueBlock),
-                        robot.sampleToClip(mediumBlueBlockToBlueClip),
-                        robot.clipToSample(clipToCloseBlueBlock),
-                        robot.sampleToClip(closeBlueBlockToBlueClip)
-                );
-                break;
-            default:
-                actionToExecute = robot.drive.actionBuilder(new Pose2d(0, 0, 0)).build();
-                break;
-        }
+        Action actionToExecute = new SequentialAction(
+                robot.poseToClip(blueInitToClip),
+                robot.clipToSample(blueClipToFarBlueBlock),
+                robot.sampleToClip(farBlueBlockToBlueClip),
+                robot.clipToSample(clipToMediumBlueBlock),
+                robot.sampleToClip(mediumBlueBlockToBlueClip),
+                robot.clipToSample(clipToCloseBlueBlock),
+                robot.sampleToClip(closeBlueBlockToBlueClip)
+        );
 
         telemetry.update();
         waitForStart();
