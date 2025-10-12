@@ -19,15 +19,15 @@ import org.firstinspires.ftc.teamcode.drive.PoseStorage;
 public class drive extends LinearOpMode {
     /*
      * Intake:
-     *    IN (TOGGLE ON/OFF)  - A
-     *    OUT (TOGGLE ON/OFF) - B
-     *    FLIP                - X
+     *    COLLECT             - A
+     *    OUT                 - B
+     *    LOAD                - X
      *    STOP                - Y
      * Launcher:
      *    ON/OFF (TOGGLE)     - Right Bumper
      *    ON/OFF (HOLD)       - Right Trigger
      * Load:
-     *    LOAD                - Dpad Right
+     *    SHOOT               - Dpad Right
      *    RESET               - Dpad Left
      * Macros:
      *    AIM + SHOOT         - Dpad Up
@@ -59,10 +59,10 @@ public class drive extends LinearOpMode {
         // Initialize and configure launch motor
         DcMotorEx launch1 = hardwareMap.get(DcMotorEx.class, "launch1");
         DcMotorEx launch2 = hardwareMap.get(DcMotorEx.class, "launch2");
-        launch1.setDirection(DcMotorSimple.Direction.FORWARD);
-        launch2.setDirection(DcMotorSimple.Direction.REVERSE);
-        launch1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        launch2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        launch1.setDirection(DcMotorEx.Direction.FORWARD);
+        launch2.setDirection(DcMotorEx.Direction.REVERSE);
+        launch1.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        launch2.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
         // Initialize servos
         Servo load = hardwareMap.get(Servo.class, "load");
@@ -202,11 +202,11 @@ public class drive extends LinearOpMode {
 
             // Power Launch
             if (gamepad1.right_trigger > 0.5f) {
-                launch1.setPower(parameters.LAUNCH_POWER);
-                launch2.setPower(parameters.LAUNCH_POWER);
+                launch1.setVelocity(parameters.LAUNCH_SPEED_CLOSE, AngleUnit.RADIANS);
+                launch2.setVelocity(parameters.LAUNCH_SPEED_CLOSE, AngleUnit.RADIANS);
             } else if (gamepad1.left_trigger > 0.5f) {
-                launch1.setPower(1f);
-                launch2.setPower(1f);
+                launch1.setVelocity(parameters.LAUNCH_SPEED_FAR, AngleUnit.RADIANS);
+                launch2.setVelocity(parameters.LAUNCH_SPEED_FAR, AngleUnit.RADIANS);
             } else {
                 launch1.setPower(0);
                 launch2.setPower(0);
