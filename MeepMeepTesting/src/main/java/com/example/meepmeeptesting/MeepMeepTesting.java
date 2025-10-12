@@ -79,24 +79,26 @@ public class MeepMeepTesting {
                 return pose2d;
             }
         }
-    }
-    enum PARKING {
 
-        //+-5 for the other artifacts near the middle one
+        enum PARKING {
 
-        PARK_RED(new Pose2d(38.25f, 32, Math.toRadians(0))),
-        PARK_BLUE(new Pose2d(38.25f, -32, Math.toRadians(0)));
+            //+-5 for the other artifacts near the middle one
 
-        private Pose2d pose2d;
+            PARK_RED(new Pose2d(38.25f, 32, Math.toRadians(0))),
+            PARK_BLUE(new Pose2d(38.25f, -32, Math.toRadians(0)));
 
-        PARKING(Pose2d _pose2d) {
-            this.pose2d = _pose2d;
+            private Pose2d pose2d;
+
+            PARKING(Pose2d _pose2d) {
+                this.pose2d = _pose2d;
+            }
+
+            public Pose2d getPose() {
+                return pose2d;
+            }
         }
-
-        public Pose2d getPose() {
-            return pose2d;
-        }
     }
+
 
     public static void main(String[] args) {
         MeepMeep meepMeep = new MeepMeep(800);
