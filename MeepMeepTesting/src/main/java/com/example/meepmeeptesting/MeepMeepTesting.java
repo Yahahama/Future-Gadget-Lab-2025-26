@@ -40,21 +40,6 @@ public class MeepMeepTesting {
         }
 
         enum START {
-            RED(new Pose2d(48, -48, Math.toRadians(135))),
-            BLUE(new Pose2d(-48, -48, Math.toRadians(225)));
-
-            private Pose2d pose2d;
-
-            START(Pose2d _pose2d) {
-                this.pose2d = _pose2d;
-            }
-
-            public Pose2d getPose() {
-                return pose2d;
-            }
-        }
-
-        enum START {
 
             //RED_CLOSE means the starting position CLOSE TO THE GOAL
 
@@ -149,6 +134,14 @@ public class MeepMeepTesting {
 //        Action toRedBucketToBlueBucket = robot.getDrive().actionBuilder(new Pose2d(33, 38, 0))
 //            .splineToLinearHeading(Positions.GOAL.RED, Math.toRadians(45)))
 //            .build();
+
+        Pose2d initialPose = Positions.START.RED_CLOSE.getPose();
+
+        TrajectoryActionBuilder redCloseToViewObelisk = robot.getDrive().actionBuilder(initialPose)
+                .setTangent(Math.toRadians(225))
+                .splineToLinearHeading(new Pose2d(-32, 32, Math.toRadians(180)), Math.toRadians(0));
+
+        robot.runAction(redCloseToViewObelisk.build());
 
         Image img = null;
         try { img = ImageIO.read(new File("/Users/abibolov27/Documents/Images/Robotics/DecodeMeepMeepBackground.png")); }

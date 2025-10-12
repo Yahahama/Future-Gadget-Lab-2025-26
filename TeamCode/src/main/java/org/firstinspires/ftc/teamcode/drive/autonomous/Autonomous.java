@@ -130,7 +130,7 @@ public class Autonomous extends LinearOpMode {
         public Action Init() {
             return new SequentialAction(
                     intake.intakeInit(),
-                    launch.launchInit()
+                    launch.launchInit(),
                     launch.launchInit(),
                     load.loadInit()
             );
@@ -221,9 +221,9 @@ public class Autonomous extends LinearOpMode {
             );
         }
 
-        public Action goToPose(TrajectoryActionBuilder goToPose) {
+        public Action poseToPose(TrajectoryActionBuilder poseToPose) {
             return new SequentialAction(
-                    goToPose.build()
+                    poseToPose.build()
             );
         }
     }
@@ -466,14 +466,14 @@ public class Autonomous extends LinearOpMode {
 
         Pose2d initialPose = startPos.getPose();
         Robot robot = new Robot(
-                new Intake(hardwareMap), new Launch(hardwareMap),
+                new Intake(hardwareMap), new Launch(hardwareMap), new Load(hardwareMap),
                 new MecanumDrive(hardwareMap, initialPose));
 
         // Trajectories to select from
 
-        TrajectoryActionBuilder redCloseViewObelisk = robot.drive.actionBuilder(initialPose)
-                .setTangent()
-                .splineToLinearHeading()
+        TrajectoryActionBuilder redCloseToViewObelisk = robot.drive.actionBuilder(initialPose)
+                .setTangent(Math.toRadians(225))
+                .splineToLinearHeading(new Pose2d(-32, 32, Math.toRadians(180)), Math.toRadians(0));
 
         // Initialization Actions
         Actions.runBlocking(robot.Init());
@@ -491,7 +491,7 @@ public class Autonomous extends LinearOpMode {
         switch(startPos) {
             case RED_CLOSE:
                 actionToExecute = new SequentialAction(
-                        // robot.SOMEKINDAACTION
+                        robot.poseToPose(redCloseToViewObelisk)
                 );
                 break;
             case RED_FAR:
