@@ -23,6 +23,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 
 import java.util.Arrays;
@@ -129,6 +130,30 @@ public class Autonomous extends LinearOpMode {
                     intake.intakeInit(),
                     launch.launchInit(),
                     load.loadInit()
+            );
+        }
+
+        public Action poseToScoreClose(TrajectoryActionBuilder poseToLaunchPose) {
+            return new SequentialAction(
+                    new ParallelAction(
+                            poseToLaunchPose.build(),
+                            launch.launchClose()
+                    ),
+                    load.loadLoad(),
+                    load.loadReset(),
+                    launch.launchOff()
+            );
+        }
+
+        public Action poseToScoreFar(TrajectoryActionBuilder poseToLaunchPose) {
+            return new SequentialAction(
+                    new ParallelAction(
+                            poseToLaunchPose.build(),
+                            launch.launchFar()
+                    ),
+                    load.loadLoad(),
+                    load.loadReset(),
+                    launch.launchOff()
             );
         }
 
@@ -366,15 +391,15 @@ public class Autonomous extends LinearOpMode {
         private final DcMotorEx launch1;
         private final DcMotorEx launch2;
 
-        boolean isLaunchActive = false;
+        int launchState = 0;
 
         public Launch(HardwareMap hardwareMap) {
             launch1 = hardwareMap.get(DcMotorEx.class, "launch1");
-            launch1.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
-            launch1.setDirection(DcMotorSimple.Direction.FORWARD);
+            launch1.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+            launch1.setDirection(DcMotorEx.Direction.FORWARD);
             launch2 = hardwareMap.get(DcMotorEx.class, "launch2");
-            launch2.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
-            launch2.setDirection(DcMotorSimple.Direction.REVERSE);
+            launch2.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+            launch2.setDirection(DcMotorEx.Direction.REVERSE);
         }
 
         public class LaunchMove implements Action {
@@ -386,8 +411,15 @@ public class Autonomous extends LinearOpMode {
                     initialized = true;
                 }
 
-                if (isLaunchActive) {
-                    launch1.setPower(parameters.LAUNCH_POWER);
+                if (launchState == 0 ) {
+                    launch1.setVelocity(0, AngleUnit.RADIANS);
+                    launch2.setVelocity(0, AngleUnit.RADIANS);
+                } else if (launchState == 1) {
+                    launch1.setVelocity(parameters.LAUNCH_SPEED_CLOSE, AngleUnit.RADIANS);
+                    launch2.setVelocity(parameters.LAUNCH_SPEED_CLOSE, AngleUnit.RADIANS);
+                } else if (launchState == 2) {
+                    launch1.setVelocity(parameters.LAUNCH_SPEED_FAR, AngleUnit.RADIANS);
+                    launch2.setVelocity(parameters.LAUNCH_SPEED_FAR, AngleUnit.RADIANS);
                 }
 
                 return true;
@@ -398,26 +430,43 @@ public class Autonomous extends LinearOpMode {
             return new LaunchMove();
         }
 
-        public class LaunchOn implements Action {
+        public class LaunchClose implements Action {
 
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                isLaunchActive = true;
-               return false;
+                launchState = 1;
+                return false;
             }
         }
 
-        public Action launchOn() {
-            return new LaunchOn();
+        public Action launchClose() {
+            return new LaunchClose();
+        }
+
+        public class LaunchFar implements Action {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                launchState = 2;
+                return false;
+            }
+        }
+
+        public Action launchFar() {
+            return new LaunchFar();
         }
 
         public class LaunchOff implements Action {
 
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                isLaunchActive = false;
+                launchState = 0;
                 return false;
             }
+        }
+
+        public Action launchOff() {
+            return new LaunchOff();
         }
 
         public class LaunchInit implements Action {
