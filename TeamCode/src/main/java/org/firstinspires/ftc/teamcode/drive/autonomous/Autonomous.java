@@ -130,6 +130,12 @@ public class Autonomous extends LinearOpMode {
                     launch.launchInit()
             );
         }
+
+        public Action goToPose(TrajectoryActionBuilder goToPose) {
+            return new SequentialAction(
+                    goToPose.build()
+            );
+        }
     }
 
     public class Intake {
@@ -304,7 +310,11 @@ public class Autonomous extends LinearOpMode {
                 new Intake(hardwareMap), new Launch(hardwareMap),
                 new MecanumDrive(hardwareMap, initialPose));
 
-        // Trajectories to select from, CURRENTLY EMPTY AS OF 10/12/25
+        // Trajectories to select from
+
+        TrajectoryActionBuilder redCloseViewObelisk = robot.drive.actionBuilder(initialPose)
+                .setTangent()
+                .splineToLinearHeading()
 
         // Initialization Actions
         Actions.runBlocking(robot.Init());
