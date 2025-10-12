@@ -459,10 +459,10 @@ public class Autonomous extends LinearOpMode {
         }
     }
 
+    Positions.START startPos = Positions.START.RED_CLOSE;  // startPos will be different in every extension
+
     @Override
     public void runOpMode() {
-        Positions.START startPos = Positions.START.RED_CLOSE;
-
         Pose2d initialPose = startPos.getPose();
         Robot robot = new Robot(
                 new Intake(hardwareMap), new Launch(hardwareMap), new Load(hardwareMap),
