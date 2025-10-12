@@ -19,6 +19,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.drive.PoseStorage;
+import org.firstinspires.ftc.teamcode.drive.autonomous.Autonomous;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
@@ -331,9 +332,9 @@ public class drive extends LinearOpMode {
                 faceGoal(myPose, team);  // Face the goal based on the deadwheel-derived pose, myPose
                 myVisionPortal.resumeStreaming();  // Probably unnecessary? Try removing it and see if things break.
                 AprilTagDetection goalAprilTag = getAprilTagOfID(myAprilTagProcessor.getDetections(), goalID);
-                if(goalAprilTag != null){
-                    Pose2d goalPose = new Pose2d(goalAprilTag.ftcPose.x, goalAprilTag.ftcPose.y, goalAprilTag.ftcPose.bearing);
-                    faceGoal(goalPose, team);
+                if(goalAprilTag != null) {
+                    // We use RoadRunner to set our relative heading (to the goal) to zero. This means we are facing the goal dead-on. (Hopefully.)
+                    drive.actionBuilder(new Pose2d(goalAprilTag.ftcPose.x, goalAprilTag.ftcPose.y, goalAprilTag.ftcPose.bearing)).turn(-goalAprilTag.ftcPose.bearing).build();
                 }
                 launch(getLaunchPowerNeeded(goalAprilTag.ftcPose), launch1, launch2);
             }
