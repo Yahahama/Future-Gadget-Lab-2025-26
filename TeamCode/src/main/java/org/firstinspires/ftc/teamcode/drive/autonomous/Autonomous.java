@@ -459,7 +459,7 @@ public class Autonomous extends LinearOpMode {
         }
     }
 
-    Positions.START startPos = Positions.START.RED_CLOSE;  // startPos will be different in every extension
+    Positions.START startPos = Positions.START.RED_FAR;  // startPos will be different in every extension
 
     @Override
     public void runOpMode() {
@@ -477,6 +477,11 @@ public class Autonomous extends LinearOpMode {
         TrajectoryActionBuilder blueCloseToViewObelisk = robot.drive.actionBuilder(initialPose)
                 .setTangent(Math.toRadians(135))
                 .splineToLinearHeading(new Pose2d(-32, -32, Math.toRadians(135)), Math.toRadians(0));
+
+        TrajectoryActionBuilder redFarToViewObelisk = robot.drive.actionBuilder(initialPose)
+                .setTangent(Math.toRadians(189))
+                .splineToLinearHeading(new Pose2d(23, 12, Math.toRadians(194)), Math.toRadians(0));
+
         // Initialization Actions
         Actions.runBlocking(robot.Init());
 
@@ -498,7 +503,7 @@ public class Autonomous extends LinearOpMode {
                 break;
             case RED_FAR:
                 actionToExecute = new SequentialAction(
-                        // robot.SOMEKINDAACTION
+                        robot.poseToPose(redFarToViewObelisk)
                 );
                 break;
             case BLUE_CLOSE:
