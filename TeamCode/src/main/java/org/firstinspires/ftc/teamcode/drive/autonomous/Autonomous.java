@@ -409,17 +409,23 @@ public class Autonomous extends LinearOpMode {
 
     Positions.START startPos = Positions.START.RED_FAR;  // startPos will be different in every extension
 
+    String getPattern() {  // Currently a dummy. IMPLEMENT WITH VISION!!
+        return "GPP";
+    }
+
     @Override
     public void runOpMode() {
         Pose2d initialPose = startPos.getPose();
         String team;
         switch (startPos) {
-            case Positions.START.RED_CLOSE:
-            case Positions.START.RED_FAR:
+            case RED_CLOSE:
+            case RED_FAR:
                 team = "RED";
-            case Positions.START.BLUE_CLOSE:
-            case Positions.START.BLUE_FAR:
+                break;
+            case BLUE_CLOSE:
+            case BLUE_FAR:
                 team = "BLUE";
+                break;
             default:
                 throw new IllegalStateException("Unexpected value for startPos: " + startPos);
         }
@@ -495,24 +501,51 @@ public class Autonomous extends LinearOpMode {
                         robot.intake.moveIntake(),
                         robot.launch.moveLaunch(),
                         new SequentialAction(
-                                actionToExecute,
-                                pattern = readPattern(),
-
-                                Positions.ARTIFACT targetArtifactTriplet = {
-                                        switch (pattern) {
-                                            case "GPP":
-                                                return Positions.ARTIFACT.;
-                                            case "PGP":
-                                                break;
-                                            case "PPG":
-                                                return
-                                            default:
-                                                throw new IllegalStateException("Unexpected value for pattern: " + pattern);
-                                        }
-                                }
-                                robot.poseToPose(Positions.ARTIFACT.)
+                                actionToExecute
                         )
                 )
+        );
+
+        String pattern = getPattern();  // TO DO: Implement readPattern using vision
+
+        // targetArtifactTriplet represents, as of 10/17/25, the center ARTIFACT of the triplet that
+        // would work for the PATTERN if scooped up in a row. With a transformation to make sure the
+        // robot drives in front of the ARTIFACTS and not *into* them, that's where we want to send
+        // the robot next!
+        Positions.ARTIFACT targetArtifactTriplet;
+        switch (pattern) {
+            case "GPP":
+                if (team.equals("RED")) {
+                    targetArtifactTriplet = Positions.ARTIFACT.RED_C;
+                } else {
+                    targetArtifactTriplet = Positions.ARTIFACT.BLUE_C;
+                }
+                break;
+            case "PGP":
+                if (team.equals("RED")) {
+                    targetArtifactTriplet = Positions.ARTIFACT.RED_B;
+                } else {
+                    targetArtifactTriplet = Positions.ARTIFACT.BLUE_B;
+                }
+                break;
+            case "PPG":
+                if (team.equals("RED")) {
+                    targetArtifactTriplet = Positions.ARTIFACT.RED_A;
+                } else {
+                    targetArtifactTriplet = Positions.ARTIFACT.BLUE_A;
+                }
+            default:
+                throw new IllegalStateException("Unexpected value for pattern: " + pattern);
+        }
+
+        Actions.runBlocking(
+            new SequentialAction(
+                // TO DO: You know how we just kinda type in numbers to tell the robot where to go from the start
+                //        so the camera can read the OBELISK? We gotta put those into Positions so we can use
+                //        them to tell the robot where to go next. Trust. Once that's done, just make a variable
+                //        that records the Positions.OBELISK_VIEW the robot had to travel to and use that here.
+                robot.poseToPose(thePoseYouTraveledToSoYouCouldReadTheOBELISK, targetArtifactTriplet.getPose())
+            )
         );
     }
 }
