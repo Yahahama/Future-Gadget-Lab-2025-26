@@ -142,12 +142,12 @@ public class MeepMeepTesting {
                 .splineToLinearHeading(new Pose2d(-32, -32, Math.toRadians(135)), Math.toRadians(0));
         TrajectoryActionBuilder redFarToViewObelisk = robot.getDrive().actionBuilder(initialPose)
                 .setTangent(Math.toRadians(194))
-                .splineToLinearHeading(new Pose2d(23, 12, Math.toRadians(194)), Math.toRadians(180));
+                .splineToLinearHeading(new Pose2d(23, 12, Math.toRadians(187)), Math.toRadians(180));
 
         robot.runAction(redFarToViewObelisk.build());
 
         Image img = null;
-        try { img = ImageIO.read(new File("/Users/bma30/Documents/FTC/DecodeMeepMeepBackground.png")); }
+        try { img = ImageIO.read(new File("/Users/abibolov27/Documents/Images/Robotics/DecodeMeepMeepBackground.png")); }
         catch (IOException e) {}
 
         meepMeep.setBackground(img)

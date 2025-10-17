@@ -30,7 +30,7 @@ import org.firstinspires.ftc.teamcode.drive.PoseStorage;
 import java.util.Arrays;
 
 @Config
-@com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "BLUE_AUTONOMOUS", group = "Autonomous")
+@com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "AUTONOMOUS", group = "Autonomous")
 public class Autonomous extends LinearOpMode {
 
     MecanumDrive.Params parameters = new MecanumDrive.Params();
@@ -159,64 +159,12 @@ public class Autonomous extends LinearOpMode {
             );
         }
 
-        public Action poseToBucket(TrajectoryActionBuilder poseToBucket) {
-            return new SequentialAction(
-                    new ParallelAction(
-                            poseToBucket.build() // Movement + manipulators
-                    ),
-                    new SleepAction(0.5), // Sequential movements
-                    new SleepAction(0.1)
-            );
-        }
-
-        public Action bucketToSample(TrajectoryActionBuilder bucketToSample) {
-            return new SequentialAction(
-                    new SleepAction(0.1),
-                    new ParallelAction(
-                            bucketToSample.build()
-                    ),
-                    GetSample()
-            );
-        }
-
-        public Action GetSample() {
-            return new SequentialAction(
-                    new SleepAction(0.5),
-                    new SleepAction(0.5),
-                    new SleepAction(0.5),
-                    new ParallelAction(
-                    )
-            );
-        }
-
-        public Action GetSampleLow() {
-            return new SequentialAction(
-                    new SleepAction(0.5), // Sequential movements
-                    new SleepAction(0.5),
-                    new SleepAction(0.5)
-            );
-        }
-
-        public Action bucketToSubmersible(TrajectoryActionBuilder bucketToSubmersible) {
-            return new ParallelAction(
-                    bucketToSubmersible.build()
-            );
-        }
-
         public Action poseToClip(TrajectoryActionBuilder poseToClip) {
             return new SequentialAction(
                     new ParallelAction(
                             poseToClip.build()
                     ),
                     new SleepAction(0.5)
-            );
-        }
-
-        public Action clipToSample(TrajectoryActionBuilder clipToSample) {
-            return new SequentialAction(
-                    new ParallelAction(
-                            clipToSample.build()
-                    )
             );
         }
 
@@ -464,6 +412,18 @@ public class Autonomous extends LinearOpMode {
     @Override
     public void runOpMode() {
         Pose2d initialPose = startPos.getPose();
+        String team;
+        switch (startPos) {
+            case Positions.START.RED_CLOSE:
+            case Positions.START.RED_FAR:
+                team = "RED";
+            case Positions.START.BLUE_CLOSE:
+            case Positions.START.BLUE_FAR:
+                team = "BLUE";
+            default:
+                throw new IllegalStateException("Unexpected value for startPos: " + startPos);
+        }
+
         Robot robot = new Robot(
                 new Intake(hardwareMap), new Launch(hardwareMap), new Load(hardwareMap),
                 new MecanumDrive(hardwareMap, initialPose));
@@ -480,11 +440,11 @@ public class Autonomous extends LinearOpMode {
 
         TrajectoryActionBuilder redFarToViewObelisk = robot.drive.actionBuilder(initialPose)
                 .setTangent(Math.toRadians(194))
-                .splineToLinearHeading(new Pose2d(23, 12, Math.toRadians(194)), Math.toRadians(180));
+                .splineToLinearHeading(new Pose2d(23, 12, Math.toRadians(187)), Math.toRadians(180));
 
         TrajectoryActionBuilder blueFarToViewObelisk = robot.drive.actionBuilder(initialPose)
                 .setTangent(Math.toRadians(166))
-                .splineToLinearHeading(new Pose2d(23, -12, Math.toRadians(166)), Math.toRadians(180));
+                .splineToLinearHeading(new Pose2d(23, -12, Math.toRadians(173)), Math.toRadians(180));
         // Initialization Actions
         Actions.runBlocking(robot.Init());
 
@@ -534,7 +494,24 @@ public class Autonomous extends LinearOpMode {
                 new ParallelAction(
                         robot.intake.moveIntake(),
                         robot.launch.moveLaunch(),
-                        actionToExecute
+                        new SequentialAction(
+                                actionToExecute,
+                                pattern = readPattern(),
+
+                                Positions.ARTIFACT targetArtifactTriplet = {
+                                        switch (pattern) {
+                                            case "GPP":
+                                                return Positions.ARTIFACT.;
+                                            case "PGP":
+                                                break;
+                                            case "PPG":
+                                                return
+                                            default:
+                                                throw new IllegalStateException("Unexpected value for pattern: " + pattern);
+                                        }
+                                }
+                                robot.poseToPose(Positions.ARTIFACT.)
+                        )
                 )
         );
     }
