@@ -474,6 +474,9 @@ public class Autonomous extends LinearOpMode {
                 .setTangent(Math.toRadians(225))
                 .splineToLinearHeading(new Pose2d(-32, 32, Math.toRadians(225)), Math.toRadians(0));
 
+        TrajectoryActionBuilder blueCloseToViewObelisk = robot.drive.actionBuilder(initialPose)
+                .setTangent(Math.toRadians(135))
+                .splineToLinearHeading(new Pose2d(-32, -32, Math.toRadians(135)), Math.toRadians(0));
         // Initialization Actions
         Actions.runBlocking(robot.Init());
 
@@ -500,7 +503,7 @@ public class Autonomous extends LinearOpMode {
                 break;
             case BLUE_CLOSE:
                 actionToExecute = new SequentialAction(
-                        // robot.SOMEKINDAACTION
+                        robot.poseToPose(blueCloseToViewObelisk)
                 );
                 break;
             case BLUE_FAR:
