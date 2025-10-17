@@ -538,14 +538,16 @@ public class Autonomous extends LinearOpMode {
                 throw new IllegalStateException("Unexpected value for pattern: " + pattern);
         }
 
+        // go from wherever we ended up after reading the obelisk to the target artifact triplet
+        TrajectoryActionBuilder toArtifactTriplet = robot.drive.actionBuilder(robot.drive.pose)
+                .setTangent(Math.toRadians(0))
+                .splineToLinearHeading(targetArtifactTriplet.getPose(), Math.toRadians(0));
+
         Actions.runBlocking(
-            new SequentialAction(
-                // TO DO: You know how we just kinda type in numbers to tell the robot where to go from the start
-                //        so the camera can read the OBELISK? We gotta put those into Positions so we can use
-                //        them to tell the robot where to go next. Trust. Once that's done, just make a variable
-                //        that records the Positions.OBELISK_VIEW the robot had to travel to and use that here.
-                robot.poseToPose(thePoseYouTraveledToSoYouCouldReadTheOBELISK, targetArtifactTriplet.getPose())
-            )
+                new SequentialAction(
+                        robot.poseToPose(toArtifactTriplet)
+                )
         );
+
     }
 }
