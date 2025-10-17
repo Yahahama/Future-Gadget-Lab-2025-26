@@ -44,9 +44,9 @@ public class MeepMeepTesting {
             //RED_CLOSE means the starting position CLOSE TO THE GOAL
 
             RED_CLOSE(new Pose2d(-49.3f, 50.3f, Math.toRadians(315))),
-            RED_FAR(new Pose2d(62, 16, Math.toRadians(180))), //y pos + 12???
+            RED_FAR(new Pose2d(62, 23, Math.toRadians(180))), //y pos + 12???
             BLUE_CLOSE(new Pose2d(-49.3f, -50.3f, Math.toRadians(45))),
-            BLUE_FAR(new Pose2d(62, -16, Math.toRadians(180))); //y pos - 12???
+            BLUE_FAR(new Pose2d(62, -23, Math.toRadians(180))); //y pos - 12???
 
             private Pose2d pose2d;
 
@@ -135,7 +135,7 @@ public class MeepMeepTesting {
 //            .splineToLinearHeading(Positions.GOAL.RED, Math.toRadians(45)))
 //            .build();
 
-        Pose2d initialPose = Positions.START.BLUE_CLOSE.getPose();
+        Pose2d initialPose = Positions.START.BLUE_FAR.getPose();
 
         TrajectoryActionBuilder redCloseToViewObelisk = robot.getDrive().actionBuilder(initialPose)
                 .setTangent(Math.toRadians(135))
