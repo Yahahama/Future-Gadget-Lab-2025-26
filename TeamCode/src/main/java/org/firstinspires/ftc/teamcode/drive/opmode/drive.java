@@ -145,7 +145,7 @@ public class drive extends LinearOpMode {
             double leftFrontPower = ((axial_target + lateral_target + yaw) / 2) * right_trigger * left_trigger;
             double rightFrontPower = ((axial_target - lateral_target - yaw) / 2) * right_trigger * left_trigger;
             double leftBackPower = ((axial_target - lateral_target + yaw) / 2) * right_trigger * left_trigger;
-            double rightBackPower =  ((axial_target + lateral_target - yaw) / 2) * right_trigger * left_trigger;
+            double rightBackPower = ((axial_target + lateral_target - yaw) / 2) * right_trigger * left_trigger;
 
             /*leftFrontPower  = leftFrontPower>=0 ? leftFrontPower+right_trigger : leftFrontPower-right_trigger;
             rightFrontPower  = rightFrontPower>=0 ? rightFrontPower+right_trigger : rightFrontPower-right_trigger;
@@ -160,7 +160,7 @@ public class drive extends LinearOpMode {
             // Normalize the values so no wheel power exceeds 100%
             // This ensures that the robot maintains the desired motion.
             double max = Math.max(Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower)),
-                                  Math.max(Math.abs(leftBackPower), Math.abs(rightBackPower)));
+                    Math.max(Math.abs(leftBackPower), Math.abs(rightBackPower)));
             if (max > 1.0) {
                 leftFrontPower /= max;
                 rightFrontPower /= max;
@@ -207,9 +207,12 @@ public class drive extends LinearOpMode {
             } else if (gamepad1.left_trigger > 0.5f) {
                 launch1.setVelocity(parameters.LAUNCH_SPEED_FAR, AngleUnit.RADIANS);
                 launch2.setVelocity(parameters.LAUNCH_SPEED_FAR, AngleUnit.RADIANS);
+            } else if (gamepad1.right_bumper) {
+                launch1.setVelocity(parameters.LAUNCH_SPEED_DROP, AngleUnit.RADIANS);
+                launch2.setVelocity(parameters.LAUNCH_SPEED_DROP, AngleUnit.RADIANS);
             } else {
-                launch1.setPower(0);
-                launch2.setPower(0);
+                launch1.setVelocity(0, AngleUnit.RADIANS);
+                launch2.setVelocity(0, AngleUnit.RADIANS);
             }
 
             // Loader Servo
