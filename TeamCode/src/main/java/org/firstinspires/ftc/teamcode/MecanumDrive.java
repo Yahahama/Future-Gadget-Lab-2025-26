@@ -91,7 +91,7 @@ public final class MecanumDrive {
         public double headingVelGain = 1.0; // shared with turn
 
         // Speed Parameters
-        public final float INTAKE_SPEED_IN = 0.6f;
+        public final float INTAKE_SPEED_IN = 0.5f;
         public final float INTAKE_SPEED_OUT = -0.7f;
         public final float INTAKE_SPEED_LOAD = 1.0f;
         public final float LAUNCH_SPEED_CLOSE = 9;
@@ -101,8 +101,8 @@ public final class MecanumDrive {
         // Control Parameters
         public final int INTAKE_DIRECTION_START = 0;
         public final boolean LAUNCH_START = false;
-        public final float LOAD_INIT = 0.4f;
-        public final float LOAD_LOAD = 1f;
+        public final float LOAD_INIT = 0.0f;
+        public final float LOAD_LOAD = 0.5f;
         public final float LOAD_RESET = 0.45f;
     }
 
