@@ -94,16 +94,17 @@ public final class MecanumDrive {
         public final float INTAKE_SPEED_IN = 0.5f;
         public final float INTAKE_SPEED_OUT = -0.7f;
         public final float INTAKE_SPEED_LOAD = 1.0f;
-        public final float LAUNCH_SPEED_CLOSE = 9;
-        public final float LAUNCH_SPEED_FAR = 15;
+        public final float LAUNCH_SPEED_CLOSE = 7;
+        public final float LAUNCH_SPEED_FAR = 11;
         public final float LAUNCH_SPEED_DROP = -2;
 
         // Control Parameters
         public final int INTAKE_DIRECTION_START = 0;
         public final boolean LAUNCH_START = false;
-        public final float LOAD_INIT = 0.0f;
-        public final float LOAD_LOAD = 0.5f;
-        public final float LOAD_RESET = 0.45f;
+        public final float LOAD_INIT = 0.43f;
+        public final float LOAD_LOAD = 0.67f;
+        public final float LOAD_RELOAD = 0.72f;
+        public final float LOAD_RESET = 0.43f;
     }
 
     public static Params PARAMS = new Params();

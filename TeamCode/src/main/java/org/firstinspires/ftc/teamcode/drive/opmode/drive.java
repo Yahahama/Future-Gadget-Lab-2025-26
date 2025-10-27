@@ -95,6 +95,9 @@ public class drive extends LinearOpMode {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
 
+        //Initialization Actions
+        load.setPosition(parameters.LOAD_INIT);
+
         // Wait for the game to start (driver presses START)
         waitForStart();
         runtime.reset();
@@ -220,12 +223,14 @@ public class drive extends LinearOpMode {
                 load.setPosition(parameters.LOAD_LOAD);
             } else if (gamepad1.dpad_left) {
                 load.setPosition(parameters.LOAD_RESET);
+            } else if (gamepad1.dpad_up) {
+                load.setPosition(parameters.LOAD_RELOAD);
             }
 
             // Aim + Launch Macro TODO: WRITE MACROS
-            if (gamepad1.dpad_up) {
-                //win
-            }
+//            if () {
+//                //win
+//            }
 
             // Power Wheels
             leftFrontDrive.setPower(-leftFrontPower);
