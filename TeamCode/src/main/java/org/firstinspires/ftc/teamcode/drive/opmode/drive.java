@@ -66,6 +66,7 @@ public class drive extends LinearOpMode {
 
         // Initialize servos
         Servo load = hardwareMap.get(Servo.class, "load");
+        Servo bunt = hardwareMap.get(Servo.class, "bunt");
 
         // Initialize IMU
         IMU imu = hardwareMap.get(IMU.class, "imu");
@@ -225,6 +226,12 @@ public class drive extends LinearOpMode {
                 load.setPosition(parameters.LOAD_RESET);
             } else if (gamepad1.dpad_up) {
                 load.setPosition(parameters.LOAD_RELOAD);
+            }
+
+            if (gamepad1.dpad_down) {
+                bunt.setPosition(parameters.BUNT_RESET);
+            } else if (gamepad1.left_bumper) {
+                bunt.setPosition(parameters.BUNT_LAUNCH);
             }
 
             // Aim + Launch Macro TODO: WRITE MACROS
