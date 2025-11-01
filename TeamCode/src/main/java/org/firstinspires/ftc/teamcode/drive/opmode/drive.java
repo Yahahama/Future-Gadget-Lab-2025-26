@@ -21,16 +21,21 @@ public class drive extends LinearOpMode {
      * Intake:
      *    COLLECT             - A
      *    OUT                 - B
-     *    LOAD                - X
+     *    FAST                - X
      *    STOP                - Y
      * Launcher:
-     *    ON/OFF (TOGGLE)     - Right Bumper
-     *    ON/OFF (HOLD)       - Right Trigger
+     *    FAST                - Left Trigger
+     *    SLOW                - Right Trigger
+     *    BACK                - Right Bumper
      * Load:
-     *    SHOOT               - Dpad Right
-     *    RESET               - Dpad Left
+     *    RAISE               - Dpad Right
+     *    LOWER               - Dpad Left
+     *    RECYCLE             - Dpad Up
+     * Bunt:
+     *    RESET               - Left Trigger
+     *    LAUNCH              - Dpad Down
      * Macros:
-     *    AIM + SHOOT         - Dpad Up
+     *    NONE
      */
 
     @Override
@@ -234,10 +239,6 @@ public class drive extends LinearOpMode {
                 bunt.setPosition(parameters.BUNT_LAUNCH);
             }
 
-            // Aim + Launch Macro TODO: WRITE MACROS
-//            if () {
-//                //win
-//            }
 
             // Power Wheels
             leftFrontDrive.setPower(-leftFrontPower);
