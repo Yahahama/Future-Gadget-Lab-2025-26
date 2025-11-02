@@ -416,97 +416,87 @@ public class Autonomous extends LinearOpMode {
     @Override
     public void runOpMode() {
         Pose2d initialPose = startPos.getPose();
-        String team;
-        switch (startPos) {
-            case RED_CLOSE:
-            case RED_FAR:
-                team = "RED";
-                break;
-            case BLUE_CLOSE:
-            case BLUE_FAR:
-                team = "BLUE";
-                break;
-            default:
-                throw new IllegalStateException("Unexpected value for startPos: " + startPos);
-        }
+
+        boolean isRed   = (startPos == Positions.START.RED_CLOSE || startPos == Positions.START.RED_FAR);
+        boolean isClose = (startPos == Positions.START.RED_CLOSE || startPos == Positions.START.BLUE_CLOSE);
 
         Robot robot = new Robot(
-                new Intake(hardwareMap), new Launch(hardwareMap), new Load(hardwareMap),
-                new MecanumDrive(hardwareMap, initialPose));
+                new Intake(hardwareMap),
+                new Launch(hardwareMap),
+                new Load(hardwareMap),
+                new MecanumDrive(hardwareMap, initialPose)
+        );
 
-        // Trajectories to select from
-
-        TrajectoryActionBuilder redCloseToViewObelisk = robot.drive.actionBuilder(initialPose)
-                .setTangent(Math.toRadians(225))
-                .splineToLinearHeading(new Pose2d(-32, 32, Math.toRadians(225)), Math.toRadians(0));
-
-        TrajectoryActionBuilder blueCloseToViewObelisk = robot.drive.actionBuilder(initialPose)
-                .setTangent(Math.toRadians(135))
-                .splineToLinearHeading(new Pose2d(-32, -32, Math.toRadians(135)), Math.toRadians(0));
-
-        TrajectoryActionBuilder redFarToViewObelisk = robot.drive.actionBuilder(initialPose)
-                .setTangent(Math.toRadians(194))
-                .splineToLinearHeading(new Pose2d(23, 12, Math.toRadians(187)), Math.toRadians(180));
-
-        TrajectoryActionBuilder blueFarToViewObelisk = robot.drive.actionBuilder(initialPose)
-                .setTangent(Math.toRadians(166))
-                .splineToLinearHeading(new Pose2d(23, -12, Math.toRadians(173)), Math.toRadians(180));
-        // Initialization Actions
+        // Initialize subsystems
         Actions.runBlocking(robot.Init());
 
         while (!isStopRequested() && !opModeIsActive()) {
-            telemetry.addData("X Position during Init", robot.drive.pose.position.x);
-            telemetry.addData("Y Position during Init", robot.drive.pose.position.y);
-            telemetry.addData("Heading during Init", robot.drive.pose.heading.real);
-
+            telemetry.addData("Init X", robot.drive.pose.position.x);
+            telemetry.addData("Init Y", robot.drive.pose.position.y);
+            telemetry.addData("Init Heading", robot.drive.pose.heading.real);
             telemetry.update();
         }
 
-        Action actionToExecute;
-
-        switch(startPos) {
-            case RED_CLOSE:
-                actionToExecute = new SequentialAction(
-                    robot.poseToPose(redCloseToViewObelisk)
-                );
-                break;
-            case RED_FAR:
-                actionToExecute = new SequentialAction(
-                        robot.poseToPose(redFarToViewObelisk)
-                );
-                break;
-            case BLUE_CLOSE:
-                actionToExecute = new SequentialAction(
-                        robot.poseToPose(blueCloseToViewObelisk)
-                );
-                break;
-            case BLUE_FAR:
-                actionToExecute = new SequentialAction(
-                        robot.poseToPose(blueFarToViewObelisk)
-                );
-                break;
-            default:
-                actionToExecute = robot.drive.actionBuilder(new Pose2d(0, 0, 0)).build();
-                break;
-        }
-
-        telemetry.update();
         waitForStart();
-
         if (isStopRequested()) return;
 
-        // Run Pathing
+        // === Determine field elements ===
+        Positions.GOAL teamGoal   = isRed ? Positions.GOAL.RED   : Positions.GOAL.BLUE;
+        Positions.ARTIFACT target = (isRed)
+                ? (isClose ? Positions.ARTIFACT.RED_B : Positions.ARTIFACT.RED_C)
+                : (isClose ? Positions.ARTIFACT.BLUE_B : Positions.ARTIFACT.BLUE_C);
+
+        // Approach and obelisk points (same geometry as MeepMeep)
+        Pose2d targetPose       = target.getPose();
+        Pose2d approachPoint    = new Pose2d(targetPose.position.x,
+                targetPose.position.y + (isRed ? -20 : 20),
+                Math.toRadians(isRed ? 90 : 270));
+        Pose2d chosenObeliskPose = (isRed)
+                ? (isClose ? new Pose2d(-32, 32, Math.toRadians(225))
+                : new Pose2d(23, 12, Math.toRadians(187)))
+                : (isClose ? new Pose2d(-32, -32, Math.toRadians(135))
+                : new Pose2d(23, -12, Math.toRadians(173)));
+
+        // Stop a short distance in front of the goal
+        double stopDistance = 10;
+        Pose2d goalFront = new Pose2d(
+                teamGoal.getPose().position.x + (isRed ? stopDistance : stopDistance),
+                teamGoal.getPose().position.y,
+                teamGoal.getPose().heading.real
+        );
+
+        double firstTangent     = isRed ? Math.toRadians(225) : Math.toRadians(135);
+        double approachHeading  = isRed ? Math.toRadians(90)  : Math.toRadians(270);
+
+        // === Build trajectory sequence ===
+        TrajectoryActionBuilder fullSequence = robot.drive.actionBuilder(initialPose)
+                // 1. go to the obelisk-view pose
+                .setTangent(firstTangent)
+                .splineToLinearHeading(chosenObeliskPose, chosenObeliskPose.heading.real)
+                .waitSeconds(1.0)
+                // 2. drive to the artifact
+                .setTangent(Math.toRadians(isRed ? 45 : -45))
+                .splineToLinearHeading(approachPoint, approachHeading)
+                .lineToY(targetPose.position.y)
+                // 3. back away from artifact
+                .lineToY(approachPoint.position.y + (isRed ? -10 : 10))
+                // 4. move in front of goal and stop
+                .setTangent(Math.toRadians(isRed ? -90 : 90))
+                .splineTo(goalFront.position, Math.toRadians(isRed ? 135 : 225));
+
+        // === Execute trajectory ===
         Actions.runBlocking(
                 new ParallelAction(
                         robot.intake.moveIntake(),
                         robot.launch.moveLaunch(),
-                        new SequentialAction(
-                                actionToExecute
-                        )
+                        robot.poseToPose(fullSequence)
                 )
         );
 
-        String pattern = getPattern();  // TO DO: Implement readPattern using vision
+        // Done – store pose for TeleOp or end-of-auto use
+        PoseStorage.currentPose = robot.drive.pose;
+
+    String pattern = getPattern();  // TO DO: Implement readPattern using vision
 
         // targetArtifactTriplet represents, as of 10/17/25, the center ARTIFACT of the triplet that
         // would work for the PATTERN if scooped up in a row. With a transformation to make sure the
@@ -515,28 +505,18 @@ public class Autonomous extends LinearOpMode {
         Positions.ARTIFACT targetArtifactTriplet;
         switch (pattern) {
             case "GPP":
-                if (team.equals("RED")) {
-                    targetArtifactTriplet = Positions.ARTIFACT.RED_C;
-                } else {
-                    targetArtifactTriplet = Positions.ARTIFACT.BLUE_C;
-                }
+                targetArtifactTriplet = isRed ? Positions.ARTIFACT.RED_C : Positions.ARTIFACT.BLUE_C;
                 break;
             case "PGP":
-                if (team.equals("RED")) {
-                    targetArtifactTriplet = Positions.ARTIFACT.RED_B;
-                } else {
-                    targetArtifactTriplet = Positions.ARTIFACT.BLUE_B;
-                }
+                targetArtifactTriplet = isRed ? Positions.ARTIFACT.RED_B : Positions.ARTIFACT.BLUE_B;
                 break;
             case "PPG":
-                if (team.equals("RED")) {
-                    targetArtifactTriplet = Positions.ARTIFACT.RED_A;
-                } else {
-                    targetArtifactTriplet = Positions.ARTIFACT.BLUE_A;
-                }
+                targetArtifactTriplet = isRed ? Positions.ARTIFACT.RED_A : Positions.ARTIFACT.BLUE_A;
+                break;
             default:
                 throw new IllegalStateException("Unexpected value for pattern: " + pattern);
         }
+
 
         // go from wherever we ended up after reading the obelisk to the target artifact triplet
         TrajectoryActionBuilder toArtifactTriplet = robot.drive.actionBuilder(robot.drive.pose)
