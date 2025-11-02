@@ -6,7 +6,6 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -18,23 +17,27 @@ import org.firstinspires.ftc.teamcode.drive.PoseStorage;
 @TeleOp(name="Basic Drive", group="Linear OpMode")
 public class drive extends LinearOpMode {
     /*
-     * Intake:
+     * Driving (1):
+     *    FLIP                - Right Stick
+     * Intake (BOTH):
      *    COLLECT             - A
      *    OUT                 - B
      *    FAST                - X
      *    STOP                - Y
-     * Launcher:
+     * Launcher (2):
      *    FAST                - Left Trigger
      *    SLOW                - Right Trigger
-     *    BACK                - Right Bumper
-     * Load:
-     *    RAISE               - Dpad Right
-     *    LOWER               - Dpad Left
-     *    RECYCLE             - Dpad Up
-     * Bunt:
+     *    BACK                - Left Stick
+     * Load (2):
+     *    RAISE               - Dpad Up
+     *    LOWER               - Dpad Down
+     *    RECYCLE             - Dpad Left
+     * Bunt (2):
      *    RESET               - Left Trigger
-     *    LAUNCH              - Dpad Down
-     * Macros:
+     *    LAUNCH              - Right Trigger
+     * Macros (1):
+     *    NONE
+     * Macros (2):
      *    NONE
      */
 
@@ -93,9 +96,7 @@ public class drive extends LinearOpMode {
         // Initialize control parameters
         int intakeDirection = parameters.INTAKE_DIRECTION_START;
         float intakeSpeed = 0f;
-        boolean isLaunchActive = parameters.LAUNCH_START;
-        boolean previousA = false;
-        boolean previousRightTrigger = false;
+        boolean isIntakeCentric = true;
 
         // Robot is ready to start! Display message to screen
         telemetry.addData("Status", "Initialized");
@@ -103,6 +104,7 @@ public class drive extends LinearOpMode {
 
         //Initialization Actions
         load.setPosition(parameters.LOAD_INIT);
+        bunt.setPosition(parameters.BUNT_RESET);
 
         // Wait for the game to start (driver presses START)
         waitForStart();
@@ -132,39 +134,22 @@ public class drive extends LinearOpMode {
             double lateral_target = gamepad1.left_stick_x * 1.1;
             double yaw = gamepad1.right_stick_x;
 
-            double theta = gamepad1.left_bumper ? -robotAngle : 0;
+            double theta = isIntakeCentric ? 0 : Math.toRadians(180); // Change this to use robot-centric soon
             double cosine = Math.cos(theta);
             double sine = Math.sin(theta);
 
-            double targetx = axial_target * cosine - lateral_target * sine;
-            double targety = axial_target * sine + lateral_target * cosine;
-
-            double lateral_real = targetx;
-            double axial_real = targety;
-
-            // commented out perspective driving controls
-//            double axial_real = lateral_target * Math.cos(robotAngle) + axial_target * Math.sin(robotAngle);
-//            double lateral_real = lateral_target * -Math.sin(robotAngle) + axial_target * Math.cos(robotAngle);
+            double lateral_real = lateral_target * cosine - axial_target * sine;
+            double axial_real = lateral_target * sine + axial_target * cosine;
 
             double right_trigger = 1 + gamepad1.right_trigger;
             double left_trigger = 1 - gamepad1.left_trigger;
 
             // Combine the joystick requests for each axis-motion to determine each wheel's power.
             // Set up a variable for each drive wheel to save the power level for telemetry.
-            double leftFrontPower = ((axial_target + lateral_target + yaw) / 2) * right_trigger * left_trigger;
-            double rightFrontPower = ((axial_target - lateral_target - yaw) / 2) * right_trigger * left_trigger;
-            double leftBackPower = ((axial_target - lateral_target + yaw) / 2) * right_trigger * left_trigger;
-            double rightBackPower = ((axial_target + lateral_target - yaw) / 2) * right_trigger * left_trigger;
-
-            /*leftFrontPower  = leftFrontPower>=0 ? leftFrontPower+right_trigger : leftFrontPower-right_trigger;
-            rightFrontPower  = rightFrontPower>=0 ? rightFrontPower+right_trigger : rightFrontPower-right_trigger;
-            leftBackPower  = leftBackPower>=0 ? leftBackPower+right_trigger : leftBackPower-right_trigger;
-            rightBackPower  = rightBackPower>=0 ? rightBackPower+right_trigger : rightBackPower-right_trigger;
-
-            leftFrontPower  = leftFrontPower>=0 ? leftFrontPower+left_trigger : leftFrontPower-left_trigger;
-            rightFrontPower  = rightFrontPower>=0 ? rightFrontPower+left_trigger : rightFrontPower-left_trigger;
-            leftBackPower  = leftBackPower>=0 ? leftBackPower+left_trigger : leftBackPower-left_trigger;
-            rightBackPower  = rightBackPower>=0 ? rightBackPower+left_trigger : rightBackPower-left_trigger;*/
+            double leftFrontPower = ((axial_real + lateral_real + yaw) / 2) * right_trigger * left_trigger;
+            double rightFrontPower = ((axial_real - lateral_real - yaw) / 2) * right_trigger * left_trigger;
+            double leftBackPower = ((axial_real - lateral_real + yaw) / 2) * right_trigger * left_trigger;
+            double rightBackPower = ((axial_real + lateral_real - yaw) / 2) * right_trigger * left_trigger;
 
             // Normalize the values so no wheel power exceeds 100%
             // This ensures that the robot maintains the desired motion.
@@ -178,17 +163,17 @@ public class drive extends LinearOpMode {
             }
 
             // Intake
-            if (gamepad1.a && !previousA) {
+            if (gamepad1.y || gamepad2.y) {
+                intakeDirection = 0;
+            } else if (gamepad1.a || gamepad2.a) {
                 intakeDirection = 1;
                 intakeSpeed = parameters.INTAKE_SPEED_IN;
-            } else if (gamepad1.b) {
+            } else if (gamepad1.b || gamepad2.b) {
                 intakeDirection = -1;
                 intakeSpeed = parameters.INTAKE_SPEED_OUT;
-            } else if (gamepad1.x) {
+            } else if (gamepad1.x || gamepad2.x) {
                 intakeDirection = 1;
                 intakeSpeed = parameters.INTAKE_SPEED_LOAD;
-            } else if (gamepad1.y) {
-                intakeDirection = 0;
             }
 
             // Power Intake
@@ -200,23 +185,14 @@ public class drive extends LinearOpMode {
                 intake.setPower(0f);
             }
 
-            // Launch
-//            if (gamepad1.right_trigger > 0.5f && !previousRightTrigger) {
-//                previousRightTrigger = true;
-//                isLaunchActive = !isLaunchActive;
-//            } else if (gamepad1.right_trigger < 0.5f) {
-//                previousRightTrigger = false;
-//                isLaunchActive = gamepad1.right_bumper;
-//            }
-
             // Power Launch
-            if (gamepad1.right_trigger > 0.5f) {
+            if (gamepad2.right_trigger > 0.5f) {
                 launch1.setVelocity(parameters.LAUNCH_SPEED_CLOSE, AngleUnit.RADIANS);
                 launch2.setVelocity(parameters.LAUNCH_SPEED_CLOSE, AngleUnit.RADIANS);
-            } else if (gamepad1.left_trigger > 0.5f) {
+            } else if (gamepad2.left_trigger > 0.5f) {
                 launch1.setVelocity(parameters.LAUNCH_SPEED_FAR, AngleUnit.RADIANS);
                 launch2.setVelocity(parameters.LAUNCH_SPEED_FAR, AngleUnit.RADIANS);
-            } else if (gamepad1.right_bumper) {
+            } else if (gamepad2.left_stick_button) {
                 launch1.setVelocity(parameters.LAUNCH_SPEED_DROP, AngleUnit.RADIANS);
                 launch2.setVelocity(parameters.LAUNCH_SPEED_DROP, AngleUnit.RADIANS);
             } else {
@@ -225,20 +201,19 @@ public class drive extends LinearOpMode {
             }
 
             // Loader Servo
-            if (gamepad1.dpad_right) {
+            if (gamepad2.dpad_up) {
                 load.setPosition(parameters.LOAD_LOAD);
-            } else if (gamepad1.dpad_left) {
+            } else if (gamepad2.dpad_down) {
                 load.setPosition(parameters.LOAD_RESET);
-            } else if (gamepad1.dpad_up) {
+            } else if (gamepad2.dpad_left) {
                 load.setPosition(parameters.LOAD_RELOAD);
             }
 
-            if (gamepad1.dpad_down) {
+            if (gamepad2.left_bumper) {
                 bunt.setPosition(parameters.BUNT_RESET);
-            } else if (gamepad1.left_bumper) {
+            } else if (gamepad2.right_bumper) {
                 bunt.setPosition(parameters.BUNT_LAUNCH);
             }
-
 
             // Power Wheels
             leftFrontDrive.setPower(-leftFrontPower);
@@ -246,17 +221,9 @@ public class drive extends LinearOpMode {
             leftBackDrive.setPower(-leftBackPower);
             rightBackDrive.setPower(-rightBackPower);
 
-            if (gamepad2.a) {
-                leftFrontDrive.setPower(-0.5f);
-            } else if (gamepad2.x) {
-                leftBackDrive.setPower(-0.5f);
-            } else if (gamepad2.y) {
-                rightFrontDrive.setPower(-0.5f);
-            } else if (gamepad2.b) {
-                rightBackDrive.setPower(-0.5f);
+            if (gamepad1.right_stick_button) {
+                isIntakeCentric = !isIntakeCentric;
             }
-
-            previousA = gamepad1.a;
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime);
@@ -265,7 +232,6 @@ public class drive extends LinearOpMode {
                 telemetry.addData("Heading", "Angle: " + myPose.heading.toDouble());
             }
             telemetry.addData("Intake", "Direction: " + intakeDirection);
-            telemetry.addData("Launch", "Active: " + isLaunchActive);
             telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
             telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
             telemetry.addData("Version: ", 1);
