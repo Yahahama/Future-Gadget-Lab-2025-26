@@ -47,9 +47,9 @@ public class drive extends LinearOpMode {
 
         // Initialize and configure drive motor variables
         DcMotor leftFrontDrive = hardwareMap.get(DcMotor.class, "lfMtr"); // CH 2
-        DcMotor leftBackDrive = hardwareMap.get(DcMotor.class, "lbMtr"); // CH 1
+        DcMotor leftBackDrive = hardwareMap.get(DcMotor.class, "lbMtr"); // CH 3
         DcMotor rightFrontDrive = hardwareMap.get(DcMotor.class, "rfMtr"); // CH 0
-        DcMotor rightBackDrive = hardwareMap.get(DcMotor.class, "rbMtr"); // CH 3
+        DcMotor rightBackDrive = hardwareMap.get(DcMotor.class, "rbMtr"); // CH 1
         leftFrontDrive.setDirection(DcMotor.Direction.FORWARD);
         leftBackDrive.setDirection(DcMotor.Direction.FORWARD);
         rightFrontDrive.setDirection(DcMotor.Direction.REVERSE);

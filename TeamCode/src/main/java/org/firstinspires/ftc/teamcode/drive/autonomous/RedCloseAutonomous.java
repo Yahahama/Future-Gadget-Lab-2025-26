@@ -21,7 +21,7 @@ public class RedCloseAutonomous extends Autonomous{
 
         Pose2d initialPose = startPos.getPose();
         Autonomous.Robot robot = new Robot(
-                new Intake(hardwareMap), new Launch(hardwareMap), new Load(hardwareMap),
+                new Intake(hardwareMap), new Launch(hardwareMap), new Load(hardwareMap), new Bunt(hardwareMap),
                 new MecanumDrive(hardwareMap, initialPose));
 
         // Trajectories to select from
@@ -38,32 +38,6 @@ public class RedCloseAutonomous extends Autonomous{
         blueMiddleNeutralBlockToBucket
         */
 
-        TrajectoryActionBuilder redInitToBucket = robot.drive.actionBuilder(initialPose)
-                .setTangent(Math.toRadians(180))
-                .splineToLinearHeading(Positions.BUCKET_RED, Math.toRadians(135));
-        TrajectoryActionBuilder redBucketToFarNeutralBlock = robot.drive.actionBuilder(Positions.BUCKET_RED)
-                .setTangent(Math.toRadians(0))
-                .splineToLinearHeading(Positions.SAMPLE_NEUTRAL_RED_FAR, Math.toRadians(130));
-        TrajectoryActionBuilder redFarNeutralBlockToBucket = robot.drive.actionBuilder(Positions.SAMPLE_NEUTRAL_RED_FAR)
-                .setTangent(Math.toRadians(90))
-                .splineToLinearHeading(Positions.BUCKET_RED, Math.toRadians(225));
-        TrajectoryActionBuilder redBucketToMiddleNeutralBlock = robot.drive.actionBuilder(Positions.BUCKET_RED)
-                .setTangent(Math.toRadians(-45))
-                .splineToLinearHeading(Positions.SAMPLE_NEUTRAL_RED_MIDDLE, Math.toRadians(90));
-        TrajectoryActionBuilder redMiddleNeutralBlockToBucket = robot.drive.actionBuilder(Positions.SAMPLE_NEUTRAL_RED_MIDDLE)
-                .setTangent(Math.toRadians(90))
-                .splineToLinearHeading(Positions.BUCKET_RED, Math.toRadians(225));
-        TrajectoryActionBuilder redBucketToCloseNeutralBlock = robot.drive.actionBuilder(Positions.BUCKET_RED)
-                .setTangent(Math.toRadians(-45))
-                .splineToLinearHeading(Positions.SAMPLE_NEUTRAL_RED_CLOSE, Math.toRadians(120));
-        TrajectoryActionBuilder redCloseNeutralBlockToBucket = robot.drive.actionBuilder(Positions.SAMPLE_NEUTRAL_RED_CLOSE)
-                .setTangent(Math.toRadians(60))
-                .splineToLinearHeading(Positions.BUCKET_RED, Math.toRadians(225));
-        TrajectoryActionBuilder redBucketToSubmersible = robot.drive.actionBuilder(Positions.BUCKET_RED)
-                .setTangent(Math.toRadians(180))
-                .splineToLinearHeading(new Pose2d(-26, 15, Math.toRadians(180)), Math.toRadians(20));
-
-
 
 
         // Initialization Actions
@@ -78,14 +52,7 @@ public class RedCloseAutonomous extends Autonomous{
         }
 
         Action actionToExecute = new SequentialAction(
-                robot.poseToBucket(redInitToBucket),
-                robot.bucketToSample(redBucketToFarNeutralBlock),
-                robot.poseToBucket(redFarNeutralBlockToBucket),
-                robot.bucketToSample(redBucketToMiddleNeutralBlock),
-                robot.poseToBucket(redMiddleNeutralBlockToBucket),
-                robot.bucketToSample(redBucketToCloseNeutralBlock),
-                robot.poseToBucket(redCloseNeutralBlockToBucket),
-                robot.bucketToSubmersible(redBucketToSubmersible)
+
         );
 
 

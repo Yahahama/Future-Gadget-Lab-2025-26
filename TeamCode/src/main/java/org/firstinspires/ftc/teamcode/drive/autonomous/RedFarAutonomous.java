@@ -21,7 +21,7 @@ public class RedFarAutonomous extends Autonomous{
 
         Pose2d initialPose = startPos.getPose();
         Autonomous.Robot robot = new Robot(
-                new Intake(hardwareMap), new Launch(hardwareMap), new Load(hardwareMap),
+                new Intake(hardwareMap), new Launch(hardwareMap), new Load(hardwareMap), new Bunt(hardwareMap),
                 new MecanumDrive(hardwareMap, initialPose));
 
         // Trajectories to select from
@@ -38,28 +38,6 @@ public class RedFarAutonomous extends Autonomous{
         blueMiddleNeutralBlockToBucket
         */
 
-        TrajectoryActionBuilder redInitToClip = robot.drive.actionBuilder(initialPose)
-                .setTangent(Math.toRadians(25))
-                .splineToLinearHeading(Positions.SAMPLE_RED_CLIP, Math.toRadians(270));
-        TrajectoryActionBuilder redClipToFarRedBlock = robot.drive.actionBuilder(Positions.SAMPLE_RED_CLIP)
-                .setTangent(Math.toRadians(235))
-                .splineToLinearHeading(Positions.SAMPLE_RED_FAR, Math.toRadians(0));
-        TrajectoryActionBuilder farRedBlockToRedClip = robot.drive.actionBuilder(Positions.SAMPLE_RED_FAR)
-                .setTangent(Math.toRadians(315))
-                .splineToLinearHeading(Positions.SAMPLE_RED_CLIP, Math.toRadians(270));
-        TrajectoryActionBuilder clipToMediumRedBlock = robot.drive.actionBuilder(Positions.SAMPLE_RED_CLIP)
-                .setTangent(Math.toRadians(235))
-                .splineToLinearHeading(Positions.SAMPLE_RED_MIDDLE, Math.toRadians(0));
-        TrajectoryActionBuilder mediumRedBlockToRedClip = robot.drive.actionBuilder(Positions.SAMPLE_RED_MIDDLE)
-                .setTangent(Math.toRadians(315))
-                .splineToLinearHeading(Positions.SAMPLE_RED_CLIP, Math.toRadians(270));
-        TrajectoryActionBuilder clipToCloseRedBlock = robot.drive.actionBuilder(Positions.SAMPLE_RED_CLIP)
-                .setTangent(Math.toRadians(235))
-                .splineToLinearHeading(Positions.SAMPLE_RED_CLOSE, Math.toRadians(0));
-        TrajectoryActionBuilder closeRedBlockToRedClip = robot.drive.actionBuilder(Positions.SAMPLE_RED_CLOSE)
-                .setTangent(Math.toRadians(315))
-                .splineToLinearHeading(Positions.SAMPLE_RED_CLIP, Math.toRadians(-90));
-
 
 
         // Initialization Actions
@@ -75,13 +53,6 @@ public class RedFarAutonomous extends Autonomous{
 
 
         Action actionToExecute = new SequentialAction(
-                robot.poseToClip(redInitToClip),
-                robot.clipToSample(redClipToFarRedBlock),
-                robot.sampleToClip(farRedBlockToRedClip),
-                robot.clipToSample(clipToMediumRedBlock),
-                robot.sampleToClip(mediumRedBlockToRedClip),
-                robot.clipToSample(clipToCloseRedBlock),
-                robot.sampleToClip(closeRedBlockToRedClip)
         );
 
         telemetry.update();

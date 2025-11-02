@@ -29,14 +29,13 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 import java.util.Arrays;
 
 @Config
-@Disabled
-@com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "BLUE_AUTONOMOUS", group = "Autonomous")
+@com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "AUTONOMOUS", group = "Autonomous")
 public class Autonomous extends LinearOpMode {
     public static class Positions {
         //TODO: CREATE NEW POSITIONAL CONSTANTS
-        public enum GOAL {
-            RED(new Pose2d(48, -48, Math.toRadians(135))),
-            BLUE(new Pose2d(-48, -48, Math.toRadians(225)));
+        enum GOAL {
+            RED(new Pose2d(-53, 48, Math.toRadians(135))),
+            BLUE(new Pose2d(-53, -48, Math.toRadians(225)));
 
             private Pose2d pose2d;
 
@@ -49,28 +48,56 @@ public class Autonomous extends LinearOpMode {
             }
         }
 
-        public static final Pose2d BUCKET_BLUE = new Pose2d(48, -48, Math.toRadians(-45));
-        public static final Pose2d BUCKET_RED = new Pose2d(-47, 49, Math.toRadians(135));
+        enum START {
+            RED_CLOSE(new Pose2d(-48, 47, Math.toRadians(315))),
+            RED_FAR(new Pose2d(62, 23, Math.toRadians(180))),
+            BLUE_CLOSE(new Pose2d(-48, -47, Math.toRadians(45))),
+            BLUE_FAR(new Pose2d(62, -23, Math.toRadians(180)));
 
-        public static final Pose2d SAMPLE_NEUTRAL_BLUE_FAR = new Pose2d(35.5, -27.25, Math.toRadians(0));
-        public static final Pose2d SAMPLE_NEUTRAL_BLUE_MIDDLE = new Pose2d(44.5, -27.75, Math.toRadians(0));
-        public static final Pose2d SAMPLE_NEUTRAL_BLUE_CLOSE = new Pose2d(55, -27, Math.toRadians(0));
+            private Pose2d pose2d;
 
-        public static final Pose2d SAMPLE_RED_FAR = new Pose2d(38, 27.5, Math.toRadians(0));
-        public static final Pose2d SAMPLE_RED_MIDDLE = new Pose2d(46.5, 27.75, Math.toRadians(0));
-        public static final Pose2d SAMPLE_RED_CLOSE = new Pose2d(56.5, 27.75, Math.toRadians(0));
-        public static final Pose2d SAMPLE_RED_CLIP = new Pose2d(50, 60, Math.toRadians(90));
+            START(Pose2d _pose2d) {
+                this.pose2d = _pose2d;
+            }
 
-        public static final Pose2d SAMPLE_BLUE_FAR = new Pose2d(-38, -27.5, Math.toRadians(180));
-        public static final Pose2d SAMPLE_BLUE_MIDDLE = new Pose2d(-46.5, -27.75, Math.toRadians(180));
-        public static final Pose2d SAMPLE_BLUE_CLOSE = new Pose2d(-56.5, -27.75, Math.toRadians(180));
-        public static final Pose2d SAMPLE_BLUE_CLIP = new Pose2d(-50, -60, Math.toRadians(-90));
-        public static final Pose2d SAMPLE_BLUE_CLIP_CLOSE = new Pose2d(-50, -48, Math.toRadians(-90));
-        public static final Pose2d SAMPLE_BLUE_HANG = new Pose2d(0, -44, Math.toRadians(90));
+            public Pose2d getPose() {
+                return pose2d;
+            }
+        }
 
-        public static final Pose2d SAMPLE_NEUTRAL_RED_FAR = new Pose2d(-34, 25.5, Math.toRadians(180));
-        public static final Pose2d SAMPLE_NEUTRAL_RED_MIDDLE = new Pose2d(-44, 27, Math.toRadians(180));
-        public static final Pose2d SAMPLE_NEUTRAL_RED_CLOSE = new Pose2d(-56, 27, Math.toRadians(180));
+        enum ARTIFACT {
+            RED_A(new Pose2d(-11.5f, 46.5f, Math.toRadians(0))),
+            RED_B(new Pose2d(12.3f, 46.5f, Math.toRadians(0))),
+            RED_C(new Pose2d(36, 46.5f, Math.toRadians(0))),
+            BLUE_A(new Pose2d(-11.5f, -46.5f, Math.toRadians(0))),
+            BLUE_B(new Pose2d(12.3f, -46.5f, Math.toRadians(0))),
+            BLUE_C(new Pose2d(36, -46.5f, Math.toRadians(0)));
+
+            private Pose2d pose2d;
+
+            ARTIFACT(Pose2d _pose2d) {
+                this.pose2d = _pose2d;
+            }
+
+            public Pose2d getPose() {
+                return pose2d;
+            }
+        }
+
+        enum PARKING {
+            PARK_RED(new Pose2d(38.25f, 32, Math.toRadians(0))),
+            PARK_BLUE(new Pose2d(38.25f, -32, Math.toRadians(0)));
+
+            private Pose2d pose2d;
+
+            PARKING(Pose2d _pose2d) {
+                this.pose2d = _pose2d;
+            }
+
+            public Pose2d getPose() {
+                return pose2d;
+            }
+        }
     }
 
     MecanumDrive.Params parameters = new MecanumDrive.Params();
@@ -116,12 +143,14 @@ public class Autonomous extends LinearOpMode {
         Intake intake;
         Launch launch;
         Load load;
+        Bunt bunt;
         MecanumDrive drive;
 
-        public Robot(Intake intake, Launch launch, Load load, MecanumDrive drive) {
+        public Robot(Intake intake, Launch launch, Load load, Bunt bunt, MecanumDrive drive) {
             this.intake = intake;
             this.launch = launch;
             this.load = load;
+            this.bunt = bunt;
             this.drive = drive;
         }
 
@@ -129,7 +158,26 @@ public class Autonomous extends LinearOpMode {
             return new SequentialAction(
                     intake.intakeInit(),
                     launch.launchInit(),
-                    load.loadInit()
+                    load.loadInit(),
+                    bunt.buntInit()
+            );
+        }
+
+        public Action shootLow() {
+            return new SequentialAction(
+                    load.loadLoad(),
+                    bunt.buntLaunch(),
+                    new SleepAction(1),
+                    bunt.buntReset()
+            );
+        }
+
+        public Action shootHigh() {
+            return new SequentialAction(
+                    load.loadReset(),
+                    bunt.buntLaunch(),
+                    new SleepAction(1),
+                    bunt.buntReset()
             );
         }
 
@@ -278,6 +326,8 @@ public class Autonomous extends LinearOpMode {
                     intake.setPower(parameters.INTAKE_SPEED_IN);
                 } else if (intakeDirection == -1) {
                     intake.setPower(parameters.INTAKE_SPEED_OUT);
+                } else if (intakeDirection == 2) {
+                    intake.setPower(parameters.INTAKE_SPEED_LOAD);
                 } else {
                     intake.setPower(0f);
                 }
@@ -328,6 +378,17 @@ public class Autonomous extends LinearOpMode {
         public Action intakeOff() {
             return new IntakeOff();
         }
+
+        public class IntakeLoad implements Action {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                intakeDirection = 2;
+                return false;
+            }
+        }
+
+        public Action intakeLoad() {return new IntakeLoad();}
 
         public class IntakeInit implements Action {
             private boolean initialized = false;
@@ -384,6 +445,50 @@ public class Autonomous extends LinearOpMode {
 
         public Action loadInit() {
             return new LoadInit();
+        }
+    }
+
+    public class Bunt {
+        private Servo bunt;
+
+        public Bunt(HardwareMap hardwareMap) {
+            bunt = hardwareMap.get(Servo.class, "bunt");
+        }
+
+        public class BuntLaunch implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                bunt.setPosition(parameters.BUNT_LAUNCH);
+                return false;
+            }
+        }
+
+        public Action buntLaunch() {
+            return new Bunt.BuntLaunch();
+        }
+
+        public class BuntReset implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                bunt.setPosition(parameters.BUNT_RESET);
+                return false;
+            }
+        }
+
+        public Action buntReset() {
+            return new Bunt.BuntReset();
+        }
+
+        public class BuntInit implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                bunt.setPosition(parameters.BUNT_RESET);
+                return false;
+            }
+        }
+
+        public Action buntInit() {
+            return new Bunt.BuntInit();
         }
     }
 
@@ -485,13 +590,6 @@ public class Autonomous extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        StartingPosition startPos = StartingPosition.RED_DIVE;
-
-        Pose2d initialPose = startPos.getStartPos();
-        Robot robot = new Robot(
-                new Intake(hardwareMap), new Launch(hardwareMap), new Load(hardwareMap),
-                new MecanumDrive(hardwareMap, initialPose));
-
         // Trajectories to select from
 
         /*
@@ -506,145 +604,96 @@ public class Autonomous extends LinearOpMode {
         blueMiddleNeutralBlockToBucket
         */
 
-        TrajectoryActionBuilder blueInitToBucket = robot.drive.actionBuilder(initialPose)
-                .setTangent(Math.toRadians(0))
-                .splineToLinearHeading(Positions.BUCKET_BLUE, Math.toRadians(315));
-        TrajectoryActionBuilder blueBucketToFarNeutralBlock = robot.drive.actionBuilder(Positions.BUCKET_BLUE)
-                .setTangent(Math.toRadians(180))
-                .splineToLinearHeading(Positions.SAMPLE_NEUTRAL_BLUE_FAR, Math.toRadians(-50));
-        TrajectoryActionBuilder blueFarNeutralBlockToBucket = robot.drive.actionBuilder(Positions.SAMPLE_NEUTRAL_BLUE_FAR)
-                .setTangent(Math.toRadians(-90))
-                .splineToLinearHeading(Positions.BUCKET_BLUE, Math.toRadians(45));
-        TrajectoryActionBuilder blueBucketToMiddleNeutralBlock = robot.drive.actionBuilder(Positions.BUCKET_BLUE)
-                .setTangent(Math.toRadians(-225))
-                .splineToLinearHeading(Positions.SAMPLE_NEUTRAL_BLUE_MIDDLE, Math.toRadians(-90));
-        TrajectoryActionBuilder blueMiddleNeutralBlockToBucket = robot.drive.actionBuilder(Positions.SAMPLE_NEUTRAL_BLUE_MIDDLE)
-                .setTangent(Math.toRadians(-90))
-                .splineToLinearHeading(Positions.BUCKET_BLUE, Math.toRadians(45));
-        TrajectoryActionBuilder blueBucketToCloseNeutralBlock = robot.drive.actionBuilder(Positions.BUCKET_BLUE)
-                .setTangent(Math.toRadians(-225))
-                .splineToLinearHeading(Positions.SAMPLE_NEUTRAL_BLUE_CLOSE, Math.toRadians(-60));
-        TrajectoryActionBuilder blueCloseNeutralBlockToBucket = robot.drive.actionBuilder(Positions.SAMPLE_NEUTRAL_BLUE_CLOSE)
-                .setTangent(Math.toRadians(-120))
-                .splineToLinearHeading(Positions.BUCKET_BLUE, Math.toRadians(45));
-        TrajectoryActionBuilder blueBucketToSubmersible = robot.drive.actionBuilder(Positions.BUCKET_BLUE)
-                .setTangent(Math.toRadians(80))
-                .splineToLinearHeading(new Pose2d(26, -10, Math.toRadians(0)), Math.toRadians(200));
+        Positions.START startPos = Positions.START.RED_FAR; // choose start
+        char artifactLetter = 'C'; // choose which artifact: 'A', 'B', or 'C'
 
+        Pose2d initialPose = startPos.getPose();
 
-        TrajectoryActionBuilder redInitToBucket = robot.drive.actionBuilder(initialPose)
-                .setTangent(Math.toRadians(180))
-                .splineToLinearHeading(Positions.BUCKET_RED, Math.toRadians(135));
-        TrajectoryActionBuilder redBucketToFarNeutralBlock = robot.drive.actionBuilder(Positions.BUCKET_RED)
-                .setTangent(Math.toRadians(0))
-                .splineToLinearHeading(Positions.SAMPLE_NEUTRAL_RED_FAR, Math.toRadians(130));
-        TrajectoryActionBuilder redFarNeutralBlockToBucket = robot.drive.actionBuilder(Positions.SAMPLE_NEUTRAL_RED_FAR)
-                .setTangent(Math.toRadians(90))
-                .splineToLinearHeading(Positions.BUCKET_RED, Math.toRadians(225));
-        TrajectoryActionBuilder redBucketToMiddleNeutralBlock = robot.drive.actionBuilder(Positions.BUCKET_RED)
-                .setTangent(Math.toRadians(-45))
-                .splineToLinearHeading(Positions.SAMPLE_NEUTRAL_RED_MIDDLE, Math.toRadians(90));
-        TrajectoryActionBuilder redMiddleNeutralBlockToBucket = robot.drive.actionBuilder(Positions.SAMPLE_NEUTRAL_RED_MIDDLE)
-                .setTangent(Math.toRadians(90))
-                .splineToLinearHeading(Positions.BUCKET_RED, Math.toRadians(225));
-        TrajectoryActionBuilder redBucketToCloseNeutralBlock = robot.drive.actionBuilder(Positions.BUCKET_RED)
-                .setTangent(Math.toRadians(-45))
-                .splineToLinearHeading(Positions.SAMPLE_NEUTRAL_RED_CLOSE, Math.toRadians(120));
-        TrajectoryActionBuilder redCloseNeutralBlockToBucket = robot.drive.actionBuilder(Positions.SAMPLE_NEUTRAL_RED_CLOSE)
-                .setTangent(Math.toRadians(60))
-                .splineToLinearHeading(Positions.BUCKET_RED, Math.toRadians(225));
-        TrajectoryActionBuilder redBucketToSubmersible = robot.drive.actionBuilder(Positions.BUCKET_RED)
-                .setTangent(Math.toRadians(180))
-                .splineToLinearHeading(new Pose2d(-26, 15, Math.toRadians(180)), Math.toRadians(20));
+        Robot robot = new Robot(
+                new Intake(hardwareMap), new Launch(hardwareMap), new Load(hardwareMap), new Bunt(hardwareMap),
+                new MecanumDrive(hardwareMap, initialPose));
 
+        boolean isRed = (startPos == Positions.START.RED_CLOSE || startPos == Positions.START.RED_FAR);
+        boolean isClose = (startPos == Positions.START.RED_CLOSE || startPos == Positions.START.BLUE_CLOSE);
 
-        TrajectoryActionBuilder blueInitToClip = robot.drive.actionBuilder(initialPose)
-                .setTangent(Math.toRadians(160))
-                .splineToLinearHeading(Positions.SAMPLE_BLUE_CLIP, Math.toRadians(225));
-        TrajectoryActionBuilder blueClipToFarBlueBlock = robot.drive.actionBuilder(Positions.SAMPLE_BLUE_CLIP)
-                .setTangent(Math.toRadians(45))
-                .splineToLinearHeading(Positions.SAMPLE_BLUE_FAR, Math.toRadians(180));
-        TrajectoryActionBuilder farBlueBlockToBlueClip = robot.drive.actionBuilder(Positions.SAMPLE_BLUE_FAR)
-                .setTangent(Math.toRadians(90))
-                .splineToLinearHeading(Positions.SAMPLE_BLUE_CLIP, Math.toRadians(90));
-        TrajectoryActionBuilder clipToMediumBlueBlock = robot.drive.actionBuilder(Positions.SAMPLE_BLUE_CLIP)
-                .setTangent(Math.toRadians(45))
-                .splineToLinearHeading(Positions.SAMPLE_BLUE_MIDDLE, Math.toRadians(180));
-        TrajectoryActionBuilder mediumBlueBlockToBlueClip = robot.drive.actionBuilder(Positions.SAMPLE_BLUE_MIDDLE)
-                .setTangent(Math.toRadians(90))
-                .splineToLinearHeading(Positions.SAMPLE_BLUE_CLIP, Math.toRadians(90));
-        TrajectoryActionBuilder clipToCloseBlueBlock = robot.drive.actionBuilder(Positions.SAMPLE_BLUE_CLIP)
-                .setTangent(Math.toRadians(45))
-                .splineToLinearHeading(Positions.SAMPLE_BLUE_CLOSE, Math.toRadians(180));
-        TrajectoryActionBuilder closeBlueBlockToBlueClip = robot.drive.actionBuilder(Positions.SAMPLE_BLUE_CLOSE)
-                .setTangent(Math.toRadians(90))
-                .splineToLinearHeading(Positions.SAMPLE_BLUE_CLIP, Math.toRadians(90));
+        // pick correct artifact automatically
+        Positions.ARTIFACT detectedTag;
+        if (isRed) {
+            if (artifactLetter == 'A') detectedTag = Positions.ARTIFACT.RED_A;
+            else if (artifactLetter == 'B') detectedTag = Positions.ARTIFACT.RED_B;
+            else detectedTag = Positions.ARTIFACT.RED_C;
+        } else {
+            if (artifactLetter == 'A') detectedTag = Positions.ARTIFACT.BLUE_A;
+            else if (artifactLetter == 'B') detectedTag = Positions.ARTIFACT.BLUE_B;
+            else detectedTag = Positions.ARTIFACT.BLUE_C;
+        }
 
-        TrajectoryActionBuilder redInitToClip = robot.drive.actionBuilder(initialPose)
-                .setTangent(Math.toRadians(25))
-                .splineToLinearHeading(Positions.SAMPLE_RED_CLIP, Math.toRadians(270));
-        TrajectoryActionBuilder redClipToFarRedBlock = robot.drive.actionBuilder(Positions.SAMPLE_RED_CLIP)
-                .setTangent(Math.toRadians(235))
-                .splineToLinearHeading(Positions.SAMPLE_RED_FAR, Math.toRadians(0));
-        TrajectoryActionBuilder farRedBlockToRedClip = robot.drive.actionBuilder(Positions.SAMPLE_RED_FAR)
-                .setTangent(Math.toRadians(315))
-                .splineToLinearHeading(Positions.SAMPLE_RED_CLIP, Math.toRadians(270));
-        TrajectoryActionBuilder clipToMediumRedBlock = robot.drive.actionBuilder(Positions.SAMPLE_RED_CLIP)
-                .setTangent(Math.toRadians(235))
-                .splineToLinearHeading(Positions.SAMPLE_RED_MIDDLE, Math.toRadians(0));
-        TrajectoryActionBuilder mediumRedBlockToRedClip = robot.drive.actionBuilder(Positions.SAMPLE_RED_MIDDLE)
-                .setTangent(Math.toRadians(315))
-                .splineToLinearHeading(Positions.SAMPLE_RED_CLIP, Math.toRadians(270));
-        TrajectoryActionBuilder clipToCloseRedBlock = robot.drive.actionBuilder(Positions.SAMPLE_RED_CLIP)
-                .setTangent(Math.toRadians(235))
-                .splineToLinearHeading(Positions.SAMPLE_RED_CLOSE, Math.toRadians(0));
-        TrajectoryActionBuilder closeRedBlockToRedClip = robot.drive.actionBuilder(Positions.SAMPLE_RED_CLOSE)
-                .setTangent(Math.toRadians(315))
-                .splineToLinearHeading(Positions.SAMPLE_RED_CLIP, Math.toRadians(-90));
+        Pose2d target = detectedTag.getPose();
 
-        // Legacy code (possible stuff for clipping specimens:
-        MinVelConstraint velConstraint = new MinVelConstraint(Arrays.asList(
-                new TranslationalVelConstraint(5),
-                new AngularVelConstraint(1)
-        ));
-        TrajectoryActionBuilder blueClipInchFoward = robot.drive.actionBuilder(Positions.SAMPLE_BLUE_CLIP)
-                .setTangent(Math.toRadians(90))
-                .splineToLinearHeading(Positions.SAMPLE_BLUE_CLIP_CLOSE, Math.toRadians(90), velConstraint);
-        TrajectoryActionBuilder blueClipToHang = robot.drive.actionBuilder(Positions.SAMPLE_BLUE_CLIP)
-                .setTangent(Math.toRadians(45))
-                .splineToLinearHeading(Positions.SAMPLE_BLUE_HANG, Math.toRadians(90));
-        TrajectoryActionBuilder blueHangToMediumBlueBlock = robot.drive.actionBuilder(Positions.SAMPLE_BLUE_HANG)
-                .setTangent(Math.toRadians(250))
-                .splineToLinearHeading(Positions.SAMPLE_BLUE_MIDDLE, Math.toRadians(160));
+        // approach points (up for red, down for blue)
+        Pose2d redApproachPoint = new Pose2d(target.position.x, target.position.y - 20, Math.toRadians(90));
+        Pose2d blueApproachPoint = new Pose2d(target.position.x, target.position.y + 20, Math.toRadians(270));
 
-        TrajectoryActionBuilder blueMiddleBlueBlockToBucket = robot.drive.actionBuilder(Positions.SAMPLE_NEUTRAL_BLUE_MIDDLE)
-                .setTangent(Math.toRadians(90))
-                .splineToLinearHeading(Positions.BUCKET_BLUE, Math.toRadians(45));
-        TrajectoryActionBuilder blueBucketToCloseBlueBlock = robot.drive.actionBuilder(Positions.BUCKET_BLUE)
-                .setTangent(Math.toRadians(225))
-                .splineToLinearHeading(Positions.SAMPLE_BLUE_CLOSE, Math.toRadians(-60));
-        TrajectoryActionBuilder blueCloseBlueBlockToBucket = robot.drive.actionBuilder(Positions.SAMPLE_NEUTRAL_BLUE_CLOSE)
-                .setTangent(Math.toRadians(120))
-                .splineToLinearHeading(Positions.BUCKET_BLUE, Math.toRadians(45));
+        // obelisk poses
+        Pose2d redCloseObeliskPose = new Pose2d(-32, 32, Math.toRadians(225));
+        Pose2d redFarObeliskPose = new Pose2d(23, 12, Math.toRadians(187));
+        Pose2d blueCloseObeliskPose = new Pose2d(-32, -32, Math.toRadians(135));
+        Pose2d blueFarObeliskPose = new Pose2d(23, -12, Math.toRadians(173));
 
-        // TODO: Correctly invert the rest of these trajectories
+        // team goals
+        Pose2d redGoal = Positions.GOAL.RED.getPose();
+        Pose2d blueGoal = Positions.GOAL.BLUE.getPose();
 
-        TrajectoryActionBuilder redBucketToFarRedBlock = robot.drive.actionBuilder(Positions.BUCKET_RED)
-                .setTangent(Math.toRadians(45))
-                .splineToLinearHeading(Positions.SAMPLE_RED_FAR, Math.toRadians(100));
-        TrajectoryActionBuilder redFarRedBlockToBucket = robot.drive.actionBuilder(Positions.SAMPLE_NEUTRAL_RED_FAR)
-                .splineToLinearHeading(Positions.BUCKET_RED, 45);
-        TrajectoryActionBuilder redBucketToMiddleRedBlock = robot.drive.actionBuilder(Positions.BUCKET_RED)
-                .setTangent(Math.toRadians(180))
-                .splineToLinearHeading(Positions.SAMPLE_RED_MIDDLE, 0);
-        TrajectoryActionBuilder redMiddleRedBlockToBucket = robot.drive.actionBuilder(Positions.SAMPLE_NEUTRAL_RED_MIDDLE)
-                .setTangent(Math.toRadians(90))
-                .splineToLinearHeading(Positions.BUCKET_RED, 45);
-        TrajectoryActionBuilder redBucketToCloseRedBlock = robot.drive.actionBuilder(Positions.BUCKET_RED)
-                .setTangent(Math.toRadians(180))
-                .splineToLinearHeading(Positions.SAMPLE_RED_CLOSE, 0);
-        TrajectoryActionBuilder redCloseRedBlockToBucket = robot.drive.actionBuilder(Positions.SAMPLE_NEUTRAL_RED_CLOSE)
-                .splineToLinearHeading(Positions.BUCKET_RED, 45);
+        Pose2d approachPoint;
+        Pose2d chosenObeliskPose;
+
+        double secondsToWait = 1f;
+
+        if (isRed && isClose) {
+            approachPoint = redApproachPoint;
+            chosenObeliskPose = redCloseObeliskPose;
+        } else if (!isRed && isClose) {
+            approachPoint = blueApproachPoint;
+            chosenObeliskPose = blueCloseObeliskPose;
+        } else if (isRed && !isClose) {
+            approachPoint = redApproachPoint;
+            chosenObeliskPose = redFarObeliskPose;
+        } else {
+            approachPoint = blueApproachPoint;
+            chosenObeliskPose = blueFarObeliskPose;
+        }
+
+        // new goal selection using XOR
+        boolean goToRedGoal = (isRed ^ isClose);
+        Pose2d teamGoal = goToRedGoal ? redGoal : blueGoal;
+
+        double firstTangent = isRed ? Math.toRadians(225) : Math.toRadians(135);
+        double approachHeading = isRed ? Math.toRadians(90) : Math.toRadians(270);
+
+        // make a point in front of the goal (stop before entering)
+        double stopDistance = 10; // how far to stop before goal
+        Pose2d goalFront = new Pose2d(
+                teamGoal.position.x + (isRed ? stopDistance : stopDistance),
+                teamGoal.position.y,
+                teamGoal.heading.real
+        );
+
+        // build the sequence (view obelisk -> artifact -> back out -> goal front -> stop)
+        Action fullSequence = robot.drive.actionBuilder(initialPose)
+                // 1. go to obelisk
+                .setTangent(Math.toRadians(isRed ? (isClose ? -45 : 197) : (isClose ?  45 : 163)))
+                .splineToLinearHeading(chosenObeliskPose, isClose ? chosenObeliskPose.heading.real : (isRed ? Math.toRadians(225) : Math.toRadians(135)))
+                .waitSeconds(secondsToWait)
+                // 2. go to artifact
+                .setTangent(Math.toRadians(isRed ? 45 : -45))
+                .splineToLinearHeading(approachPoint, approachHeading)
+                .lineToY(target.position.y)
+                // 3. back out (along Y axis)
+                .lineToY(approachPoint.position.y + (isRed ? -10 : 10))
+                // 4. move in front of goal (stop before entering)
+                .setTangent(Math.toRadians(isRed ? -90 : 90))
+                .splineTo(goalFront.position, Math.toRadians(isRed ? 135 : 225))
+                .build();
 
         // Initialization Actions
         Actions.runBlocking(robot.Init());
@@ -659,57 +708,7 @@ public class Autonomous extends LinearOpMode {
 
         Action actionToExecute;
 
-        switch(startPos) {
-            case BLUE_BUCKET:
-                actionToExecute = new SequentialAction(
-                        robot.poseToBucket(blueInitToBucket),
-                        robot.bucketToSample(blueBucketToFarNeutralBlock),
-                        robot.poseToBucket(blueFarNeutralBlockToBucket),
-                        robot.bucketToSample(blueBucketToMiddleNeutralBlock),
-                        robot.poseToBucket(blueMiddleNeutralBlockToBucket),
-                        robot.bucketToSample(blueBucketToCloseNeutralBlock),
-                        robot.poseToBucket(blueCloseNeutralBlockToBucket),
-                        robot.bucketToSubmersible(blueBucketToSubmersible)
-                );
-                break;
-            case BLUE_DIVE:
-                actionToExecute = new SequentialAction(
-                        robot.poseToClip(blueInitToClip),
-                        robot.clipToSample(blueClipToFarBlueBlock),
-                        robot.sampleToClip(farBlueBlockToBlueClip),
-                        robot.clipToSample(clipToMediumBlueBlock),
-                        robot.sampleToClip(mediumBlueBlockToBlueClip),
-                        robot.clipToSample(clipToCloseBlueBlock),
-                        robot.sampleToClip(closeBlueBlockToBlueClip)
-                );
-                break;
-            case RED_BUCKET:
-                actionToExecute = new SequentialAction(
-                        robot.poseToBucket(redInitToBucket),
-                        robot.bucketToSample(redBucketToFarNeutralBlock),
-                        robot.poseToBucket(redFarNeutralBlockToBucket),
-                        robot.bucketToSample(redBucketToMiddleNeutralBlock),
-                        robot.poseToBucket(redMiddleNeutralBlockToBucket),
-                        robot.bucketToSample(redBucketToCloseNeutralBlock),
-                        robot.poseToBucket(redCloseNeutralBlockToBucket),
-                        robot.bucketToSubmersible(redBucketToSubmersible)
-                );
-                break;
-            case RED_DIVE:
-                actionToExecute = new SequentialAction(
-                        robot.poseToClip(redInitToClip),
-                        robot.clipToSample(redClipToFarRedBlock),
-                        robot.sampleToClip(farRedBlockToRedClip),
-                        robot.clipToSample(clipToMediumRedBlock),
-                        robot.sampleToClip(mediumRedBlockToRedClip),
-                        robot.clipToSample(clipToCloseRedBlock),
-                        robot.sampleToClip(closeRedBlockToRedClip)
-                );
-                break;
-            default:
-                actionToExecute = robot.drive.actionBuilder(new Pose2d(0, 0, 0)).build();
-                break;
-        }
+
 
         telemetry.update();
         waitForStart();
@@ -721,7 +720,7 @@ public class Autonomous extends LinearOpMode {
                 new ParallelAction(
                         robot.intake.moveIntake(),
                         robot.launch.moveLaunch(),
-                        actionToExecute
+                        fullSequence
                 )
         );
     }

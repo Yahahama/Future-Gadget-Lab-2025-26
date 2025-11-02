@@ -5,6 +5,7 @@ import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.ftc.Actions;
 
@@ -21,7 +22,7 @@ public class BlueCloseAutonomous extends Autonomous{
 
         Pose2d initialPose = startPos.getPose();
         Autonomous.Robot robot = new Robot(
-                new Intake(hardwareMap), new Launch(hardwareMap), new Load(hardwareMap),
+                new Intake(hardwareMap), new Launch(hardwareMap), new Load(hardwareMap), new Bunt(hardwareMap),
                 new MecanumDrive(hardwareMap, initialPose));
 
         // Trajectories to select from
@@ -38,32 +39,6 @@ public class BlueCloseAutonomous extends Autonomous{
         blueMiddleNeutralBlockToBucket
         */
 
-        TrajectoryActionBuilder blueInitToBucket = robot.drive.actionBuilder(initialPose)
-                .setTangent(Math.toRadians(0))
-                .splineToLinearHeading(Autonomous.Positions.BUCKET_BLUE, Math.toRadians(315));
-        TrajectoryActionBuilder blueBucketToFarNeutralBlock = robot.drive.actionBuilder(Autonomous.Positions.BUCKET_BLUE)
-                .setTangent(Math.toRadians(180))
-                .splineToLinearHeading(Autonomous.Positions.SAMPLE_NEUTRAL_BLUE_FAR, Math.toRadians(-50));
-        TrajectoryActionBuilder blueFarNeutralBlockToBucket = robot.drive.actionBuilder(Autonomous.Positions.SAMPLE_NEUTRAL_BLUE_FAR)
-                .setTangent(Math.toRadians(-90))
-                .splineToLinearHeading(Autonomous.Positions.BUCKET_BLUE, Math.toRadians(45));
-        TrajectoryActionBuilder blueBucketToMiddleNeutralBlock = robot.drive.actionBuilder(Autonomous.Positions.BUCKET_BLUE)
-                .setTangent(Math.toRadians(-225))
-                .splineToLinearHeading(Autonomous.Positions.SAMPLE_NEUTRAL_BLUE_MIDDLE, Math.toRadians(-90));
-        TrajectoryActionBuilder blueMiddleNeutralBlockToBucket = robot.drive.actionBuilder(Autonomous.Positions.SAMPLE_NEUTRAL_BLUE_MIDDLE)
-                .setTangent(Math.toRadians(-90))
-                .splineToLinearHeading(Autonomous.Positions.BUCKET_BLUE, Math.toRadians(45));
-        TrajectoryActionBuilder blueBucketToCloseNeutralBlock = robot.drive.actionBuilder(Autonomous.Positions.BUCKET_BLUE)
-                .setTangent(Math.toRadians(-225))
-                .splineToLinearHeading(Autonomous.Positions.SAMPLE_NEUTRAL_BLUE_CLOSE, Math.toRadians(-60));
-        TrajectoryActionBuilder blueCloseNeutralBlockToBucket = robot.drive.actionBuilder(Autonomous.Positions.SAMPLE_NEUTRAL_BLUE_CLOSE)
-                .setTangent(Math.toRadians(-120))
-                .splineToLinearHeading(Autonomous.Positions.BUCKET_BLUE, Math.toRadians(45));
-        TrajectoryActionBuilder blueBucketToSubmersible = robot.drive.actionBuilder(Autonomous.Positions.BUCKET_BLUE)
-                .setTangent(Math.toRadians(80))
-                .splineToLinearHeading(new Pose2d(26, -10, Math.toRadians(0)), Math.toRadians(200));
-
-
 
         // Initialization Actions
         Actions.runBlocking(robot.Init());
@@ -77,14 +52,7 @@ public class BlueCloseAutonomous extends Autonomous{
         }
 
         Action actionToExecute = new SequentialAction(
-                robot.poseToBucket(blueInitToBucket),
-                robot.bucketToSample(blueBucketToFarNeutralBlock),
-                robot.poseToBucket(blueFarNeutralBlockToBucket),
-                robot.bucketToSample(blueBucketToMiddleNeutralBlock),
-                robot.poseToBucket(blueMiddleNeutralBlockToBucket),
-                robot.bucketToSample(blueBucketToCloseNeutralBlock),
-                robot.poseToBucket(blueCloseNeutralBlockToBucket),
-                robot.bucketToSubmersible(blueBucketToSubmersible)
+
         );
 
         telemetry.update();
@@ -97,7 +65,12 @@ public class BlueCloseAutonomous extends Autonomous{
                 new ParallelAction(
                         robot.launch.moveLaunch(),
                         robot.intake.moveIntake(),
-                        actionToExecute
+                        new SequentialAction(
+                                robot.launch.launchClose(),
+                                robot.shootHigh(),
+                                new SleepAction(2),
+                                robot.shootLow()
+                        )
                 )
         );
     }
