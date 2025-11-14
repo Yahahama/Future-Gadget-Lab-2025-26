@@ -671,10 +671,10 @@ public class Autonomous extends LinearOpMode {
         double approachHeading = isRed ? Math.toRadians(90) : Math.toRadians(270);
 
         // make a point in front of the goal (stop before entering)
-        double stopDistance = 10; // how far to stop before goal
+        double stopDistance = 22; // how far to stop before goal
         Pose2d goalFront = new Pose2d(
-                teamGoal.position.x + (isRed ? stopDistance : stopDistance) + 15,
-                teamGoal.position.y + 25,
+                teamGoal.position.x + stopDistance + 21,
+                teamGoal.position.y + (isRed? -stopDistance : +stopDistance),
                 teamGoal.heading.real
         );
 

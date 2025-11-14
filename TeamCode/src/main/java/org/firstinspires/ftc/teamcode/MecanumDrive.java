@@ -94,8 +94,8 @@ public final class MecanumDrive {
         public final float INTAKE_SPEED_IN = 0.5f;
         public final float INTAKE_SPEED_OUT = -0.7f;
         public final float INTAKE_SPEED_LOAD = 1.0f;
-        public final float LAUNCH_SPEED_CLOSE = 10f;
-        public final float LAUNCH_SPEED_FAR = 11f;
+        public final float LAUNCH_SPEED_CLOSE = 8.6f;
+        public final float LAUNCH_SPEED_FAR = 10f; //10
         public final float LAUNCH_SPEED_DROP = -2;
 
         // Control Parameters
