@@ -604,7 +604,7 @@ public class Autonomous extends LinearOpMode {
         blueMiddleNeutralBlockToBucket
         */
 
-        Positions.START startPos = Positions.START.RED_FAR; // choose start
+        Positions.START startPos = Positions.START.BLUE_FAR; // choose start
         char artifactLetter = 'C'; // choose which artifact: 'A', 'B', or 'C'
 
         Pose2d initialPose = startPos.getPose();
@@ -673,8 +673,8 @@ public class Autonomous extends LinearOpMode {
         // make a point in front of the goal (stop before entering)
         double stopDistance = 10; // how far to stop before goal
         Pose2d goalFront = new Pose2d(
-                teamGoal.position.x + (isRed ? stopDistance : stopDistance),
-                teamGoal.position.y,
+                teamGoal.position.x + (isRed ? stopDistance : stopDistance) + 15,
+                teamGoal.position.y + 25,
                 teamGoal.heading.real
         );
 
@@ -695,6 +695,22 @@ public class Autonomous extends LinearOpMode {
                 .splineTo(goalFront.position, Math.toRadians(isRed ? 135 : 225))
                 .build();
 
+        Action s1 = robot.drive.actionBuilder(initialPose)
+                // 1. go to obelisk
+                .setTangent(Math.toRadians(isRed ? (isClose ? -45 : 197) : (isClose ?  45 : 163)))
+                .splineToLinearHeading(chosenObeliskPose, isClose ? chosenObeliskPose.heading.real : (isRed ? Math.toRadians(225) : Math.toRadians(135))).waitSeconds(secondsToWait).build();
+
+        Action s2 = robot.drive.actionBuilder(chosenObeliskPose).setTangent(Math.toRadians(isRed ? 45 : -45))
+                .splineToLinearHeading(approachPoint, approachHeading).build();
+
+        Action s3 = robot.drive.actionBuilder(approachPoint).setTangent(Math.toRadians(90)).lineToY(target.position.y, new TranslationalVelConstraint(10)).build();
+
+        Action s4 = robot.drive.actionBuilder(new Pose2d(approachPoint.position.x, target.position.y, approachPoint.heading.real)).setTangent(Math.toRadians(270)).lineToY(approachPoint.position.y + (isRed ? -10 : 10)).build();
+
+        Action s5 = robot.drive.actionBuilder(new Pose2d(approachPoint.position.x, approachPoint.position.y + (isRed ? -10 : 10), Math.toRadians(90))).setTangent(Math.toRadians(isRed ? -225 : 225))
+                .splineTo(goalFront.position, Math.toRadians(isRed ? 135 : 225)).turnTo(Math.toRadians(240)).build();
+
+
         // Initialization Actions
         Actions.runBlocking(robot.Init());
 
@@ -708,8 +724,6 @@ public class Autonomous extends LinearOpMode {
 
         Action actionToExecute;
 
-
-
         telemetry.update();
         waitForStart();
 
@@ -720,7 +734,34 @@ public class Autonomous extends LinearOpMode {
                 new ParallelAction(
                         robot.intake.moveIntake(),
                         robot.launch.moveLaunch(),
-                        fullSequence
+//                        fullSequence
+                        new SequentialAction(
+                                s1,
+                                s2,
+                                robot.intake.intakeLoad(),
+                                s3,
+                                robot.intake.intakeOff(),
+                                s4,
+                                s5,
+                                robot.launch.launchClose(),
+                                new SleepAction(1),
+                                robot.bunt.buntLaunch(),
+                                new SleepAction(1),
+                                robot.bunt.buntReset(),
+                                new SleepAction(1),
+                                robot.intake.intakeLoad(),
+                                new SleepAction(1.5),
+                                robot.intake.intakeOff(),
+                                new SleepAction(0.75),
+                                robot.bunt.buntLaunch(),
+                                new SleepAction(1),
+                                robot.bunt.buntReset(),
+                                robot.load.loadLoad(),
+                                new SleepAction(1),
+                                robot.bunt.buntLaunch(),
+                                new SleepAction(1),
+                                robot.bunt.buntReset()
+                        )
                 )
         );
     }

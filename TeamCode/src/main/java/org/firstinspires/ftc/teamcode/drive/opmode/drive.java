@@ -67,6 +67,8 @@ public class drive extends LinearOpMode {
         // Initialize and configure launch motor
         DcMotorEx launch1 = hardwareMap.get(DcMotorEx.class, "launch1");
         DcMotorEx launch2 = hardwareMap.get(DcMotorEx.class, "launch2");
+        launch1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        launch2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         launch1.setDirection(DcMotorEx.Direction.FORWARD);
         launch2.setDirection(DcMotorEx.Direction.REVERSE);
         launch1.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);

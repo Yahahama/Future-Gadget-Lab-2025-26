@@ -37,10 +37,11 @@ public final class ThreeDeadWheelLocalizer implements Localizer {
     public ThreeDeadWheelLocalizer(HardwareMap hardwareMap, double inPerTick) {
         // TODO: Ensure these are correct
         par0 = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "pl"))); // EH 3
-        par1 = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "rbMtr"))); // CH 3
+        par1 = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "lbMtr"))); // CH 3
         perp = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "rfMtr"))); // CH 0
 
-        perp.setDirection(DcMotorSimple.Direction.FORWARD);
+        perp.setDirection(DcMotorSimple.Direction.REVERSE);
+        par1.setDirection(DcMotorSimple.Direction.REVERSE);
 
         this.inPerTick = inPerTick;
 
