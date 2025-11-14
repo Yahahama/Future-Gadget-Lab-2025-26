@@ -134,7 +134,7 @@ public class drive extends LinearOpMode {
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
             double axial_target = -gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
             double lateral_target = gamepad1.left_stick_x * 1.1;
-            double yaw = gamepad1.right_stick_x;
+            double yaw = -gamepad1.right_stick_x;
 
             double theta = isIntakeCentric ? 0 : Math.toRadians(180); // Change this to use robot-centric soon
             double cosine = Math.cos(theta);
@@ -227,6 +227,19 @@ public class drive extends LinearOpMode {
                 isIntakeCentric = !isIntakeCentric;
             }
 
+            if (gamepad1.dpad_up) {
+                leftFrontDrive.setPower(1);
+            }
+            if (gamepad1.dpad_right) {
+                rightFrontDrive.setPower(1);
+            }
+            if (gamepad1.dpad_down) {
+                rightBackDrive.setPower(1);
+            }
+            if (gamepad1.dpad_left) {
+                leftBackDrive.setPower(1);
+            }
+
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime);
             if (myPose != null) {
@@ -237,6 +250,7 @@ public class drive extends LinearOpMode {
             telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
             telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
             telemetry.addData("Version: ", 1);
+            telemetry.addData("Yaw", gamepad1.right_stick_x);
             telemetry.update();
         }
     }
