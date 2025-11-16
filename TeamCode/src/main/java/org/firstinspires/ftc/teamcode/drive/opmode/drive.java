@@ -207,8 +207,10 @@ public class drive extends LinearOpMode {
                 load.setPosition(parameters.LOAD_LOAD);
             } else if (gamepad2.dpad_down) {
                 load.setPosition(parameters.LOAD_RESET);
-            } else if (gamepad2.dpad_left) {
+            } else if (gamepad2.dpad_right) {
                 load.setPosition(parameters.LOAD_RELOAD);
+            } else if (gamepad2.dpad_left) {
+                load.setPosition(parameters.LOAD_FALL);
             }
 
             if (gamepad2.left_bumper) {
@@ -225,19 +227,6 @@ public class drive extends LinearOpMode {
 
             if (gamepad1.right_stick_button) {
                 isIntakeCentric = !isIntakeCentric;
-            }
-
-            if (gamepad1.dpad_up) {
-                leftFrontDrive.setPower(1);
-            }
-            if (gamepad1.dpad_right) {
-                rightFrontDrive.setPower(1);
-            }
-            if (gamepad1.dpad_down) {
-                rightBackDrive.setPower(1);
-            }
-            if (gamepad1.dpad_left) {
-                leftBackDrive.setPower(1);
             }
 
             // Show the elapsed game time and wheel power.
