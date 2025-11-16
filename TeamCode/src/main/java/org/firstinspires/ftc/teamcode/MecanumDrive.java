@@ -60,7 +60,7 @@ public final class MecanumDrive {
         public RevHubOrientationOnRobot.LogoFacingDirection logoFacingDirection =
                 RevHubOrientationOnRobot.LogoFacingDirection.RIGHT;
         public RevHubOrientationOnRobot.UsbFacingDirection usbFacingDirection =
-                RevHubOrientationOnRobot.UsbFacingDirection.UP;
+                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
 
         // drive model parameters
         public double inPerTick = 0.002956509615;
@@ -91,16 +91,18 @@ public final class MecanumDrive {
         public double headingVelGain = 1.0; // shared with turn
 
         // Speed Parameters
-        public final float INTAKE_SPEED_IN = 1.0f;
-        public final float INTAKE_SPEED_OUT = -0.5f;
-        public final float LAUNCH_POWER = 1.0f;
+        public final float INTAKE_SPEED_IN = 0.6f;
+        public final float INTAKE_SPEED_OUT = -0.7f;
+        public final float INTAKE_SPEED_LOAD = 1.0f;
+        public final float LAUNCH_SPEED_CLOSE = 15;
+        public final float LAUNCH_SPEED_FAR = 30;
 
         // Control Parameters
         public final int INTAKE_DIRECTION_START = 0;
         public final boolean LAUNCH_START = false;
-        public final float LOAD_INIT = 0f;
+        public final float LOAD_INIT = 0.4f;
         public final float LOAD_LOAD = 1f;
-        public final float LOAD_RESET = 0f;
+        public final float LOAD_RESET = 0.45f;
     }
 
     public static Params PARAMS = new Params();

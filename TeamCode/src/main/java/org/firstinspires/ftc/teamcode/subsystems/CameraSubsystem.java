@@ -70,6 +70,8 @@ public class CameraSubsystem {
         initializeVisionPortal();
         setupColorFilter();
     }
+
+    public VisionPortal getStreamSource() { return visionPortal; }
     
     private void initializeProcessors() {
         // Initialize AprilTag Processor
@@ -148,12 +150,13 @@ public class CameraSubsystem {
     }
     
     private void initializeVisionPortal() {
-        VisionPortal.Builder builder = new VisionPortal.Builder();
+        VisionPortal.Builder builder = new VisionPortal.Builder()
+                .setCamera(hardwareMap.get(WebcamName.class, "FGLs Webcam 2025!"));
         
         // Set camera with error handling
         boolean cameraSet = false;
         try {
-            WebcamName webcam = hardwareMap.get(WebcamName.class, "Webcam 1");
+            WebcamName webcam = hardwareMap.get(WebcamName.class, "FGLs Webcam 2025!");
             if (webcam != null) {
                 builder.setCamera(webcam);
                 cameraSet = true;
@@ -180,7 +183,7 @@ public class CameraSubsystem {
         
         if (!cameraSet) {
             telemetry.addLine("ERROR: Failed to set camera");
-            telemetry.addLine("Please configure 'Webcam 1' in robot configuration");
+            telemetry.addLine("Please configure 'FGLs Webcam 2025!' in robot configuration");
             return;
         }
         
