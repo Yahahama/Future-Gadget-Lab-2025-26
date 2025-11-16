@@ -67,9 +67,9 @@ public class BlueCloseAutonomous extends Autonomous{
                         robot.intake.moveIntake(),
                         new SequentialAction(
                                 robot.launch.launchClose(),
-                                robot.shootHigh(),
+                                robot.shootHigh(1),
                                 new SleepAction(2),
-                                robot.shootLow()
+                                robot.shootLow(1)
                         )
                 )
         );

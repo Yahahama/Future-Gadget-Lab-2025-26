@@ -163,21 +163,44 @@ public class Autonomous extends LinearOpMode {
             );
         }
 
-        public Action shootLow() {
+        public Action hitBall() {
             return new SequentialAction(
-                    load.loadLoad(),
                     bunt.buntLaunch(),
                     new SleepAction(1),
                     bunt.buntReset()
             );
         }
 
-        public Action shootHigh() {
+        public Action shootLow(float timeToWait) {
+            return new SequentialAction(
+                    load.loadLoad(),
+                    new SleepAction(timeToWait),
+                    hitBall()
+            );
+        }
+
+        public Action shootHigh(float timeToWait) {
             return new SequentialAction(
                     load.loadReset(),
-                    bunt.buntLaunch(),
-                    new SleepAction(1),
-                    bunt.buntReset()
+                    new SleepAction(timeToWait),
+                    hitBall()
+            );
+        }
+
+        public Action loadIntakeIntoHigh() {
+            return new SequentialAction(
+                    load.loadReset(),
+                    intake.intakeLoad(),
+                    new SleepAction(1.5),
+                    intake.intakeOff()
+            );
+        }
+
+        public Action collectBalls(TrajectoryActionBuilder ballCollectionTrajectory) {
+            return new SequentialAction(
+                    intake.intakeLoad(),
+                    ballCollectionTrajectory.build(),
+                    intake.intakeOff()
             );
         }
 
@@ -704,6 +727,8 @@ public class Autonomous extends LinearOpMode {
                 .splineToLinearHeading(approachPoint, approachHeading).build();
 
         Action s3 = robot.drive.actionBuilder(approachPoint).setTangent(Math.toRadians(90)).lineToY(target.position.y, new TranslationalVelConstraint(10)).build();
+        TrajectoryActionBuilder t3 = robot.drive.actionBuilder(approachPoint).setTangent(Math.toRadians(90)).lineToY(target.position.y, new TranslationalVelConstraint(10));
+
 
         Action s4 = robot.drive.actionBuilder(new Pose2d(approachPoint.position.x, target.position.y, approachPoint.heading.real)).setTangent(Math.toRadians(270)).lineToY(approachPoint.position.y + (isRed ? -10 : 10)).build();
 
@@ -738,29 +763,18 @@ public class Autonomous extends LinearOpMode {
                         new SequentialAction(
                                 s1,
                                 s2,
-                                robot.intake.intakeLoad(),
-                                s3,
-                                robot.intake.intakeOff(),
+                                robot.collectBalls(t3),
                                 s4,
                                 s5,
                                 robot.launch.launchClose(),
                                 new SleepAction(1),
-                                robot.bunt.buntLaunch(),
+                                robot.shootHigh(0),
                                 new SleepAction(1),
-                                robot.bunt.buntReset(),
-                                new SleepAction(1),
-                                robot.intake.intakeLoad(),
-                                new SleepAction(1.5),
-                                robot.intake.intakeOff(),
+                                robot.loadIntakeIntoHigh(),
                                 new SleepAction(0.75),
-                                robot.bunt.buntLaunch(),
-                                new SleepAction(1),
-                                robot.bunt.buntReset(),
+                                robot.shootHigh(0),
                                 robot.load.loadLoad(),
-                                new SleepAction(1),
-                                robot.bunt.buntLaunch(),
-                                new SleepAction(1),
-                                robot.bunt.buntReset()
+                                robot.shootLow(1)
                         )
                 )
         );
