@@ -5,66 +5,108 @@ import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
-import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
+import com.acmerobotics.roadrunner.SleepAction;
+import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.ftc.Actions;
 
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 
 @Config
-@com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "BLUE_DIVE_AUTONOMOUS", group = "Autonomous")
-public class BlueFarAutonomous extends Autonomous{
-
+@com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "BLUE_FAR_AUTONOMOUS", group = "Autonomous")
+public class BlueFarAutonomous extends Autonomous {
 
     @Override
     public void runOpMode() {
-        Autonomous.START startPos = Autonomous.START.BLUE_FAR;
+
+        Autonomous.Positions.START startPos = Autonomous.Positions.START.BLUE_FAR;
+        char artifactLetter = 'C';
 
         Pose2d initialPose = startPos.getPose();
-        Autonomous.Robot robot = new Robot(
-                new Intake(hardwareMap), new Launch(hardwareMap), new Load(hardwareMap), new Bunt(hardwareMap),
-                new MecanumDrive(hardwareMap, initialPose));
 
-        // Trajectories to select from
+        Robot robot = new Robot(
+                new Intake(hardwareMap),
+                new Launch(hardwareMap),
+                new Load(hardwareMap),
+                new Bunt(hardwareMap),
+                new MecanumDrive(hardwareMap, initialPose)
+        );
 
-        /*
-        Naming scheme for TrajectoryActionBuilders that go from buckets to blocks:
-        {color of team}BucketTo{distance of target block from wall}{color of target block}Block
-        ex.
-        blueBucketToMiddleNeutralBlock
+        boolean isRed = false;
+        boolean isClose = false;
 
-        Naming scheme for TrajectoryActionBuilders that go from blocks to buckets:
-        {color of team}{distance of current block from wall}{color of block}BlockToBucket
-        ex.
-        blueMiddleNeutralBlockToBucket
-        */
+        Positions.ARTIFACT detectedTag;
+        if (artifactLetter == 'A') detectedTag = Positions.ARTIFACT.BLUE_A;
+        else if (artifactLetter == 'B') detectedTag = Positions.ARTIFACT.BLUE_B;
+        else detectedTag = Positions.ARTIFACT.BLUE_C;
 
+        Pose2d target = detectedTag.getPose();
 
-        // Initialization Actions
+        Pose2d blueApproachPoint = new Pose2d(target.position.x, target.position.y + 20, Math.toRadians(270));
+        Pose2d blueFarObeliskPose = new Pose2d(23, -12, Math.toRadians(173));
+
+        Pose2d chosenObeliskPose = blueFarObeliskPose;
+        Pose2d approachPoint = blueApproachPoint;
+
+        // NEW FINAL PARK
+        Pose2d finalPark = new Pose2d(60, -12, Math.toRadians(202));
+
+        double approachHeading = Math.toRadians(270);
+        double secondsToWait = 1;
+
+        Action s1 = robot.drive.actionBuilder(initialPose)
+                .setTangent(Math.toRadians(163))
+                .splineToLinearHeading(chosenObeliskPose, chosenObeliskPose.heading.real)
+                .waitSeconds(secondsToWait)
+                .build();
+
+        Action s2 = robot.drive.actionBuilder(chosenObeliskPose)
+                .setTangent(Math.toRadians(-45))
+                .splineToLinearHeading(approachPoint, approachHeading)
+                .build();
+
+        Action s3 = robot.drive.actionBuilder(approachPoint)
+                .setTangent(Math.toRadians(90))
+                .lineToY(target.position.y, new TranslationalVelConstraint(10))
+                .build();
+
+        Action s4 = robot.drive.actionBuilder(
+                        new Pose2d(approachPoint.position.x, target.position.y, approachHeading))
+                .setTangent(Math.toRadians(270))
+                .lineToY(approachPoint.position.y + 10)
+                .build();
+
+        Action s5 = robot.drive.actionBuilder(
+                        new Pose2d(
+                                approachPoint.position.x,
+                                approachPoint.position.y + 10,
+                                Math.toRadians(90)))
+                .setTangent(Math.toRadians(225))
+                .splineToLinearHeading(finalPark, finalPark.heading.real)
+                .build();
+
         Actions.runBlocking(robot.Init());
 
         while (!isStopRequested() && !opModeIsActive()) {
-            telemetry.addData("X Position during Init", robot.drive.pose.position.x);
-            telemetry.addData("Y Position during Init", robot.drive.pose.position.y);
-            telemetry.addData("Heading during Init", robot.drive.pose.heading.real);
-
+            telemetry.addData("Init X", robot.drive.pose.position.x);
+            telemetry.addData("Init Y", robot.drive.pose.position.y);
+            telemetry.addData("Init Heading", robot.drive.pose.heading.real);
             telemetry.update();
         }
 
-        Action actionToExecute = new SequentialAction(
-
-        );
-
-        telemetry.update();
         waitForStart();
-
         if (isStopRequested()) return;
 
-        // Run Pathing
         Actions.runBlocking(
                 new ParallelAction(
-                        robot.launch.moveLaunch(),
                         robot.intake.moveIntake(),
-                        actionToExecute
+                        robot.launch.moveLaunch(),
+                        new SequentialAction(
+                                s1, s2,
+                                robot.intake.intakeLoad(),
+                                s3,
+                                robot.intake.intakeOff(),
+                                s4, s5
+                        )
                 )
         );
     }
