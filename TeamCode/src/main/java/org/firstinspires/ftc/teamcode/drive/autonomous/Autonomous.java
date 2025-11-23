@@ -29,6 +29,9 @@ public class Autonomous extends LinearOpMode {
 
     MecanumDrive.Params parameters = new MecanumDrive.Params();
 
+    // dashboard-editable pattern
+    public static String START_PATTERN = "GPP";
+
     public static class Positions {
 
         enum GOAL {
@@ -274,7 +277,7 @@ public class Autonomous extends LinearOpMode {
 
     Positions.START startPos = Positions.START.RED_FAR;
 
-    String getPattern() { return "GPP"; }
+    String getPattern() { return START_PATTERN; }
 
     @Override
     public void runOpMode() {
