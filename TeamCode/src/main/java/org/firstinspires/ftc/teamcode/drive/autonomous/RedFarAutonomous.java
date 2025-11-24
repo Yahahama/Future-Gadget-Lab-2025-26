@@ -48,7 +48,7 @@ public class RedFarAutonomous extends Autonomous {
         Pose2d approachPoint = redApproachPoint;
 
         // NEW FINAL PARK
-        Pose2d finalPark = new Pose2d(60, 12, Math.toRadians(158));
+        Pose2d finalPark = new Pose2d(60, 12, Math.toRadians(158+180));
 
         double approachHeading = Math.toRadians(90);
         double secondsToWait = 1;
@@ -89,7 +89,10 @@ public class RedFarAutonomous extends Autonomous {
         if (isStopRequested()) return;
 
         Actions.runBlocking(
-                new SequentialAction(s1, s2, s3, s4, s5)
+                new ParallelAction(
+                        robot.intake.moveIntake(),
+                robot.launch.moveLaunch(),
+                new SequentialAction(s1, s2, robot.intake.intakeLoad(), s3, robot.intake.intakeOff(), s4, s5))
         );
     }
 }

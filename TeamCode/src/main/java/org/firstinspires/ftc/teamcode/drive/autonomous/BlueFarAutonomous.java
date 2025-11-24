@@ -48,7 +48,7 @@ public class BlueFarAutonomous extends Autonomous {
         Pose2d approachPoint = blueApproachPoint;
 
         // NEW FINAL PARK
-        Pose2d finalPark = new Pose2d(60, -12, Math.toRadians(202));
+        Pose2d finalPark = new Pose2d(60, -12, Math.toRadians(205+180));
 
         double approachHeading = Math.toRadians(270);
         double secondsToWait = 1;
@@ -80,8 +80,8 @@ public class BlueFarAutonomous extends Autonomous {
                                 approachPoint.position.x,
                                 approachPoint.position.y + 10,
                                 Math.toRadians(90)))
-                .setTangent(Math.toRadians(225))
-                .splineToLinearHeading(finalPark, finalPark.heading.real)
+                .setTangent(Math.toRadians(30+90))
+                .splineToLinearHeading(finalPark, Math.toRadians(0+90))
                 .build();
 
         Actions.runBlocking(robot.Init());
@@ -105,7 +105,14 @@ public class BlueFarAutonomous extends Autonomous {
                                 robot.intake.intakeLoad(),
                                 s3,
                                 robot.intake.intakeOff(),
-                                s4, s5
+                                s4, s5,
+                                robot.loadIntakeIntoHigh(0.5f),
+                                robot.launch.launchFar(),
+                                robot.shootHigh(1),
+                                new SleepAction(0.75),
+                                robot.shuffleIntakeIntoHigh(1.5f),
+                                robot.shootHigh(1),
+                                robot.shootLow(1)
                         )
                 )
         );

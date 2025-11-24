@@ -19,7 +19,7 @@ public class RedCloseAutonomous extends Autonomous {
     public void runOpMode() {
 
         Autonomous.Positions.START startPos = Autonomous.Positions.START.RED_CLOSE;
-        char artifactLetter = 'C';
+        char artifactLetter = 'A';
 
         Pose2d initialPose = startPos.getPose();
 

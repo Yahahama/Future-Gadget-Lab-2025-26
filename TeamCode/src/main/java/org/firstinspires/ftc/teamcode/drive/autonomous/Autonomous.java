@@ -68,10 +68,10 @@ public class Autonomous extends LinearOpMode {
         enum ARTIFACT {
             RED_A(new Pose2d(-11.5f, 46.5f, Math.toRadians(0))),
             RED_B(new Pose2d(12.3f, 46.5f, Math.toRadians(0))),
-            RED_C(new Pose2d(36, 46.5f, Math.toRadians(0))),
+            RED_C(new Pose2d(35.75, 46.5f, Math.toRadians(0))),
             BLUE_A(new Pose2d(-11.5f, -46.5f, Math.toRadians(0))),
             BLUE_B(new Pose2d(12.3f, -46.5f, Math.toRadians(0))),
-            BLUE_C(new Pose2d(36, -46.5f, Math.toRadians(0)));
+            BLUE_C(new Pose2d(35.75, -46.5f, Math.toRadians(0)));
 
             private Pose2d pose2d;
 
@@ -187,11 +187,22 @@ public class Autonomous extends LinearOpMode {
             );
         }
 
-        public Action loadIntakeIntoHigh() {
+        public Action loadIntakeIntoHigh(float intakeTime) {
             return new SequentialAction(
                     load.loadReset(),
                     intake.intakeLoad(),
-                    new SleepAction(1.5),
+                    new SleepAction(intakeTime),
+                    intake.intakeOff()
+            );
+        }
+
+        public Action shuffleIntakeIntoHigh(float intakeTime) {
+            return new SequentialAction(
+                    load.loadReset(),
+                    intake.intakeOut(),
+                    new SleepAction(0.25),
+                    intake.intakeLoad(),
+                    new SleepAction(intakeTime),
                     intake.intakeOff()
             );
         }
@@ -770,7 +781,7 @@ public class Autonomous extends LinearOpMode {
                                 new SleepAction(1),
                                 robot.shootHigh(0),
                                 new SleepAction(1),
-                                robot.loadIntakeIntoHigh(),
+                                robot.loadIntakeIntoHigh(1),
                                 new SleepAction(0.75),
                                 robot.shootHigh(0),
                                 robot.load.loadLoad(),
