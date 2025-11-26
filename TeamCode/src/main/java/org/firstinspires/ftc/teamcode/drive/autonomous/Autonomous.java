@@ -187,12 +187,41 @@ public class Autonomous extends LinearOpMode {
             );
         }
 
+        public Action shootHighDouble(float timeToWait) {
+            return new SequentialAction(
+                    load.loadReset(),
+                    new SleepAction(timeToWait),
+                    intake.intakeOut(),
+                    hitBall(),
+                    intake.intakeOff()
+            );
+        }
+
         public Action loadIntakeIntoHigh(float intakeTime) {
             return new SequentialAction(
                     load.loadReset(),
                     intake.intakeLoad(),
                     new SleepAction(intakeTime),
+                    nudgeIntake(),
                     intake.intakeOff()
+            );
+        }
+
+        public Action loadIntakeIntoLow(float intakeTime) {
+            return new SequentialAction(
+                    load.loadLoad(),
+                    intake.intakeLoad(),
+                    new SleepAction(intakeTime),
+                    nudgeIntake(),
+                    intake.intakeOff()
+            );
+        }
+
+        public Action nudgeIntake() {
+            return new SequentialAction(
+                    bunt.buntLoad(),
+                    new SleepAction(0.4),
+                    bunt.buntReset()
             );
         }
 
@@ -524,6 +553,18 @@ public class Autonomous extends LinearOpMode {
         public Action buntInit() {
             return new Bunt.BuntInit();
         }
+
+        public class BuntLoad implements Action {
+            @Override
+            public boolean run (@NonNull TelemetryPacket packet) {
+                bunt.setPosition(parameters.BUNT_LOAD);
+                return false;
+            }
+        }
+
+        public Action buntLoad() {
+            return new Bunt.BuntLoad();
+        }
     }
 
     public class Launch {
@@ -559,6 +600,9 @@ public class Autonomous extends LinearOpMode {
                 } else if (launchState == 2) {
                     launch1.setVelocity(parameters.LAUNCH_SPEED_FAR, AngleUnit.RADIANS);
                     launch2.setVelocity(parameters.LAUNCH_SPEED_FAR, AngleUnit.RADIANS);
+                } else if (launchState == 3) {
+                    launch1.setVelocity(parameters.LAUNCH_SPEED_DROP, AngleUnit.RADIANS);
+                    launch2.setVelocity(parameters.LAUNCH_SPEED_DROP, AngleUnit.RADIANS);
                 }
 
                 return true;
@@ -606,6 +650,18 @@ public class Autonomous extends LinearOpMode {
 
         public Action launchOff() {
             return new LaunchOff();
+        }
+
+        public class LaunchDrop implements Action {
+            @Override
+            public boolean run (@NonNull TelemetryPacket packet) {
+                launchState = 3;
+                return false;
+            }
+        }
+
+        public Action launchDrop() {
+            return new LaunchDrop();
         }
 
         public class LaunchInit implements Action {
@@ -772,20 +828,21 @@ public class Autonomous extends LinearOpMode {
                         robot.launch.moveLaunch(),
 //                        fullSequence
                         new SequentialAction(
-                                s1,
-                                s2,
-                                robot.collectBalls(t3),
-                                s4,
-                                s5,
-                                robot.launch.launchClose(),
-                                new SleepAction(1),
-                                robot.shootHigh(0),
-                                new SleepAction(1),
-                                robot.loadIntakeIntoHigh(1),
-                                new SleepAction(0.75),
-                                robot.shootHigh(0),
-                                robot.load.loadLoad(),
-                                robot.shootLow(1)
+//                                s1,
+//                                s2,
+//                                robot.collectBalls(t3),
+//                                s4,
+//                                s5,
+//                                robot.launch.launchClose(),
+//                                new SleepAction(1),
+//                                robot.shootHigh(0),
+//                                new SleepAction(1),
+//                                robot.loadIntakeIntoHigh(1),
+//                                new SleepAction(0.75),
+//                                robot.shootHigh(0),
+//                                robot.load.loadLoad(),
+//                                robot.shootLow(1)
+                                robot.nudgeIntake()
                         )
                 )
         );

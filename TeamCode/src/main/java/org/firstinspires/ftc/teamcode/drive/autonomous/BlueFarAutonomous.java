@@ -48,7 +48,7 @@ public class BlueFarAutonomous extends Autonomous {
         Pose2d approachPoint = blueApproachPoint;
 
         // NEW FINAL PARK
-        Pose2d finalPark = new Pose2d(60, -12, Math.toRadians(205+180));
+        Pose2d finalPark = new Pose2d(60, -12, Math.toRadians(195+180));
 
         double approachHeading = Math.toRadians(270);
         double secondsToWait = 1;
@@ -66,7 +66,7 @@ public class BlueFarAutonomous extends Autonomous {
 
         Action s3 = robot.drive.actionBuilder(approachPoint)
                 .setTangent(Math.toRadians(90))
-                .lineToY(target.position.y, new TranslationalVelConstraint(10))
+                .lineToY(target.position.y, new TranslationalVelConstraint(8))
                 .build();
 
         Action s4 = robot.drive.actionBuilder(
@@ -81,7 +81,7 @@ public class BlueFarAutonomous extends Autonomous {
                                 approachPoint.position.y + 10,
                                 Math.toRadians(90)))
                 .setTangent(Math.toRadians(30+90))
-                .splineToLinearHeading(finalPark, Math.toRadians(0+90))
+                .splineToLinearHeading(finalPark, Math.toRadians(180))
                 .build();
 
         Actions.runBlocking(robot.Init());
@@ -108,11 +108,14 @@ public class BlueFarAutonomous extends Autonomous {
                                 s4, s5,
                                 robot.loadIntakeIntoHigh(0.5f),
                                 robot.launch.launchFar(),
-                                robot.shootHigh(1),
+                                robot.shootHighDouble(1),
                                 new SleepAction(0.75),
-                                robot.shuffleIntakeIntoHigh(1.5f),
+                                robot.loadIntakeIntoHigh(1.5f),
                                 robot.shootHigh(1),
-                                robot.shootLow(1)
+                                robot.launch.launchDrop(),
+                                robot.loadIntakeIntoLow(0.25f),
+                                robot.launch.launchFar(),
+                                robot.shootLow(0.75f)
                         )
                 )
         );

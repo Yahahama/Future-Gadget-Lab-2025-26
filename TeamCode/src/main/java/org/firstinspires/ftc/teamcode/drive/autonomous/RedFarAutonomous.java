@@ -91,8 +91,27 @@ public class RedFarAutonomous extends Autonomous {
         Actions.runBlocking(
                 new ParallelAction(
                         robot.intake.moveIntake(),
-                robot.launch.moveLaunch(),
-                new SequentialAction(s1, s2, robot.intake.intakeLoad(), s3, robot.intake.intakeOff(), s4, s5))
+                        robot.launch.moveLaunch(),
+                        new SequentialAction(
+        //                        s1,
+        //                        s2,
+                                robot.intake.intakeLoad(),
+        //                        s3,
+                                robot.intake.intakeOff(),
+        //                        s4,
+        //                        s5,
+                                robot.loadIntakeIntoHigh(0.5f),
+                                robot.launch.launchFar(),
+                                robot.shootHigh(1),
+                                new SleepAction(0.75),
+                                robot.loadIntakeIntoHigh(1.5f),
+                                robot.shootHigh(1),
+                                robot.launch.launchDrop(),
+                                robot.loadIntakeIntoLow(0.25f),
+                                robot.launch.launchFar(),
+                                robot.shootLow(0.5f)
+                        )
+                )
         );
     }
 }
