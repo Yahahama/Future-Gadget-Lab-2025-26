@@ -106,7 +106,8 @@ public final class MecanumDrive {
         public final float LOAD_FALL = 0.4f;
         public final float LOAD_RELOAD = 0.74f;
         public final float LOAD_RESET = 0.48f;
-        public final float BUNT_RESET = 1f;
+        public final float BUNT_RESET = 0.73f;
+        public final float BUNT_LOAD = 0.5f;
         public final float BUNT_LAUNCH = 0f;
     }
 
