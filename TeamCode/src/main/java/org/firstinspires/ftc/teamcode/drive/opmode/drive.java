@@ -217,6 +217,10 @@ public class drive extends LinearOpMode {
                 bunt.setPosition(parameters.BUNT_RESET);
             } else if (gamepad2.right_bumper) {
                 bunt.setPosition(parameters.BUNT_LAUNCH);
+            } else if (gamepad2.left_stick_y > 0.5f) {
+                bunt.setPosition(parameters.BUNT_LOAD);
+            } else if (gamepad2.left_stick_y < -0.5f) {
+                bunt.setPosition(parameters.BUNT_RESET);
             }
 
             // Power Wheels
