@@ -123,10 +123,10 @@ public class VisionAssistedTeleOp extends LinearOpMode {
     }
     
     private void initializeDriveMotors() {
-        leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
-        leftBack = hardwareMap.get(DcMotorEx.class, "leftBack");
-        rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
-        rightBack = hardwareMap.get(DcMotorEx.class, "rightBack");
+        leftFront = hardwareMap.get(DcMotorEx.class, "lfMtr");
+        leftBack = hardwareMap.get(DcMotorEx.class, "lbMtr");
+        rightFront = hardwareMap.get(DcMotorEx.class, "rfMtr");
+        rightBack = hardwareMap.get(DcMotorEx.class, "rbMtr");
         
         // Set motor directions (adjust based on your robot)
         leftFront.setDirection(DcMotor.Direction.REVERSE);
