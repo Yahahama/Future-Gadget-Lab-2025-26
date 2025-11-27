@@ -11,6 +11,7 @@ import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.MecanumDrive;
@@ -23,6 +24,7 @@ import org.firstinspires.ftc.vision.opencv.ColorRange;
 
 import java.util.List;
 
+@Disabled
 @Config
 @Autonomous(name = "Vision Guided Autonomous", group = "Vision")
 public class VisionGuidedAutonomous extends LinearOpMode {

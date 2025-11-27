@@ -138,7 +138,7 @@ public class VisionNavigation {
      * PID controller for vision-based alignment
      */
     public static class VisionPIDController {
-        private double kP, kI, kD;
+        private final double kP, kI, kD;
         private double previousError = 0;
         private double integralSum = 0;
         private double maxIntegral = 1.0;
