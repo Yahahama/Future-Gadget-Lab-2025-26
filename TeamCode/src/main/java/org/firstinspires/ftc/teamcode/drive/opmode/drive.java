@@ -9,10 +9,22 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.drive.PoseStorage;
+import org.firstinspires.ftc.teamcode.vision.pipelines.AprilTagDetectionPipeline;
+import org.openftc.apriltag.AprilTagDetection;
+import org.openftc.easyopencv.OpenCvCamera;
+import org.openftc.easyopencv.OpenCvCameraFactory;
+import org.openftc.easyopencv.OpenCvCameraRotation;
+
+import java.util.ArrayList;
 
 @TeleOp(name="Basic Drive", group="Linear OpMode")
 public class drive extends LinearOpMode {
@@ -95,6 +107,24 @@ public class drive extends LinearOpMode {
         double robotAngle = 0;
         YawPitchRollAngles robotOrientation;
 
+        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewID", "id", hardwareMap.appContext.getPackageName());
+        OpenCvCamera camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "FGLs Webcam 2025!"), cameraMonitorViewId);
+        AprilTagDetectionPipeline aprilTagDetectionPipeline = new AprilTagDetectionPipeline(parameters.TAGSIZE_METERS, parameters.WEBCAM_FOCAL_X, parameters.WEBCAM_FOCAL_Y, parameters.WEBCAM_PRINCIPAL_POINT_X, parameters.WEBCAM_PRINCIPAL_POINT_Y);
+        camera.setPipeline(aprilTagDetectionPipeline);
+        camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener(){
+            @Override
+            public void onOpened() {
+                camera.startStreaming(640, 480, OpenCvCameraRotation.UPRIGHT);
+            }
+
+            @Override
+            public void onError(int errorCode) {
+
+            }
+        });
+        int numFramesWithoutDetection = 0;
+        ArrayList<AprilTagDetection> detections = new ArrayList<>();
+
         // Initialize control parameters
         int intakeDirection = parameters.INTAKE_DIRECTION_START;
         float intakeSpeed = 0f;
@@ -103,6 +133,7 @@ public class drive extends LinearOpMode {
         // Robot is ready to start! Display message to screen
         telemetry.addData("Status", "Initialized");
         telemetry.update();
+        telemetry.setMsTransmissionInterval(50);
 
         //Initialization Actions
         load.setPosition(parameters.LOAD_INIT);
@@ -223,11 +254,51 @@ public class drive extends LinearOpMode {
                 bunt.setPosition(parameters.BUNT_RESET);
             }
 
+            ArrayList<AprilTagDetection> newDetections = aprilTagDetectionPipeline.getDetectionsUpdate();
+
+            if (newDetections != null) {
+                if (newDetections.isEmpty()) {
+                    numFramesWithoutDetection++;
+
+                    if (numFramesWithoutDetection >= parameters.THRESHOLD_NUM_FRAMES_NO_DETECTION_BEFORE_LOW_DECIMATION) {
+                        aprilTagDetectionPipeline.setDecimation(parameters.DECIMATION_LOW);
+                    }
+                } else {
+                    numFramesWithoutDetection = 0;
+                    detections = newDetections;
+
+                    if (newDetections.get(0).pose.z < parameters.THRESHOLD_HIGH_DECIMATION_RANGE_METERS) {
+                        aprilTagDetectionPipeline.setDecimation(parameters.DECIMATION_HIGH);
+                    }
+
+                    for (AprilTagDetection detection : newDetections) {
+                        Orientation rot = Orientation.getOrientation(detection.pose.R, AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
+                    }
+                }
+            }
+
             // Power Wheels
-            leftFrontDrive.setPower(-leftFrontPower);
-            rightFrontDrive.setPower(-rightFrontPower);
-            leftBackDrive.setPower(-leftBackPower);
-            rightBackDrive.setPower(-rightBackPower);
+            if (gamepad1.right_bumper) {
+                AprilTagDetection detection = detections.get(0);
+                Orientation rot = Orientation.getOrientation(detection.pose.R, AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
+                double bearing = Math.atan2(detection.pose.x, detection.pose.z);
+                if (bearing < 0) {
+                    leftFrontDrive.setPower(-0.4f);
+                    rightFrontDrive.setPower(0.4f);
+                    leftBackDrive.setPower(-0.4f);
+                    rightBackDrive.setPower(0.4f);
+                } else {
+                    leftFrontDrive.setPower(0.4f);
+                    rightFrontDrive.setPower(-0.4f);
+                    leftBackDrive.setPower(0.4f);
+                    rightBackDrive.setPower(-0.4f);
+                }
+            } else {
+                leftFrontDrive.setPower(-leftFrontPower);
+                rightFrontDrive.setPower(-rightFrontPower);
+                leftBackDrive.setPower(-leftBackPower);
+                rightBackDrive.setPower(-rightBackPower);
+            }
 
             if (gamepad1.right_stick_button) {
                 isIntakeCentric = !isIntakeCentric;
@@ -242,8 +313,22 @@ public class drive extends LinearOpMode {
             telemetry.addData("Intake", "Direction: " + intakeDirection);
             telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
             telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
-            telemetry.addData("Version: ", 1);
-            telemetry.addData("Yaw", gamepad1.right_stick_x);
+            if (newDetections != null) {
+                telemetry.addData("Overhead ms", camera.getOverheadTimeMs());
+            } else {
+                telemetry.addLine("No new frame");
+            }
+            for (AprilTagDetection detection : detections) {
+                Orientation rot = Orientation.getOrientation(detection.pose.R, AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
+                telemetry.addData("Detected Tag ID", detection.id);
+                telemetry.addData("Translation X: ", detection.pose.x*parameters.FEET_PER_METER);
+                telemetry.addData("Translation Y: ", detection.pose.y*parameters.FEET_PER_METER);
+                telemetry.addData("Translation Z: ", detection.pose.z*parameters.FEET_PER_METER);
+                telemetry.addData("Rotation Yaw: ", rot.firstAngle);
+                telemetry.addData("Rotation Pitch: ", rot.secondAngle);
+                telemetry.addData("Rotation Roll: ", rot.thirdAngle);
+                telemetry.addData("Bearing ", Math.toDegrees(Math.atan2(detection.pose.x, detection.pose.z)));
+            }
             telemetry.update();
         }
     }

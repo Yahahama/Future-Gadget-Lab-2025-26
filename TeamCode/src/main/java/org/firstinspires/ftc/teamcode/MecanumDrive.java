@@ -66,6 +66,7 @@ public final class MecanumDrive {
         public double inPerTick = 0.002956509615;
         public double lateralInPerTick = 0.00229021378319891;
         public double trackWidthTicks = 4998.824958744461;
+        public final double FEET_PER_METER = 3.28084;
 
         // feedforward parameters (in tick units)
         public double kS = 0.9844335835262235;
@@ -109,6 +110,16 @@ public final class MecanumDrive {
         public final float BUNT_RESET = 0.73f;
         public final float BUNT_LOAD = 0.5f;
         public final float BUNT_LAUNCH = 0f;
+
+        public final float WEBCAM_FOCAL_X = 822.315f;
+        public final float WEBCAM_FOCAL_Y = 822.315f;
+        public final float WEBCAM_PRINCIPAL_POINT_X = 319.495f;
+        public final float WEBCAM_PRINCIPAL_POINT_Y = 242.502f;
+        public final double TAGSIZE_METERS = 0.166;
+        public final float DECIMATION_HIGH = 3f;
+        public final float DECIMATION_LOW = 1f;
+        public final float THRESHOLD_HIGH_DECIMATION_RANGE_METERS = 1.0f;
+        public final int THRESHOLD_NUM_FRAMES_NO_DETECTION_BEFORE_LOW_DECIMATION = 4;
     }
 
     public static MecanumDrive.Params PARAMS = new Params();

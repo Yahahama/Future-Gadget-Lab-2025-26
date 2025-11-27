@@ -146,6 +146,7 @@ public class Autonomous extends LinearOpMode {
         Bunt bunt;
         MecanumDrive drive;
 
+
         public Robot(Intake intake, Launch launch, Load load, Bunt bunt, MecanumDrive drive) {
             this.intake = intake;
             this.launch = launch;
@@ -468,7 +469,7 @@ public class Autonomous extends LinearOpMode {
     }
 
     public class Load {
-        private Servo load;
+        private final Servo load;
 
         public Load(HardwareMap hardwareMap) {
             load = hardwareMap.get(Servo.class, "load");
