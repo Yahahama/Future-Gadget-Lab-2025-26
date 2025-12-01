@@ -129,6 +129,8 @@ public class drive extends LinearOpMode {
         int intakeDirection = parameters.INTAKE_DIRECTION_START;
         float intakeSpeed = 0f;
         boolean isIntakeCentric = true;
+        boolean isLoadUp = false;
+        boolean previousDown = false;
 
         // Robot is ready to start! Display message to screen
         telemetry.addData("Status", "Initialized");
@@ -220,11 +222,11 @@ public class drive extends LinearOpMode {
 
             // Power Launch
             if (gamepad2.right_trigger > 0.5f) {
-                launch1.setVelocity(parameters.LAUNCH_SPEED_CLOSE, AngleUnit.RADIANS);
-                launch2.setVelocity(parameters.LAUNCH_SPEED_CLOSE, AngleUnit.RADIANS);
+                launch1.setVelocity(parameters.LAUNCH_SPEED_CLOSE + (isLoadUp ? 0.5f : 0f), AngleUnit.RADIANS);
+                launch2.setVelocity(parameters.LAUNCH_SPEED_CLOSE + (isLoadUp ? 0.5f : 0f), AngleUnit.RADIANS);
             } else if (gamepad2.left_trigger > 0.5f) {
-                launch1.setVelocity(parameters.LAUNCH_SPEED_FAR, AngleUnit.RADIANS);
-                launch2.setVelocity(parameters.LAUNCH_SPEED_FAR, AngleUnit.RADIANS);
+                launch1.setVelocity(parameters.LAUNCH_SPEED_FAR + (isLoadUp ? parameters.EXTRA_LAUNCH_SPEED: 0f), AngleUnit.RADIANS);
+                launch2.setVelocity(parameters.LAUNCH_SPEED_FAR + (isLoadUp ? parameters.EXTRA_LAUNCH_SPEED: 0f), AngleUnit.RADIANS);
             } else if (gamepad2.left_stick_button) {
                 launch1.setVelocity(parameters.LAUNCH_SPEED_DROP, AngleUnit.RADIANS);
                 launch2.setVelocity(parameters.LAUNCH_SPEED_DROP, AngleUnit.RADIANS);
@@ -236,12 +238,16 @@ public class drive extends LinearOpMode {
             // Loader Servo
             if (gamepad2.dpad_up) {
                 load.setPosition(parameters.LOAD_LOAD);
+                isLoadUp = true;
             } else if (gamepad2.dpad_down) {
                 load.setPosition(parameters.LOAD_RESET);
+                isLoadUp = false;
             } else if (gamepad2.dpad_right) {
                 load.setPosition(parameters.LOAD_RELOAD);
+                isLoadUp = false;
             } else if (gamepad2.dpad_left) {
                 load.setPosition(parameters.LOAD_FALL);
+                isLoadUp = false;
             }
 
             if (gamepad2.left_bumper) {
@@ -278,20 +284,20 @@ public class drive extends LinearOpMode {
             }
 
             // Power Wheels
-            if (gamepad1.right_bumper) {
+            if (gamepad1.right_bumper && !detections.isEmpty()) {
                 AprilTagDetection detection = detections.get(0);
                 Orientation rot = Orientation.getOrientation(detection.pose.R, AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
-                double bearing = Math.atan2(detection.pose.x, detection.pose.z);
-                if (bearing < 0) {
-                    leftFrontDrive.setPower(-0.4f);
-                    rightFrontDrive.setPower(0.4f);
-                    leftBackDrive.setPower(-0.4f);
-                    rightBackDrive.setPower(0.4f);
+                double bearing = Math.toDegrees(Math.atan2(detection.pose.x, detection.pose.z));
+                if (bearing < 0.5) {
+                    leftFrontDrive.setPower(-0.2f);
+                    rightFrontDrive.setPower(0.2f);
+                    leftBackDrive.setPower(-0.2f);
+                    rightBackDrive.setPower(0.2f);
                 } else {
-                    leftFrontDrive.setPower(0.4f);
-                    rightFrontDrive.setPower(-0.4f);
-                    leftBackDrive.setPower(0.4f);
-                    rightBackDrive.setPower(-0.4f);
+                    leftFrontDrive.setPower(0.2f);
+                    rightFrontDrive.setPower(-0.2f);
+                    leftBackDrive.setPower(0.2f);
+                    rightBackDrive.setPower(-0.2f);
                 }
             } else {
                 leftFrontDrive.setPower(-leftFrontPower);
@@ -300,9 +306,10 @@ public class drive extends LinearOpMode {
                 rightBackDrive.setPower(-rightBackPower);
             }
 
-            if (gamepad1.right_stick_button) {
+            if (gamepad1.dpad_down && !previousDown) {
                 isIntakeCentric = !isIntakeCentric;
             }
+             previousDown = gamepad1.dpad_down;
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime);
@@ -313,6 +320,7 @@ public class drive extends LinearOpMode {
             telemetry.addData("Intake", "Direction: " + intakeDirection);
             telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
             telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
+            telemetry.addData("Load Up", isLoadUp);
             if (newDetections != null) {
                 telemetry.addData("Overhead ms", camera.getOverheadTimeMs());
             } else {

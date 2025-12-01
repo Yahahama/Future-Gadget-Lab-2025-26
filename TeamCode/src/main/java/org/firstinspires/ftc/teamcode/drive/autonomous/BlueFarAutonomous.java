@@ -28,7 +28,8 @@ public class BlueFarAutonomous extends Autonomous {
                 new Launch(hardwareMap),
                 new Load(hardwareMap),
                 new Bunt(hardwareMap),
-                new MecanumDrive(hardwareMap, initialPose)
+                new MecanumDrive(hardwareMap, initialPose),
+                new Camera(hardwareMap)
         );
 
         boolean isRed = false;

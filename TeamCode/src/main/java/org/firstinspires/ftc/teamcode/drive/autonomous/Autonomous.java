@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.drive.autonomous;
 
+import android.graphics.Camera;
+
 import androidx.annotation.NonNull;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
@@ -23,9 +25,17 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
+import org.firstinspires.ftc.teamcode.vision.pipelines.AprilTagDetectionPipeline;
+import org.openftc.apriltag.AprilTagDetection;
+import org.openftc.easyopencv.OpenCvCamera;
+import org.openftc.easyopencv.OpenCvCameraFactory;
+import org.openftc.easyopencv.OpenCvCameraRotation;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 @Config
@@ -139,20 +149,29 @@ public class Autonomous extends LinearOpMode {
         }
     }
 
+    public enum ORDER {
+        PPG,
+        PGP,
+        GPP
+    }
+
     public class Robot {
-        Intake intake;
-        Launch launch;
-        Load load;
-        Bunt bunt;
-        MecanumDrive drive;
+        final Intake intake;
+        final Launch launch;
+        final Load load;
+        final Bunt bunt;
+        final MecanumDrive drive;
+        final Camera camera;
+        ORDER order;
+        int id;
 
-
-        public Robot(Intake intake, Launch launch, Load load, Bunt bunt, MecanumDrive drive) {
+        public Robot(Intake intake, Launch launch, Load load, Bunt bunt, MecanumDrive drive, Camera camera) {
             this.intake = intake;
             this.launch = launch;
             this.load = load;
             this.bunt = bunt;
             this.drive = drive;
+            this.camera = camera;
         }
 
         public Action Init() {
@@ -237,131 +256,138 @@ public class Autonomous extends LinearOpMode {
             );
         }
 
-        public Action collectBalls(TrajectoryActionBuilder ballCollectionTrajectory) {
+        public Action collectBalls(TrajectoryActionBuilder forwardTrajectory, TrajectoryActionBuilder backTrajectory) {
             return new SequentialAction(
                     intake.intakeLoad(),
-                    ballCollectionTrajectory.build(),
-                    intake.intakeOff()
+                    forwardTrajectory.build(),
+                    intake.intakeOff(),
+                    backTrajectory.build()
             );
         }
 
-        public Action poseToScoreClose(TrajectoryActionBuilder poseToLaunchPose) {
+        public class ScanOrder implements Action {
+            private int timeoutCycles;
+            ArrayList<AprilTagDetection> detections;
+
+            public ScanOrder(int maxCycles) {
+                timeoutCycles = maxCycles;
+            }
+
+            @Override
+            public boolean run (@NonNull TelemetryPacket packet) {
+                detections = camera.aprilTagDetectionPipeline.getDetectionsUpdate();
+
+                if (detections == null) {
+                    timeoutCycles--;
+                    return true;
+                }
+
+                if (!detections.isEmpty()) {
+                    for (AprilTagDetection detection : detections) {
+                        if (detection.id == 21) {
+                            Robot.this.order = ORDER.GPP;
+                            telemetry.addData("ID", order);
+                            telemetry.update();
+                            id = 21;
+                            return false;
+                        } else if (detection.id == 22) {
+                            Robot.this.order = ORDER.PGP;
+                            telemetry.addData("ID", order);
+                            telemetry.update();
+                            id = 22;
+                            return false;
+                        } else if (detection.id == 23) {
+                            Robot.this.order = ORDER.PPG;
+                            telemetry.addData("ID", order);
+                            telemetry.update();
+                            id = 23;
+                            return false;
+                        }
+                    }
+                }
+                timeoutCycles--;
+                telemetry.addLine("Nothing seen");
+                telemetry.update();
+                return timeoutCycles != 0;
+            }
+        }
+
+        public Action scanOrder(int maxCycles) {
+            return new ScanOrder(maxCycles);
+        }
+
+        public Action shootLLL() {
             return new SequentialAction(
-                    new ParallelAction(
-                            poseToLaunchPose.build(),
-                            launch.launchClose()
-                    ),
-                    load.loadLoad(),
-                    load.loadReset(),
-                    launch.launchOff()
+                    shootLow(0),
+                    loadIntakeIntoLow(0.25f),
+                    shootLow(1),
+                    loadIntakeIntoLow(0.25f),
+                    shootLow(1)
             );
         }
 
-        public Action poseToScoreFar(TrajectoryActionBuilder poseToLaunchPose) {
-            return new SequentialAction(
-                    new ParallelAction(
-                            poseToLaunchPose.build(),
-                            launch.launchFar()
-                    ),
-                    load.loadLoad(),
-                    load.loadReset(),
-                    launch.launchOff()
-            );
-        }
+        public Action shootBalls(String artifactSet, int tagID, boolean isFar) {
+            if (isFar) {
+                if (artifactSet.equals("B")) { //PGP
+                    if (tagID == 21) { //GPP
+                        return new SequentialAction(
 
-        public Action poseToBucket(TrajectoryActionBuilder poseToBucket) {
-            return new SequentialAction(
-                    new ParallelAction(
-                            poseToBucket.build() // Movement + manipulators
-                    ),
-                    new SleepAction(0.5), // Sequential movements
-                    new SleepAction(0.1)
-            );
-        }
+                        );
+                    } else if (tagID == 22) { //PGP
+                        return new SequentialAction(
+                                shootLLL()
+                        );
+                    } else if (tagID == 23) { //PPG
+                       return new SequentialAction(
 
-        public Action bucketToSample(TrajectoryActionBuilder bucketToSample) {
-            return new SequentialAction(
-                    new SleepAction(0.1),
-                    new ParallelAction(
-                            bucketToSample.build()
-                    ),
-                    GetSample()
-            );
-        }
+                       );
+                    }
+                } else if (artifactSet.equals("C")) { //GPP
+                    if (tagID == 21) { //GPP
+                        return new SequentialAction(
+                                shootLLL()
+                        );
+                    } else if (tagID == 22) { //PGP
+                        return new SequentialAction(
 
-        public Action GetSample() {
-            return new SequentialAction(
-                    new SleepAction(0.5),
-                    new SleepAction(0.5),
-                    new SleepAction(0.5),
-                    new ParallelAction(
-                    )
-            );
-        }
+                        );
+                    } else if (tagID == 23) { //PPG
+                        return new SequentialAction(
+                        );
+                    }
+                }
+            } else {
+                if (artifactSet.equals("B")) { //PGP
+                    if (tagID == 21) { //GPP
+                        return new SequentialAction(
 
-        public Action GetSampleLow() {
-            return new SequentialAction(
-                    new SleepAction(0.5), // Sequential movements
-                    new SleepAction(0.5),
-                    new SleepAction(0.5)
-            );
-        }
+                        );
+                    } else if (tagID == 22) { //PGP
+                        return new SequentialAction(
 
-        public Action bucketToSubmersible(TrajectoryActionBuilder bucketToSubmersible) {
-            return new ParallelAction(
-                    bucketToSubmersible.build()
-            );
-        }
+                        );
+                    } else if (tagID == 23) { //PPG
+                        return new SequentialAction(
 
-        public Action poseToClip(TrajectoryActionBuilder poseToClip) {
-            return new SequentialAction(
-                    new ParallelAction(
-                            poseToClip.build()
-                    ),
-                    new SleepAction(0.5)
-            );
-        }
+                        );
+                    }
+                } else if (artifactSet.equals("C")) { //GPP
+                    if (tagID == 21) { //GPP
+                        return new SequentialAction(
 
-        public Action clipToSample(TrajectoryActionBuilder clipToSample) {
-            return new SequentialAction(
-                    new ParallelAction(
-                            clipToSample.build()
-                    )
-            );
-        }
+                        );
+                    } else if (tagID == 22) { //PGP
+                        return new SequentialAction(
 
-        public Action clipInchFoward(TrajectoryActionBuilder clipInchFoward){
-            return new SequentialAction(
-                    new ParallelAction(
-                            clipInchFoward.build()
-                    )
-            );
-        }
+                        );
+                    } else if (tagID == 23) { //PPG
+                        return new SequentialAction(
 
-        public Action sampleToClip(TrajectoryActionBuilder sampleToClip) {
-            return new SequentialAction(
-                    new ParallelAction(
-                            sampleToClip.build()
-                    )
-            );
-        }
-
-        public Action clipToHang(TrajectoryActionBuilder clipToHang) {
-            return new SequentialAction(
-                    new ParallelAction(
-                            clipToHang.build()
-                    ),
-                    new SleepAction(0.75)
-            );
-        }
-
-        public Action hangToSample(TrajectoryActionBuilder hangToSample) {
-            return new SequentialAction(
-                    new ParallelAction(
-                            hangToSample.build()
-                    ),
-                    GetSample()
-            );
+                        );
+                    }
+                }
+            }
+            return new SleepAction(1);
         }
     }
 
@@ -679,6 +705,105 @@ public class Autonomous extends LinearOpMode {
         }
     }
 
+    public class Camera {
+        private final OpenCvCamera camera;
+        public final AprilTagDetectionPipeline aprilTagDetectionPipeline;
+        private ORDER order;
+
+        public Camera (HardwareMap hardwareMap) {
+            int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+            camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "FGLs Webcam 2025!"), cameraMonitorViewId);
+            aprilTagDetectionPipeline = new AprilTagDetectionPipeline(parameters.TAGSIZE_METERS, parameters.WEBCAM_FOCAL_X, parameters.WEBCAM_FOCAL_Y, parameters.WEBCAM_PRINCIPAL_POINT_X, parameters.WEBCAM_PRINCIPAL_POINT_Y);
+            camera.setPipeline(aprilTagDetectionPipeline);
+            camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
+                @Override
+                public void onOpened() {
+                    camera.startStreaming(640, 480, OpenCvCameraRotation.UPRIGHT);
+                }
+
+                @Override
+                public void onError(int errorCode) {
+
+                }
+            });
+        }
+
+        public ORDER getOrder() {
+            telemetry.addData("Sending order", order);
+            telemetry.update();
+            return order;
+        }
+
+        public int scanTagInit() {
+            ArrayList<AprilTagDetection> detections = aprilTagDetectionPipeline.getDetectionsUpdate();
+
+            if (detections == null) {
+                return -1;
+            }
+
+            if (!detections.isEmpty()) {
+                for (AprilTagDetection detection : detections) {
+                    if (detection.id == 21) {
+                        return 21;
+                    } else if (detection.id == 22) {
+                        return 22;
+                    } else if (detection.id == 23) {
+                        return 23;
+                    }
+                }
+            }
+            return -1;
+        }
+
+        public class ScanOrder implements Action {
+            private int timeoutCycles;
+            ArrayList<AprilTagDetection> detections;
+
+            public ScanOrder(int maxCycles) {
+                timeoutCycles = maxCycles;
+            }
+
+            @Override
+            public boolean run (@NonNull TelemetryPacket packet) {
+                detections = aprilTagDetectionPipeline.getDetectionsUpdate();
+
+                if (detections == null) {
+                    timeoutCycles--;
+                    return true;
+                }
+
+                if (!detections.isEmpty()) {
+                    for (AprilTagDetection detection : detections) {
+                        if (detection.id == 21) {
+                            order = ORDER.GPP;
+                            telemetry.addData("ID", order);
+                            telemetry.update();
+                            return false;
+                        } else if (detection.id == 22) {
+                            order = ORDER.PGP;
+                            telemetry.addData("ID", order);
+                            telemetry.update();
+                            return false;
+                        } else if (detection.id == 23) {
+                            order = ORDER.PPG;
+                            telemetry.addData("ID", order);
+                            telemetry.update();
+                            return false;
+                        }
+                    }
+                }
+                timeoutCycles--;
+                telemetry.addLine("Nothing seen");
+                telemetry.update();
+                return timeoutCycles != 0;
+            }
+        }
+
+        public Action scanOrder(int maxCycles) {
+            return new ScanOrder(maxCycles);
+        }
+    }
+
     @Override
     public void runOpMode() {
         // Trajectories to select from
@@ -702,7 +827,7 @@ public class Autonomous extends LinearOpMode {
 
         Robot robot = new Robot(
                 new Intake(hardwareMap), new Launch(hardwareMap), new Load(hardwareMap), new Bunt(hardwareMap),
-                new MecanumDrive(hardwareMap, initialPose));
+                new MecanumDrive(hardwareMap, initialPose), new Camera(hardwareMap));
 
         boolean isRed = (startPos == Positions.START.RED_CLOSE || startPos == Positions.START.RED_FAR);
         boolean isClose = (startPos == Positions.START.RED_CLOSE || startPos == Positions.START.BLUE_CLOSE);
@@ -807,15 +932,37 @@ public class Autonomous extends LinearOpMode {
         // Initialization Actions
         Actions.runBlocking(robot.Init());
 
+        int scannedTagID = -1;
         while (!isStopRequested() && !opModeIsActive()) {
-            telemetry.addData("X Position during Init", robot.drive.pose.position.x);
-            telemetry.addData("Y Position during Init", robot.drive.pose.position.y);
-            telemetry.addData("Heading during Init", robot.drive.pose.heading.real);
-
-            telemetry.update();
+            int newScanID = robot.camera.scanTagInit();
+            if (newScanID == -1) {
+                continue;
+            } else {
+                scannedTagID = newScanID;
+                telemetry.addData("ID", scannedTagID);
+                telemetry.update();
+            }
         }
 
         Action actionToExecute;
+
+        if (scannedTagID == 21) {
+            actionToExecute = new SequentialAction(
+                    robot.launch.launchDrop()
+            );
+        } else if (scannedTagID == 22) {
+            actionToExecute = new SequentialAction(
+                    robot.intake.intakeOut()
+            );
+        } else if (scannedTagID == 23) {
+            actionToExecute = new SequentialAction(
+                    robot.load.loadLoad()
+            );
+        } else {
+            actionToExecute = new SequentialAction(
+                    robot.bunt.buntLaunch()
+            );
+        }
 
         telemetry.update();
         waitForStart();
@@ -843,7 +990,9 @@ public class Autonomous extends LinearOpMode {
 //                                robot.shootHigh(0),
 //                                robot.load.loadLoad(),
 //                                robot.shootLow(1)
-                                robot.nudgeIntake()
+//                                robot.camera.scanOrder(10000000),
+//                                robot.setOrder(),
+                                actionToExecute
                         )
                 )
         );
