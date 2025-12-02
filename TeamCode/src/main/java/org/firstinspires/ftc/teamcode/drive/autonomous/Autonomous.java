@@ -42,7 +42,6 @@ import java.util.Arrays;
 @com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "AUTONOMOUS", group = "Autonomous")
 public class Autonomous extends LinearOpMode {
     public static class Positions {
-        //TODO: CREATE NEW POSITIONAL CONSTANTS
         enum GOAL {
             RED(new Pose2d(-53, 48, Math.toRadians(135))),
             BLUE(new Pose2d(-53, -48, Math.toRadians(225)));
