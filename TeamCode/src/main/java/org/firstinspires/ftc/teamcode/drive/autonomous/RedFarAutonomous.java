@@ -102,14 +102,14 @@ public class RedFarAutonomous extends Autonomous {
         //                        s4,
         //                        s5,
                                 robot.loadIntakeIntoHigh(0.5f),
-                                robot.launch.launchFar(),
+                                robot.launch.launchFarHigh(),
                                 robot.shootHigh(1),
                                 new SleepAction(0.75),
                                 robot.loadIntakeIntoHigh(1.5f),
                                 robot.shootHigh(1),
                                 robot.launch.launchDrop(),
                                 robot.loadIntakeIntoLow(0.25f),
-                                robot.launch.launchFar(),
+                                robot.launch.launchFarHigh(),
                                 robot.shootLow(0.5f)
                         )
                 )

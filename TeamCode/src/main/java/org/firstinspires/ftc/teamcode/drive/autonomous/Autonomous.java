@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.drive.autonomous;
 
-import android.graphics.Camera;
-
 import androidx.annotation.NonNull;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
@@ -46,7 +44,7 @@ public class Autonomous extends LinearOpMode {
             RED(new Pose2d(-53, 48, Math.toRadians(135))),
             BLUE(new Pose2d(-53, -48, Math.toRadians(225)));
 
-            private Pose2d pose2d;
+            private final Pose2d pose2d;
 
             GOAL(Pose2d _pose2d) {
                 this.pose2d = _pose2d;
@@ -59,11 +57,11 @@ public class Autonomous extends LinearOpMode {
 
         enum START {
             RED_CLOSE(new Pose2d(-48, 47, Math.toRadians(315))),
-            RED_FAR(new Pose2d(62, 23, Math.toRadians(180))),
+            RED_FAR(new Pose2d(62, 23, Math.toRadians(0))),
             BLUE_CLOSE(new Pose2d(-48, -47, Math.toRadians(45))),
-            BLUE_FAR(new Pose2d(62, -23, Math.toRadians(180)));
+            BLUE_FAR(new Pose2d(62, -23, Math.toRadians(0)));
 
-            private Pose2d pose2d;
+            private final Pose2d pose2d;
 
             START(Pose2d _pose2d) {
                 this.pose2d = _pose2d;
@@ -75,14 +73,20 @@ public class Autonomous extends LinearOpMode {
         }
 
         enum ARTIFACT {
-            RED_A(new Pose2d(-11.5f, 46.5f, Math.toRadians(0))),
-            RED_B(new Pose2d(12.3f, 46.5f, Math.toRadians(0))),
-            RED_C(new Pose2d(35.75, 46.5f, Math.toRadians(0))),
-            BLUE_A(new Pose2d(-11.5f, -46.5f, Math.toRadians(0))),
-            BLUE_B(new Pose2d(12.3f, -46.5f, Math.toRadians(0))),
-            BLUE_C(new Pose2d(35.75, -46.5f, Math.toRadians(0)));
+            RED_A(new Pose2d(-11.5f, 26.5f, Math.toRadians(90))),
+            RED_B(new Pose2d(12.3f, 26.5f, Math.toRadians(90))),
+            RED_C(new Pose2d(35.75, 26.5f, Math.toRadians(90))),
+            BLUE_A(new Pose2d(-11.5f, -26.5f, Math.toRadians(-90))),
+            BLUE_B(new Pose2d(12.3f, -26.5f, Math.toRadians(-90))),
+            BLUE_C(new Pose2d(35.75, -26.5f, Math.toRadians(-90))),
+            RED_A_COLLECT(new Pose2d(-11.5f, 46.5f, Math.toRadians(90))),
+            RED_B_COLLECT(new Pose2d(12.3f, 46.5f, Math.toRadians(90))),
+            RED_C_COLLECT(new Pose2d(35.75, 46.5f, Math.toRadians(90))),
+            BLUE_A_COLLECT(new Pose2d(-11.5f, -46.5f, Math.toRadians(-90))),
+            BLUE_B_COLLECT(new Pose2d(12.3f, -46.5f, Math.toRadians(-90))),
+            BLUE_C_COLLECT(new Pose2d(35.75, -46.5f, Math.toRadians(-90)));
 
-            private Pose2d pose2d;
+            private final Pose2d pose2d;
 
             ARTIFACT(Pose2d _pose2d) {
                 this.pose2d = _pose2d;
@@ -97,7 +101,7 @@ public class Autonomous extends LinearOpMode {
             PARK_RED(new Pose2d(38.25f, 32, Math.toRadians(0))),
             PARK_BLUE(new Pose2d(38.25f, -32, Math.toRadians(0)));
 
-            private Pose2d pose2d;
+            private final Pose2d pose2d;
 
             PARKING(Pose2d _pose2d) {
                 this.pose2d = _pose2d;
@@ -111,49 +115,6 @@ public class Autonomous extends LinearOpMode {
 
     MecanumDrive.Params parameters = new MecanumDrive.Params();
 
-    enum StartingPosition {
-        BLUE_BUCKET(new Pose2d(35, -62, 0)),
-        BLUE_DIVE(new Pose2d(-12, -62, Math.toRadians(180))),
-        RED_BUCKET(new Pose2d(-35, 62, Math.toRadians(180))),
-        RED_DIVE(new Pose2d(35, 62, 0));
-
-        final Pose2d startPos;
-
-        public Pose2d getStartPos() {
-            return startPos;
-        }
-
-        StartingPosition(Pose2d startPos) {
-            this.startPos = startPos;
-        }
-    }
-
-    enum START {
-
-        //RED_CLOSE means the starting position CLOSE TO THE GOAL
-
-        RED_CLOSE(new Pose2d(-49.3f, 50.3f, Math.toRadians(315))),
-        RED_FAR(new Pose2d(62, 16, Math.toRadians(180))), //y pos + 12???
-        BLUE_CLOSE(new Pose2d(-49.3f, -50.3f, Math.toRadians(45))),
-        BLUE_FAR(new Pose2d(62, -16, Math.toRadians(180))); //y pos - 12???
-
-        private Pose2d pose2d;
-
-        START(Pose2d _pose2d) {
-            this.pose2d = _pose2d;
-        }
-
-        public Pose2d getPose() {
-            return pose2d;
-        }
-    }
-
-    public enum ORDER {
-        PPG,
-        PGP,
-        GPP
-    }
-
     public class Robot {
         final Intake intake;
         final Launch launch;
@@ -161,7 +122,6 @@ public class Autonomous extends LinearOpMode {
         final Bunt bunt;
         final MecanumDrive drive;
         final Camera camera;
-        ORDER order;
         int id;
 
         public Robot(Intake intake, Launch launch, Load load, Bunt bunt, MecanumDrive drive, Camera camera) {
@@ -264,57 +224,6 @@ public class Autonomous extends LinearOpMode {
             );
         }
 
-        public class ScanOrder implements Action {
-            private int timeoutCycles;
-            ArrayList<AprilTagDetection> detections;
-
-            public ScanOrder(int maxCycles) {
-                timeoutCycles = maxCycles;
-            }
-
-            @Override
-            public boolean run (@NonNull TelemetryPacket packet) {
-                detections = camera.aprilTagDetectionPipeline.getDetectionsUpdate();
-
-                if (detections == null) {
-                    timeoutCycles--;
-                    return true;
-                }
-
-                if (!detections.isEmpty()) {
-                    for (AprilTagDetection detection : detections) {
-                        if (detection.id == 21) {
-                            Robot.this.order = ORDER.GPP;
-                            telemetry.addData("ID", order);
-                            telemetry.update();
-                            id = 21;
-                            return false;
-                        } else if (detection.id == 22) {
-                            Robot.this.order = ORDER.PGP;
-                            telemetry.addData("ID", order);
-                            telemetry.update();
-                            id = 22;
-                            return false;
-                        } else if (detection.id == 23) {
-                            Robot.this.order = ORDER.PPG;
-                            telemetry.addData("ID", order);
-                            telemetry.update();
-                            id = 23;
-                            return false;
-                        }
-                    }
-                }
-                timeoutCycles--;
-                telemetry.addLine("Nothing seen");
-                telemetry.update();
-                return timeoutCycles != 0;
-            }
-        }
-
-        public Action scanOrder(int maxCycles) {
-            return new ScanOrder(maxCycles);
-        }
-
         public Action shootLLLFar() {
             return new SequentialAction(
                     launch.launchFarLow(),
@@ -415,9 +324,23 @@ public class Autonomous extends LinearOpMode {
             );
         }
 
-        public Action shootBalls(String artifactSet, int tagID, boolean isFar) {
+        public Action shootBalls(char artifactSet, int tagID, boolean isFar) {
             if (isFar) {
-                if (artifactSet.equals("B")) { //PGP
+                if (artifactSet == 'A') { //PPG
+                    if (tagID == 21) { //GPP
+                        return new SequentialAction(
+                                shootLLLFar()
+                        );
+                    } else if (tagID == 22) { //PGP
+                        return new SequentialAction(
+                                shootLHLFar()
+                        );
+                    } else if (tagID == 23) { //PPG
+                        return new SequentialAction(
+                                shootLLLFar()
+                        );
+                    }
+                } else if (artifactSet == 'B') { //PGP
                     if (tagID == 21) { //GPP
                         return new SequentialAction(
                                 shootHLLFar()
@@ -431,7 +354,7 @@ public class Autonomous extends LinearOpMode {
                                 shootLHLFar()
                        );
                     }
-                } else if (artifactSet.equals("C")) { //GPP
+                } else if (artifactSet == 'C') { //GPP
                     if (tagID == 21) { //GPP
                         return new SequentialAction(
                                 shootLLLFar()
@@ -447,7 +370,21 @@ public class Autonomous extends LinearOpMode {
                     }
                 }
             } else {
-                if (artifactSet.equals("B")) { //PGP
+                if (artifactSet == 'A') { //PPG
+                    if (tagID == 21) { //GPP
+                        return new SequentialAction(
+                                shootLLLClose()
+                        );
+                    } else if (tagID == 22) { //PGP
+                        return new SequentialAction(
+                                shootLHLClose()
+                        );
+                    } else if (tagID == 23) { //PPG
+                        return new SequentialAction(
+                                shootLLLClose()
+                        );
+                    }
+                } else if (artifactSet == 'B') { //PGP
                     if (tagID == 21) { //GPP
                         return new SequentialAction(
                                 shootHLLClose()
@@ -461,7 +398,7 @@ public class Autonomous extends LinearOpMode {
                                 shootLHLClose()
                         );
                     }
-                } else if (artifactSet.equals("C")) { //GPP
+                } else if (artifactSet == 'C') { //GPP
                     if (tagID == 21) { //GPP
                         return new SequentialAction(
                                 shootLLLClose()
@@ -626,7 +563,7 @@ public class Autonomous extends LinearOpMode {
     }
 
     public class Bunt {
-        private Servo bunt;
+        private final Servo bunt;
 
         public Bunt(HardwareMap hardwareMap) {
             bunt = hardwareMap.get(Servo.class, "bunt");
@@ -758,7 +695,6 @@ public class Autonomous extends LinearOpMode {
         }
 
         public class LaunchFarHigh implements Action {
-
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 launchState = 2;
@@ -823,7 +759,6 @@ public class Autonomous extends LinearOpMode {
     public class Camera {
         private final OpenCvCamera camera;
         public final AprilTagDetectionPipeline aprilTagDetectionPipeline;
-        private ORDER order;
 
         public Camera (HardwareMap hardwareMap) {
             int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
@@ -841,12 +776,6 @@ public class Autonomous extends LinearOpMode {
 
                 }
             });
-        }
-
-        public ORDER getOrder() {
-            telemetry.addData("Sending order", order);
-            telemetry.update();
-            return order;
         }
 
         public int scanTagInit() {
@@ -868,54 +797,6 @@ public class Autonomous extends LinearOpMode {
                 }
             }
             return -1;
-        }
-
-        public class ScanOrder implements Action {
-            private int timeoutCycles;
-            ArrayList<AprilTagDetection> detections;
-
-            public ScanOrder(int maxCycles) {
-                timeoutCycles = maxCycles;
-            }
-
-            @Override
-            public boolean run (@NonNull TelemetryPacket packet) {
-                detections = aprilTagDetectionPipeline.getDetectionsUpdate();
-
-                if (detections == null) {
-                    timeoutCycles--;
-                    return true;
-                }
-
-                if (!detections.isEmpty()) {
-                    for (AprilTagDetection detection : detections) {
-                        if (detection.id == 21) {
-                            order = ORDER.GPP;
-                            telemetry.addData("ID", order);
-                            telemetry.update();
-                            return false;
-                        } else if (detection.id == 22) {
-                            order = ORDER.PGP;
-                            telemetry.addData("ID", order);
-                            telemetry.update();
-                            return false;
-                        } else if (detection.id == 23) {
-                            order = ORDER.PPG;
-                            telemetry.addData("ID", order);
-                            telemetry.update();
-                            return false;
-                        }
-                    }
-                }
-                timeoutCycles--;
-                telemetry.addLine("Nothing seen");
-                telemetry.update();
-                return timeoutCycles != 0;
-            }
-        }
-
-        public Action scanOrder(int maxCycles) {
-            return new ScanOrder(maxCycles);
         }
     }
 
@@ -1111,5 +992,19 @@ public class Autonomous extends LinearOpMode {
                         )
                 )
         );
+
+        int maxCycles = 500;
+        if (scannedTagID == -1) {
+            //scan tag;
+            //if not found
+                // --> Try again, cycles--;
+            //if found succes
+
+        }
+
+        Actions.runBlocking(
+                robot.load.loadLoad()
+        );
+
     }
 }

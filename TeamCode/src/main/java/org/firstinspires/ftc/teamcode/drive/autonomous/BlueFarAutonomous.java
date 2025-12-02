@@ -108,14 +108,14 @@ public class BlueFarAutonomous extends Autonomous {
                                 robot.intake.intakeOff(),
                                 s4, s5,
                                 robot.loadIntakeIntoHigh(0.5f),
-                                robot.launch.launchFar(),
+                                robot.launch.launchFarHigh(),
                                 robot.shootHighDouble(1),
                                 new SleepAction(0.75),
                                 robot.loadIntakeIntoHigh(1.5f),
                                 robot.shootHigh(1),
                                 robot.launch.launchDrop(),
                                 robot.loadIntakeIntoLow(0.25f),
-                                robot.launch.launchFar(),
+                                robot.launch.launchFarHigh(),
                                 robot.shootLow(0.75f)
                         )
                 )

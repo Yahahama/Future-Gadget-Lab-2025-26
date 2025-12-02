@@ -32,9 +32,9 @@ public class MeepMeepTesting {
 
         enum START {
             RED_CLOSE(new Pose2d(-48, 47, Math.toRadians(315))),
-            RED_FAR(new Pose2d(62, 23, Math.toRadians(180))),
+            RED_FAR(new Pose2d(62, 23, Math.toRadians(0))),
             BLUE_CLOSE(new Pose2d(-48, -47, Math.toRadians(45))),
-            BLUE_FAR(new Pose2d(62, -23, Math.toRadians(180)));
+            BLUE_FAR(new Pose2d(62, -23, Math.toRadians(0)));
 
             private Pose2d pose2d;
 
@@ -180,7 +180,7 @@ public class MeepMeepTesting {
 
         Image img = null;
         try {
-            img = ImageIO.read(new File("/Users/bma30/Documents/FTC/DecodeMeepMeepBackground.png"));
+            img = ImageIO.read(new File("/Users/tnguyen26/Documents/Photos/decodempmp.png"));
         } catch (IOException e) {}
 
         meepMeep.setBackground(img)
