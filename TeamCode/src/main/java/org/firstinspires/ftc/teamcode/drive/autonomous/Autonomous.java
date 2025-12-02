@@ -56,44 +56,120 @@ public class Autonomous extends LinearOpMode {
         }
 
         enum START {
-            RED_CLOSE(new Pose2d(-48, 47, Math.toRadians(315))),
-            RED_FAR(new Pose2d(62, 23, Math.toRadians(0))),
-            BLUE_CLOSE(new Pose2d(-48, -47, Math.toRadians(45))),
-            BLUE_FAR(new Pose2d(62, -23, Math.toRadians(0)));
+            RED_CLOSE(new Pose2d(-48, 47, Math.toRadians(-45)), Math.toRadians(-45)),
+            RED_FAR(new Pose2d(62, 23, Math.toRadians(0)), Math.toRadians(180)),
+            BLUE_CLOSE(new Pose2d(-48, -47, Math.toRadians(45)), Math.toRadians(45)),
+            BLUE_FAR(new Pose2d(62, -23, Math.toRadians(0)), Math.toRadians(180));
 
             private final Pose2d pose2d;
+            private final double outHeading;
 
-            START(Pose2d _pose2d) {
+            START(Pose2d _pose2d, double _outHeading) {
                 this.pose2d = _pose2d;
+                this.outHeading = _outHeading;
             }
 
             public Pose2d getPose() {
                 return pose2d;
+            }
+
+            public double out() {
+                return outHeading;
             }
         }
 
         enum ARTIFACT {
-            RED_A(new Pose2d(-11.5f, 26.5f, Math.toRadians(90))),
-            RED_B(new Pose2d(12.3f, 26.5f, Math.toRadians(90))),
-            RED_C(new Pose2d(35.75, 26.5f, Math.toRadians(90))),
-            BLUE_A(new Pose2d(-11.5f, -26.5f, Math.toRadians(-90))),
-            BLUE_B(new Pose2d(12.3f, -26.5f, Math.toRadians(-90))),
-            BLUE_C(new Pose2d(35.75, -26.5f, Math.toRadians(-90))),
-            RED_A_COLLECT(new Pose2d(-11.5f, 46.5f, Math.toRadians(90))),
-            RED_B_COLLECT(new Pose2d(12.3f, 46.5f, Math.toRadians(90))),
-            RED_C_COLLECT(new Pose2d(35.75, 46.5f, Math.toRadians(90))),
-            BLUE_A_COLLECT(new Pose2d(-11.5f, -46.5f, Math.toRadians(-90))),
-            BLUE_B_COLLECT(new Pose2d(12.3f, -46.5f, Math.toRadians(-90))),
-            BLUE_C_COLLECT(new Pose2d(35.75, -46.5f, Math.toRadians(-90)));
+            RED_A(new Pose2d(-11.5f, 26.5f, Math.toRadians(90)), Math.toRadians(90), Math.toRadians(-90), 'A'),
+            RED_B(new Pose2d(12.3f, 26.5f, Math.toRadians(90)), Math.toRadians(90), Math.toRadians(-90), 'B'),
+            RED_C(new Pose2d(35.75, 26.5f, Math.toRadians(90)), Math.toRadians(90), Math.toRadians(-90), 'C'),
+            BLUE_A(new Pose2d(-11.5f, -26.5f, Math.toRadians(-90)), Math.toRadians(-90), Math.toRadians(90), 'A'),
+            BLUE_B(new Pose2d(12.3f, -26.5f, Math.toRadians(-90)), Math.toRadians(-90), Math.toRadians(90), 'B'),
+            BLUE_C(new Pose2d(35.75, -26.5f, Math.toRadians(-90)), Math.toRadians(-90), Math.toRadians(90), 'C'),
+            RED_A_COLLECT(new Pose2d(-11.5f, 46.5f, Math.toRadians(90)), Math.toRadians(90), Math.toRadians(-90), 'A'),
+            RED_B_COLLECT(new Pose2d(12.3f, 46.5f, Math.toRadians(90)), Math.toRadians(90), Math.toRadians(-90), 'B'),
+            RED_C_COLLECT(new Pose2d(35.75, 46.5f, Math.toRadians(90)), Math.toRadians(90), Math.toRadians(-90), 'C'),
+            BLUE_A_COLLECT(new Pose2d(-11.5f, -46.5f, Math.toRadians(-90)), Math.toRadians(-90), Math.toRadians(90), 'A'),
+            BLUE_B_COLLECT(new Pose2d(12.3f, -46.5f, Math.toRadians(-90)), Math.toRadians(-90), Math.toRadians(90), 'B'),
+            BLUE_C_COLLECT(new Pose2d(35.75, -46.5f, Math.toRadians(-90)), Math.toRadians(-90), Math.toRadians(90), 'C');
 
             private final Pose2d pose2d;
+            private final double inHeading;
+            private final double outHeading;
+            private final char set;
 
-            ARTIFACT(Pose2d _pose2d) {
+            ARTIFACT(Pose2d _pose2d, double _inHeading, double _outHeading, char _set) {
                 this.pose2d = _pose2d;
+                this.inHeading = _inHeading;
+                this.outHeading = _outHeading;
+                this.set = _set;
             }
 
             public Pose2d getPose() {
                 return pose2d;
+            }
+
+            public double in() {
+                return inHeading;
+            }
+
+            public double out() {
+                return outHeading;
+            }
+
+            public char letter() {
+                return set;
+            }
+        }
+
+        enum OBELISK {
+            RED_CLOSE(new Pose2d(1, 2, Math.toRadians(3)), Math.toRadians(4), Math.toRadians(5)),
+            RED_FAR(new Pose2d(23, 12, Math.toRadians(187)), Math.toRadians(187), Math.toRadians(90)),
+            BLUE_CLOSE(new Pose2d(1, 2, Math.toRadians(3)), Math.toRadians(4), Math.toRadians(5)),
+            BLUE_FAR(new Pose2d(23, -12, Math.toRadians(-187)), Math.toRadians(-187), Math.toRadians(-90));
+
+            private final Pose2d pose2d;
+            private final double inHeading;
+            private final double outHeading;
+
+            OBELISK(Pose2d _pose2d, double _inHeading, double _outHeading) {
+                this.pose2d = _pose2d;
+                this.inHeading = _inHeading;
+                this.outHeading = _outHeading;
+            }
+
+            public Pose2d getPose() {
+                return pose2d;
+            }
+
+            public double in() {
+                return inHeading;
+            }
+
+            public double out() {
+                return outHeading;
+            }
+        }
+
+        enum LAUNCH {
+            RED_CLOSE(new Pose2d(1, 2, Math.toRadians(3)), Math.toRadians(-135)),
+            RED_FAR(new Pose2d(1, 2, Math.toRadians(3)), Math.toRadians(-10)),
+            BLUE_CLOSE(new Pose2d(1, 2, Math.toRadians(3)), Math.toRadians(135)),
+            BLUE_FAR(new Pose2d(1, 2, Math.toRadians(3)), Math.toRadians(10));
+
+            private final Pose2d pose2d;
+            private final double inHeading;
+
+            LAUNCH(Pose2d _pose2d, double _inHeading) {
+                this.pose2d = _pose2d;
+                this.inHeading = _inHeading;
+            }
+
+            public Pose2d getPose() {
+                return pose2d;
+            }
+
+            public double in() {
+                return inHeading;
             }
         }
 
@@ -110,6 +186,36 @@ public class Autonomous extends LinearOpMode {
             public Pose2d getPose() {
                 return pose2d;
             }
+        }
+
+        static TrajectoryActionBuilder linearSplineTrajectory(Robot robot, START start, ARTIFACT artifact) {
+            return robot.drive.actionBuilder(start.getPose())
+                    .setTangent(start.out())
+                    .splineToLinearHeading(artifact.getPose(), artifact.in());
+        }
+
+        static TrajectoryActionBuilder linearSplineTrajectory(Robot robot, START start, OBELISK obelisk) {
+            return robot.drive.actionBuilder(start.getPose())
+                    .setTangent(start.out())
+                    .splineToLinearHeading(obelisk.getPose(), obelisk.in());
+        }
+
+        static TrajectoryActionBuilder linearSplineTrajectory(Robot robot, OBELISK obelisk, ARTIFACT artifact) {
+            return robot.drive.actionBuilder(obelisk.getPose())
+                    .setTangent(obelisk.out())
+                    .splineToLinearHeading(artifact.getPose(), artifact.in());
+        }
+
+        static TrajectoryActionBuilder linearSplineTrajectory(Robot robot, ARTIFACT artifact, LAUNCH launch) {
+            return robot.drive.actionBuilder(artifact.getPose())
+                    .setTangent(artifact.out())
+                    .splineToLinearHeading(launch.getPose(), launch.in());
+        }
+
+        static TrajectoryActionBuilder line(Robot robot, ARTIFACT artifact, ARTIFACT artifactCollect) {
+            return robot.drive.actionBuilder(artifact.getPose())
+                    .setTangent(artifact.out())
+                    .lineToY(artifactCollect.getPose().position.y, new TranslationalVelConstraint(8));
         }
     }
 
@@ -215,12 +321,11 @@ public class Autonomous extends LinearOpMode {
             );
         }
 
-        public Action collectBalls(TrajectoryActionBuilder forwardTrajectory, TrajectoryActionBuilder backTrajectory) {
+        public Action collectBalls(TrajectoryActionBuilder forwardTrajectory) {
             return new SequentialAction(
                     intake.intakeLoad(),
                     forwardTrajectory.build(),
-                    intake.intakeOff(),
-                    backTrajectory.build()
+                    intake.intakeOff()
             );
         }
 
@@ -369,6 +474,9 @@ public class Autonomous extends LinearOpMode {
                         );
                     }
                 }
+                return new SequentialAction(
+                        shootLLLFar()
+                );
             } else {
                 if (artifactSet == 'A') { //PPG
                     if (tagID == 21) { //GPP
@@ -413,8 +521,10 @@ public class Autonomous extends LinearOpMode {
                         );
                     }
                 }
+                return new SequentialAction(
+                        shootHHLClose()
+                );
             }
-            return new SleepAction(1);
         }
     }
 
@@ -940,22 +1050,21 @@ public class Autonomous extends LinearOpMode {
             }
         }
 
-        Action actionToExecute;
+        Action preScanTrajectory;
+        Action postScanTrajectory;
 
-        if (scannedTagID == 21) {
-            actionToExecute = new SequentialAction(
-                    robot.launch.launchDrop()
-            );
-        } else if (scannedTagID == 22) {
-            actionToExecute = new SequentialAction(
-                    robot.intake.intakeOut()
-            );
-        } else if (scannedTagID == 23) {
-            actionToExecute = new SequentialAction(
-                    robot.load.loadLoad()
-            );
+        //a == ppg
+        if (scannedTagID == 21) { //GPP
+            preScanTrajectory = new SleepAction(1);
+            postScanTrajectory = robot.drive.actionBuilder(Positions.START.RED_FAR.getPose())
+                    .setTangent(Math.toRadians(180))
+                    .splineToLinearHeading(Positions.ARTIFACT.RED_C.getPose(), Math.toRadians(90)).build();
+        } else if (scannedTagID == 22) { //PGP
+            preScanTrajectory = new SleepAction(1);
+        } else if (scannedTagID == 23) { //PPG
+            preScanTrajectory = new SleepAction(1);
         } else {
-            actionToExecute = new SequentialAction(
+            preScanTrajectory = new SequentialAction(
                     robot.bunt.buntLaunch()
             );
         }
@@ -988,7 +1097,6 @@ public class Autonomous extends LinearOpMode {
 //                                robot.shootLow(1)
 //                                robot.camera.scanOrder(10000000),
 //                                robot.setOrder(),
-                                actionToExecute
                         )
                 )
         );

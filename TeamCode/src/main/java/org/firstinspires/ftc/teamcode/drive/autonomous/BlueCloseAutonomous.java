@@ -120,7 +120,6 @@ public class BlueCloseAutonomous extends Autonomous {
                                 robot.intake.intakeOff(),
                                 s4,
                                 s5,
-                                robot.launch.launchClose(),
                                 new SleepAction(1),
                                 robot.bunt.buntLaunch(),
                                 new SleepAction(1),
