@@ -222,11 +222,11 @@ public class drive extends LinearOpMode {
 
             // Power Launch
             if (gamepad2.right_trigger > 0.5f) {
-                launch1.setVelocity(parameters.LAUNCH_SPEED_CLOSE + (isLoadUp ? 0.5f : 0f), AngleUnit.RADIANS);
-                launch2.setVelocity(parameters.LAUNCH_SPEED_CLOSE + (isLoadUp ? 0.5f : 0f), AngleUnit.RADIANS);
+                launch1.setVelocity(isLoadUp ? parameters.LAUNCH_SPEED_CLOSE_LOW : parameters.LAUNCH_SPEED_CLOSE_HIGH, AngleUnit.RADIANS);
+                launch2.setVelocity(isLoadUp ? parameters.LAUNCH_SPEED_CLOSE_LOW : parameters.LAUNCH_SPEED_CLOSE_HIGH, AngleUnit.RADIANS);
             } else if (gamepad2.left_trigger > 0.5f) {
-                launch1.setVelocity(parameters.LAUNCH_SPEED_FAR + (isLoadUp ? parameters.EXTRA_LAUNCH_SPEED: 0f), AngleUnit.RADIANS);
-                launch2.setVelocity(parameters.LAUNCH_SPEED_FAR + (isLoadUp ? parameters.EXTRA_LAUNCH_SPEED: 0f), AngleUnit.RADIANS);
+                launch1.setVelocity(isLoadUp ? parameters.LAUNCH_SPEED_FAR_LOW : parameters.LAUNCH_SPEED_FAR_HIGH, AngleUnit.RADIANS);
+                launch2.setVelocity(isLoadUp ? parameters.LAUNCH_SPEED_FAR_LOW : parameters.LAUNCH_SPEED_FAR_HIGH, AngleUnit.RADIANS);
             } else if (gamepad2.left_stick_button) {
                 launch1.setVelocity(parameters.LAUNCH_SPEED_DROP, AngleUnit.RADIANS);
                 launch2.setVelocity(parameters.LAUNCH_SPEED_DROP, AngleUnit.RADIANS);
