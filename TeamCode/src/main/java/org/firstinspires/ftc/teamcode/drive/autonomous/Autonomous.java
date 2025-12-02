@@ -316,13 +316,103 @@ public class Autonomous extends LinearOpMode {
             return new ScanOrder(maxCycles);
         }
 
-        public Action shootLLL() {
+        public Action shootLLLFar() {
             return new SequentialAction(
-                    shootLow(0),
+                    launch.launchFarLow(),
+                    shootLow(2),
                     loadIntakeIntoLow(0.25f),
                     shootLow(1),
+                    loadIntakeIntoLow(1f),
+                    shootLow(1),
+                    launch.launchOff()
+            );
+        }
+
+        public Action shootLLLClose() {
+            return new SequentialAction(
+                    launch.launchCloseLow(),
+                    shootLow(2),
                     loadIntakeIntoLow(0.25f),
-                    shootLow(1)
+                    shootLow(1),
+                    loadIntakeIntoLow(1f),
+                    shootLow(1),
+                    launch.launchOff()
+            );
+        }
+
+        public Action shootHLLFar() {
+            return new SequentialAction(
+                    launch.launchFarHigh(),
+                    shootHigh(0),
+                    launch.launchFarLow(),
+                    shootLow(1),
+                    loadIntakeIntoLow(1),
+                    shootLow(1),
+                    launch.launchOff()
+            );
+        }
+
+        public Action shootHLLClose() {
+            return new SequentialAction(
+                    launch.launchCloseHigh(),
+                    shootHigh(0),
+                    launch.launchCloseLow(),
+                    shootLow(1),
+                    loadIntakeIntoLow(1),
+                    shootLow(1),
+                    launch.launchOff()
+            );
+        }
+
+        public Action shootLHLFar() {
+            return new SequentialAction(
+                    launch.launchFarLow(),
+                    shootLow(0),
+                    launch.launchFarHigh(),
+                    loadIntakeIntoHigh(2),
+                    shootHigh(1),
+                    launch.launchFarLow(),
+                    shootLow(1),
+                    launch.launchOff()
+            );
+        }
+
+        public Action shootLHLClose() {
+            return new SequentialAction(
+                    launch.launchCloseLow(),
+                    shootLow(0),
+                    launch.launchCloseHigh(),
+                    loadIntakeIntoHigh(2),
+                    shootHigh(1),
+                    launch.launchCloseLow(),
+                    shootLow(1),
+                    launch.launchOff()
+            );
+        }
+
+        public Action shootHHLFar() {
+            return new SequentialAction(
+                    launch.launchFarHigh(),
+                    shootHigh(0),
+                    loadIntakeIntoHigh(1),
+                    shootHigh(1),
+                    launch.launchFarLow(),
+                    loadIntakeIntoLow(1),
+                    shootLow(1),
+                    launch.launchOff()
+            );
+        }
+
+        public Action shootHHLClose() {
+            return new SequentialAction(
+                    launch.launchCloseHigh(),
+                    shootHigh(0),
+                    loadIntakeIntoHigh(1),
+                    shootHigh(1),
+                    launch.launchCloseLow(),
+                    loadIntakeIntoLow(1),
+                    shootLow(1),
+                    launch.launchOff()
             );
         }
 
@@ -331,28 +421,29 @@ public class Autonomous extends LinearOpMode {
                 if (artifactSet.equals("B")) { //PGP
                     if (tagID == 21) { //GPP
                         return new SequentialAction(
-
+                                shootHLLFar()
                         );
                     } else if (tagID == 22) { //PGP
                         return new SequentialAction(
-                                shootLLL()
+                                shootLLLFar()
                         );
                     } else if (tagID == 23) { //PPG
                        return new SequentialAction(
-
+                                shootLHLFar()
                        );
                     }
                 } else if (artifactSet.equals("C")) { //GPP
                     if (tagID == 21) { //GPP
                         return new SequentialAction(
-                                shootLLL()
+                                shootLLLFar()
                         );
                     } else if (tagID == 22) { //PGP
                         return new SequentialAction(
-
+                                shootHLLFar()
                         );
                     } else if (tagID == 23) { //PPG
                         return new SequentialAction(
+                                shootHHLFar()
                         );
                     }
                 }
@@ -360,29 +451,29 @@ public class Autonomous extends LinearOpMode {
                 if (artifactSet.equals("B")) { //PGP
                     if (tagID == 21) { //GPP
                         return new SequentialAction(
-
+                                shootHLLClose()
                         );
                     } else if (tagID == 22) { //PGP
                         return new SequentialAction(
-
+                                shootLLLClose()
                         );
                     } else if (tagID == 23) { //PPG
                         return new SequentialAction(
-
+                                shootLHLClose()
                         );
                     }
                 } else if (artifactSet.equals("C")) { //GPP
                     if (tagID == 21) { //GPP
                         return new SequentialAction(
-
+                                shootLLLClose()
                         );
                     } else if (tagID == 22) { //PGP
                         return new SequentialAction(
-
+                                shootHLLClose()
                         );
                     } else if (tagID == 23) { //PPG
                         return new SequentialAction(
-
+                                shootHHLClose()
                         );
                     }
                 }
@@ -444,7 +535,6 @@ public class Autonomous extends LinearOpMode {
         }
 
         public class IntakeOut implements Action {
-
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 intakeDirection = -1;
@@ -457,7 +547,6 @@ public class Autonomous extends LinearOpMode {
         }
 
         public class IntakeOff implements Action {
-
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 intakeDirection = 0;
@@ -470,7 +559,6 @@ public class Autonomous extends LinearOpMode {
         }
 
         public class IntakeLoad implements Action {
-
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 intakeDirection = 2;
@@ -622,14 +710,20 @@ public class Autonomous extends LinearOpMode {
                     launch1.setVelocity(0, AngleUnit.RADIANS);
                     launch2.setVelocity(0, AngleUnit.RADIANS);
                 } else if (launchState == 1) {
-                    launch1.setVelocity(parameters.LAUNCH_SPEED_CLOSE, AngleUnit.RADIANS);
-                    launch2.setVelocity(parameters.LAUNCH_SPEED_CLOSE, AngleUnit.RADIANS);
+                    launch1.setVelocity(parameters.LAUNCH_SPEED_CLOSE_HIGH, AngleUnit.RADIANS);
+                    launch2.setVelocity(parameters.LAUNCH_SPEED_CLOSE_HIGH, AngleUnit.RADIANS);
                 } else if (launchState == 2) {
-                    launch1.setVelocity(parameters.LAUNCH_SPEED_FAR, AngleUnit.RADIANS);
-                    launch2.setVelocity(parameters.LAUNCH_SPEED_FAR, AngleUnit.RADIANS);
+                    launch1.setVelocity(parameters.LAUNCH_SPEED_FAR_HIGH, AngleUnit.RADIANS);
+                    launch2.setVelocity(parameters.LAUNCH_SPEED_FAR_HIGH, AngleUnit.RADIANS);
                 } else if (launchState == 3) {
                     launch1.setVelocity(parameters.LAUNCH_SPEED_DROP, AngleUnit.RADIANS);
                     launch2.setVelocity(parameters.LAUNCH_SPEED_DROP, AngleUnit.RADIANS);
+                } else if (launchState == 4) {
+                    launch1.setVelocity(parameters.LAUNCH_SPEED_FAR_LOW, AngleUnit.RADIANS);
+                    launch2.setVelocity(parameters.LAUNCH_SPEED_FAR_LOW, AngleUnit.RADIANS);
+                } else if (launchState == 5) {
+                    launch1.setVelocity(parameters.LAUNCH_SPEED_CLOSE_LOW, AngleUnit.RADIANS);
+                    launch2.setVelocity(parameters.LAUNCH_SPEED_CLOSE_LOW, AngleUnit.RADIANS);
                 }
 
                 return true;
@@ -640,8 +734,7 @@ public class Autonomous extends LinearOpMode {
             return new LaunchMove();
         }
 
-        public class LaunchClose implements Action {
-
+        public class LaunchCloseHigh implements Action {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 launchState = 1;
@@ -649,11 +742,23 @@ public class Autonomous extends LinearOpMode {
             }
         }
 
-        public Action launchClose() {
-            return new LaunchClose();
+        public Action launchCloseHigh() {
+            return new LaunchCloseHigh();
         }
 
-        public class LaunchFar implements Action {
+        public class LaunchCloseLow implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                launchState = 5;
+                return false;
+            }
+        }
+
+        public Action launchCloseLow() {
+            return new LaunchCloseLow();
+        }
+
+        public class LaunchFarHigh implements Action {
 
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
@@ -662,12 +767,23 @@ public class Autonomous extends LinearOpMode {
             }
         }
 
-        public Action launchFar() {
-            return new LaunchFar();
+        public Action launchFarHigh() {
+            return new LaunchFarHigh();
+        }
+
+        public class LaunchFarLow implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                launchState = 4;
+                return false;
+            }
+        }
+
+        public Action launchFarLow() {
+            return new LaunchFarLow();
         }
 
         public class LaunchOff implements Action {
-
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 launchState = 0;
