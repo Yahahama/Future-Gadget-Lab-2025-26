@@ -78,10 +78,10 @@ public class Autonomous extends LinearOpMode {
         }
 
         enum ARTIFACT {
-            RED_A(new Pose2d(-11.5f, 26.5f, Math.toRadians(90)), Math.toRadians(90), Math.toRadians(-90), 'A'),
+            RED_A(new Pose2d(-11.5f, 26.5f, Math.toRadians(90)), Math.toRadians(30), Math.toRadians(-90), 'A'),
             RED_B(new Pose2d(12.3f, 26.5f, Math.toRadians(90)), Math.toRadians(90), Math.toRadians(-90), 'B'),
             RED_C(new Pose2d(35.75, 26.5f, Math.toRadians(90)), Math.toRadians(90), Math.toRadians(-90), 'C'),
-            BLUE_A(new Pose2d(-11.5f, -26.5f, Math.toRadians(-90)), Math.toRadians(-90), Math.toRadians(90), 'A'),
+            BLUE_A(new Pose2d(-11.5f, -26.5f, Math.toRadians(-90)), Math.toRadians(-30), Math.toRadians(90), 'A'),
             BLUE_B(new Pose2d(12.3f, -26.5f, Math.toRadians(-90)), Math.toRadians(-90), Math.toRadians(90), 'B'),
             BLUE_C(new Pose2d(35.75, -26.5f, Math.toRadians(-90)), Math.toRadians(-90), Math.toRadians(90), 'C'),
             RED_A_COLLECT(new Pose2d(-11.5f, 46.5f, Math.toRadians(90)), Math.toRadians(90), Math.toRadians(-90), 'A'),
@@ -121,9 +121,9 @@ public class Autonomous extends LinearOpMode {
         }
 
         enum OBELISK {
-            RED_CLOSE(new Pose2d(-32, 32, Math.toRadians(45)), Math.toRadians(-80), Math.toRadians(-90)),
+            RED_CLOSE(new Pose2d(-32, 32, Math.toRadians(45)), Math.toRadians(-45), Math.toRadians(-30)),
             RED_FAR(new Pose2d(23, 12, Math.toRadians(7)), Math.toRadians(-173), Math.toRadians(90)),
-            BLUE_CLOSE(new Pose2d(-32, -32, Math.toRadians(-45)), Math.toRadians(80), Math.toRadians(-90)),
+            BLUE_CLOSE(new Pose2d(-32, -32, Math.toRadians(-45)), Math.toRadians(45), Math.toRadians(30)),
             BLUE_FAR(new Pose2d(23, -12, Math.toRadians(-7)), Math.toRadians(173), Math.toRadians(-90));
 
             private final Pose2d pose2d;
@@ -150,10 +150,10 @@ public class Autonomous extends LinearOpMode {
         }
 
         enum LAUNCH {
-            RED_CLOSE(new Pose2d(1, 2, Math.toRadians(3)), Math.toRadians(-135)),
-            RED_FAR(new Pose2d(1, 2, Math.toRadians(3)), Math.toRadians(-10)),
-            BLUE_CLOSE(new Pose2d(1, 2, Math.toRadians(3)), Math.toRadians(135)),
-            BLUE_FAR(new Pose2d(1, 2, Math.toRadians(3)), Math.toRadians(10));
+            RED_CLOSE(new Pose2d(-12, 12, Math.toRadians(-45)), Math.toRadians(-135)),
+            RED_FAR(new Pose2d(60, 12, Math.toRadians(-15)), Math.toRadians(-10)),
+            BLUE_CLOSE(new Pose2d(-12, -12, Math.toRadians(45)), Math.toRadians(135)),
+            BLUE_FAR(new Pose2d(60, -12, Math.toRadians(15)), Math.toRadians(10));
 
             private final Pose2d pose2d;
             private final double inHeading;
@@ -332,8 +332,10 @@ public class Autonomous extends LinearOpMode {
             return new SequentialAction(
                     launch.launchFarLow(),
                     shootLow(2),
+                    new SleepAction(1),
                     loadIntakeIntoLow(0.25f),
                     shootLow(1),
+                    new SleepAction(1),
                     loadIntakeIntoLow(1f),
                     shootLow(1),
                     launch.launchOff()
@@ -529,6 +531,7 @@ public class Autonomous extends LinearOpMode {
 
     public class Intake {
         private final DcMotorEx intake;
+        private boolean runMove = true;
 
         int intakeDirection = parameters.INTAKE_DIRECTION_START;
 
@@ -546,6 +549,7 @@ public class Autonomous extends LinearOpMode {
                 if (!initialized) {
                     intake.setPower(0);
                     initialized = true;
+                    runMove = true;
                 }
 
                 if (intakeDirection == 1) {
@@ -558,12 +562,24 @@ public class Autonomous extends LinearOpMode {
                     intake.setPower(0f);
                 }
 
-                return true;
+                return runMove;
             }
         }
 
         public Action moveIntake() {
             return new IntakeMove();
+        }
+
+        public class IntakeStop implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                runMove = false;
+                return false;
+            }
+        }
+
+        public Action stopIntake() {
+            return new IntakeStop();
         }
 
         public class IntakeIn implements Action {
@@ -730,6 +746,7 @@ public class Autonomous extends LinearOpMode {
     public class Launch {
         private final DcMotorEx launch1;
         private final DcMotorEx launch2;
+        private boolean runMove = true;
 
         int launchState = 0;
 
@@ -749,6 +766,7 @@ public class Autonomous extends LinearOpMode {
             public boolean run(@NonNull TelemetryPacket packet) {
                 if (!initialized) {
                     initialized = true;
+                    runMove = true;
                 }
 
                 if (launchState == 0 ) {
@@ -771,12 +789,24 @@ public class Autonomous extends LinearOpMode {
                     launch2.setVelocity(parameters.LAUNCH_SPEED_CLOSE_LOW, AngleUnit.RADIANS);
                 }
 
-                return true;
+                return runMove;
             }
         }
 
         public Action moveLaunch() {
             return new LaunchMove();
+        }
+
+        public class LaunchStop implements Action {
+            @Override
+            public boolean run (@NonNull TelemetryPacket packet) {
+                runMove = false;
+                return false;
+            }
+        }
+
+        public Action stopLaunch() {
+            return new LaunchStop();
         }
 
         public class LaunchCloseHigh implements Action {
@@ -1097,6 +1127,7 @@ public class Autonomous extends LinearOpMode {
 //                                robot.shootLow(1)
 //                                robot.camera.scanOrder(10000000),
 //                                robot.setOrder(),
+                                robot.shootLLLFar()
                         )
                 )
         );
@@ -1117,9 +1148,9 @@ public class Autonomous extends LinearOpMode {
 
         }
 
-        Actions.runBlocking(
-                robot.load.loadLoad()
-        );
+//        Actions.runBlocking(
+//                robot.load.loadLoad()
+//        );
 
     }
 }

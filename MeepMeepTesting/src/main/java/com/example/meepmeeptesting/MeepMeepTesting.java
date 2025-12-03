@@ -2,6 +2,9 @@ package com.example.meepmeeptesting;
 
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
+import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.noahbres.meepmeep.MeepMeep;
 import com.noahbres.meepmeep.roadrunner.DefaultBotBuilder;
 import com.noahbres.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
@@ -14,12 +17,11 @@ import javax.imageio.ImageIO;
 public class MeepMeepTesting {
 
     public static class Positions {
-
         enum GOAL {
             RED(new Pose2d(-53, 48, Math.toRadians(135))),
             BLUE(new Pose2d(-53, -48, Math.toRadians(225)));
 
-            private Pose2d pose2d;
+            private final Pose2d pose2d;
 
             GOAL(Pose2d _pose2d) {
                 this.pose2d = _pose2d;
@@ -31,38 +33,120 @@ public class MeepMeepTesting {
         }
 
         enum START {
-            RED_CLOSE(new Pose2d(-48, 47, Math.toRadians(315))),
-            RED_FAR(new Pose2d(62, 23, Math.toRadians(0))),
-            BLUE_CLOSE(new Pose2d(-48, -47, Math.toRadians(45))),
-            BLUE_FAR(new Pose2d(62, -23, Math.toRadians(0)));
+            RED_CLOSE(new Pose2d(-48, 47, Math.toRadians(-45)), Math.toRadians(-45)),
+            RED_FAR(new Pose2d(62, 23, Math.toRadians(0)), Math.toRadians(180)),
+            BLUE_CLOSE(new Pose2d(-48, -47, Math.toRadians(45)), Math.toRadians(45)),
+            BLUE_FAR(new Pose2d(62, -23, Math.toRadians(0)), Math.toRadians(180));
 
-            private Pose2d pose2d;
+            private final Pose2d pose2d;
+            private final double outHeading;
 
-            START(Pose2d _pose2d) {
+            START(Pose2d _pose2d, double _outHeading) {
                 this.pose2d = _pose2d;
+                this.outHeading = _outHeading;
             }
 
             public Pose2d getPose() {
                 return pose2d;
+            }
+
+            public double out() {
+                return outHeading;
             }
         }
 
         enum ARTIFACT {
-            RED_A(new Pose2d(-11.5f, 46.5f, Math.toRadians(0))),
-            RED_B(new Pose2d(12.3f, 46.5f, Math.toRadians(0))),
-            RED_C(new Pose2d(36, 46.5f, Math.toRadians(0))),
-            BLUE_A(new Pose2d(-11.5f, -46.5f, Math.toRadians(0))),
-            BLUE_B(new Pose2d(12.3f, -46.5f, Math.toRadians(0))),
-            BLUE_C(new Pose2d(36, -46.5f, Math.toRadians(0)));
+            RED_A(new Pose2d(-11.5f, 26.5f, Math.toRadians(90)), Math.toRadians(30), Math.toRadians(-90), 'A'),
+            RED_B(new Pose2d(12.3f, 26.5f, Math.toRadians(90)), Math.toRadians(90), Math.toRadians(-90), 'B'),
+            RED_C(new Pose2d(35.75, 26.5f, Math.toRadians(90)), Math.toRadians(90), Math.toRadians(-90), 'C'),
+            BLUE_A(new Pose2d(-11.5f, -26.5f, Math.toRadians(-90)), Math.toRadians(-30), Math.toRadians(90), 'A'),
+            BLUE_B(new Pose2d(12.3f, -26.5f, Math.toRadians(-90)), Math.toRadians(-90), Math.toRadians(90), 'B'),
+            BLUE_C(new Pose2d(35.75, -26.5f, Math.toRadians(-90)), Math.toRadians(-90), Math.toRadians(90), 'C'),
+            RED_A_COLLECT(new Pose2d(-11.5f, 46.5f, Math.toRadians(90)), Math.toRadians(90), Math.toRadians(-90), 'A'),
+            RED_B_COLLECT(new Pose2d(12.3f, 46.5f, Math.toRadians(90)), Math.toRadians(90), Math.toRadians(-90), 'B'),
+            RED_C_COLLECT(new Pose2d(35.75, 46.5f, Math.toRadians(90)), Math.toRadians(90), Math.toRadians(-90), 'C'),
+            BLUE_A_COLLECT(new Pose2d(-11.5f, -46.5f, Math.toRadians(-90)), Math.toRadians(-90), Math.toRadians(90), 'A'),
+            BLUE_B_COLLECT(new Pose2d(12.3f, -46.5f, Math.toRadians(-90)), Math.toRadians(-90), Math.toRadians(90), 'B'),
+            BLUE_C_COLLECT(new Pose2d(35.75, -46.5f, Math.toRadians(-90)), Math.toRadians(-90), Math.toRadians(90), 'C');
 
-            private Pose2d pose2d;
+            private final Pose2d pose2d;
+            private final double inHeading;
+            private final double outHeading;
+            private final char set;
 
-            ARTIFACT(Pose2d _pose2d) {
+            ARTIFACT(Pose2d _pose2d, double _inHeading, double _outHeading, char _set) {
                 this.pose2d = _pose2d;
+                this.inHeading = _inHeading;
+                this.outHeading = _outHeading;
+                this.set = _set;
             }
 
             public Pose2d getPose() {
                 return pose2d;
+            }
+
+            public double in() {
+                return inHeading;
+            }
+
+            public double out() {
+                return outHeading;
+            }
+
+            public char letter() {
+                return set;
+            }
+        }
+
+        enum OBELISK {
+            RED_CLOSE(new Pose2d(-32, 32, Math.toRadians(45)), Math.toRadians(-45), Math.toRadians(-30)),
+            RED_FAR(new Pose2d(23, 12, Math.toRadians(7)), Math.toRadians(-173), Math.toRadians(90)),
+            BLUE_CLOSE(new Pose2d(-32, -32, Math.toRadians(-45)), Math.toRadians(45), Math.toRadians(30)),
+            BLUE_FAR(new Pose2d(23, -12, Math.toRadians(-7)), Math.toRadians(173), Math.toRadians(-90));
+
+            private final Pose2d pose2d;
+            private final double inHeading;
+            private final double outHeading;
+
+            OBELISK(Pose2d _pose2d, double _inHeading, double _outHeading) {
+                this.pose2d = _pose2d;
+                this.inHeading = _inHeading;
+                this.outHeading = _outHeading;
+            }
+
+            public Pose2d getPose() {
+                return pose2d;
+            }
+
+            public double in() {
+                return inHeading;
+            }
+
+            public double out() {
+                return outHeading;
+            }
+        }
+
+        enum LAUNCH {
+            RED_CLOSE(new Pose2d(-12, 12, Math.toRadians(-45)), Math.toRadians(-135)),
+            RED_FAR(new Pose2d(60, 12, Math.toRadians(-15)), Math.toRadians(-10)),
+            BLUE_CLOSE(new Pose2d(-12, -12, Math.toRadians(45)), Math.toRadians(135)),
+            BLUE_FAR(new Pose2d(60, -12, Math.toRadians(15)), Math.toRadians(10));
+
+            private final Pose2d pose2d;
+            private final double inHeading;
+
+            LAUNCH(Pose2d _pose2d, double _inHeading) {
+                this.pose2d = _pose2d;
+                this.inHeading = _inHeading;
+            }
+
+            public Pose2d getPose() {
+                return pose2d;
+            }
+
+            public double in() {
+                return inHeading;
             }
         }
 
@@ -70,7 +154,7 @@ public class MeepMeepTesting {
             PARK_RED(new Pose2d(38.25f, 32, Math.toRadians(0))),
             PARK_BLUE(new Pose2d(38.25f, -32, Math.toRadians(0)));
 
-            private Pose2d pose2d;
+            private final Pose2d pose2d;
 
             PARKING(Pose2d _pose2d) {
                 this.pose2d = _pose2d;
@@ -79,6 +163,36 @@ public class MeepMeepTesting {
             public Pose2d getPose() {
                 return pose2d;
             }
+        }
+
+        static TrajectoryActionBuilder linearSplineTrajectory(RoadRunnerBotEntity robot, START start, ARTIFACT artifact) {
+            return robot.getDrive().actionBuilder(start.getPose())
+                    .setTangent(start.out())
+                    .splineToLinearHeading(artifact.getPose(), artifact.in());
+        }
+
+        static TrajectoryActionBuilder linearSplineTrajectory(RoadRunnerBotEntity robot, START start, OBELISK obelisk) {
+            return robot.getDrive().actionBuilder(start.getPose())
+                    .setTangent(start.out())
+                    .splineToLinearHeading(obelisk.getPose(), obelisk.in());
+        }
+
+        static TrajectoryActionBuilder linearSplineTrajectory(RoadRunnerBotEntity robot, OBELISK obelisk, ARTIFACT artifact) {
+            return robot.getDrive().actionBuilder(obelisk.getPose())
+                    .setTangent(obelisk.out())
+                    .splineToLinearHeading(artifact.getPose(), artifact.in());
+        }
+
+        static TrajectoryActionBuilder linearSplineTrajectory(RoadRunnerBotEntity robot, ARTIFACT artifact, LAUNCH launch) {
+            return robot.getDrive().actionBuilder(artifact.getPose())
+                    .setTangent(artifact.out())
+                    .splineToLinearHeading(launch.getPose(), launch.in());
+        }
+
+        static TrajectoryActionBuilder line(RoadRunnerBotEntity robot, ARTIFACT artifact, ARTIFACT artifactCollect) {
+            return robot.getDrive().actionBuilder(artifact.getPose())
+                    .setTangent(artifact.out())
+                    .lineToY(artifactCollect.getPose().position.y, new TranslationalVelConstraint(8));
         }
     }
 
@@ -91,27 +205,19 @@ public class MeepMeepTesting {
                 .build();
 
         // change these to test
-        Positions.START startPos = Positions.START.BLUE_CLOSE; // choose start
-        char artifactLetter = 'C'; // choose which artifact: 'A', 'B', or 'C'
+        Positions.START startPos = Positions.START.RED_CLOSE; // choose start
+        Positions.OBELISK obeliskPos = Positions.OBELISK.RED_CLOSE;
+        Positions.LAUNCH launchPos = Positions.LAUNCH.RED_CLOSE;
 
         Pose2d initialPose = startPos.getPose();
 
         boolean isRed = (startPos == Positions.START.RED_CLOSE || startPos == Positions.START.RED_FAR);
         boolean isClose = (startPos == Positions.START.RED_CLOSE || startPos == Positions.START.BLUE_CLOSE);
 
-        // pick correct artifact automatically
-        Positions.ARTIFACT detectedTag;
-        if (isRed) {
-            if (artifactLetter == 'A') detectedTag = Positions.ARTIFACT.RED_A;
-            else if (artifactLetter == 'B') detectedTag = Positions.ARTIFACT.RED_B;
-            else detectedTag = Positions.ARTIFACT.RED_C;
-        } else {
-            if (artifactLetter == 'A') detectedTag = Positions.ARTIFACT.BLUE_A;
-            else if (artifactLetter == 'B') detectedTag = Positions.ARTIFACT.BLUE_B;
-            else detectedTag = Positions.ARTIFACT.BLUE_C;
-        }
+        Positions.ARTIFACT firstArtifact = Positions.ARTIFACT.RED_B;
+        Positions.ARTIFACT firstArtifactCollect = Positions.ARTIFACT.RED_B_COLLECT;
 
-        Pose2d target = detectedTag.getPose();
+        Pose2d target = firstArtifact.getPose();
 
         // approach points (up for red, down for blue)
         Pose2d redApproachPoint = new Pose2d(target.position.x, target.position.y - 20, Math.toRadians(90));
@@ -176,7 +282,17 @@ public class MeepMeepTesting {
                 .splineTo(goalFront.position, Math.toRadians(isRed ? 135 : 225))
                 .build();
 
-        robot.runAction(fullSequence);
+        Action preScanAction = new SequentialAction(
+                Positions.linearSplineTrajectory(robot, startPos, obeliskPos).build()
+        );
+
+        Action postScanAction = new SequentialAction(
+                Positions.linearSplineTrajectory(robot, obeliskPos, firstArtifact).build(),
+                Positions.line(robot, firstArtifact, firstArtifactCollect).build(),
+                Positions.linearSplineTrajectory(robot, firstArtifactCollect, launchPos).build()
+        );
+
+        robot.runAction(preScanAction);
 
         Image img = null;
         try {

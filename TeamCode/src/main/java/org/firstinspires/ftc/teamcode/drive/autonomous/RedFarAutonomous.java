@@ -36,56 +36,6 @@ public class RedFarAutonomous extends Autonomous {
                 new Camera(hardwareMap)
         );
 
-//        Positions.ARTIFACT detectedTag;
-//        if (artifactLetter == 'A') detectedTag = Positions.ARTIFACT.RED_A;
-//        else if (artifactLetter == 'B') detectedTag = Positions.ARTIFACT.RED_B;
-//        else detectedTag = Positions.ARTIFACT.RED_C;
-//
-//        Pose2d target = detectedTag.getPose();
-//
-//        Pose2d redApproachPoint = new Pose2d(target.position.x, target.position.y - 20, Math.toRadians(90));
-//        Pose2d redFarObeliskPose = new Pose2d(23, 12, Math.toRadians(187));
-//
-//        Pose2d chosenObeliskPose = redFarObeliskPose;
-//        Pose2d approachPoint = redApproachPoint;
-//
-//        // NEW FINAL PARK
-//        Pose2d finalPark = new Pose2d(60, 12, Math.toRadians(158+180));
-//
-//        double approachHeading = Math.toRadians(90);
-//        double secondsToWait = 1;
-//
-//        Action s1 = robot.drive.actionBuilder(initialPose)
-//                .setTangent(Math.toRadians(197))
-//                .splineToLinearHeading(chosenObeliskPose, chosenObeliskPose.heading.real)
-//                .waitSeconds(secondsToWait)
-//                .build();
-//
-//        Action s2 = robot.drive.actionBuilder(chosenObeliskPose)
-//                .setTangent(Math.toRadians(45))
-//                .splineToLinearHeading(approachPoint, approachHeading)
-//                .build();
-//
-//        Action s3 = robot.drive.actionBuilder(approachPoint)
-//                .setTangent(Math.toRadians(270))
-//                .lineToY(target.position.y, new TranslationalVelConstraint(10))
-//                .build();
-//
-//        Action s4 = robot.drive.actionBuilder(
-//                        new Pose2d(approachPoint.position.x, target.position.y, approachHeading))
-//                .setTangent(Math.toRadians(90))
-//                .lineToY(approachPoint.position.y - 10)
-//                .build();
-//
-//        Action s5 = robot.drive.actionBuilder(
-//                        new Pose2d(
-//                                approachPoint.position.x,
-//                                approachPoint.position.y - 10,
-//                                Math.toRadians(270)))
-//                .setTangent(Math.toRadians(-225))
-//                .splineToLinearHeading(finalPark, finalPark.heading.real)
-//                .build();
-
         Actions.runBlocking(robot.Init());
 
         telemetry.addLine("Robot Initialized. Scanning for AprilTags");
@@ -137,14 +87,25 @@ public class RedFarAutonomous extends Autonomous {
 
         Actions.runBlocking(
                 new ParallelAction(
-                        robot.intake.moveIntake(),
                         robot.launch.moveLaunch(),
-                        preScanAction
+                        robot.intake.moveIntake(),
+                        new SequentialAction(
+                                preScanAction,
+                                robot.launch.stopLaunch(),
+                                robot.intake.stopIntake()
+                        )
                 )
         );
 
         int timeoutCycles = 500;
-        while (scannedTagID == -1 && timeoutCycles > 0) {
+        while (scannedTagID == -1 && timeoutCycles >= 0) {
+            if (timeoutCycles == 0) {
+                firstArtifact = Positions.ARTIFACT.RED_C;
+                firstArtifactCollect = Positions.ARTIFACT.RED_C_COLLECT;
+                timeoutCycles = -1;
+                break;
+            }
+
             telemetry.addLine("Scanning for AprilTag");
             telemetry.addData("Cycles remaining before timeout", timeoutCycles);
             telemetry.update();
@@ -162,14 +123,17 @@ public class RedFarAutonomous extends Autonomous {
             if (scannedTagID == 21) { //GPP
                 firstArtifact = Positions.ARTIFACT.RED_C;
                 firstArtifactCollect = Positions.ARTIFACT.RED_C_COLLECT;
+                timeoutCycles = -1;
                 break;
             } else if (scannedTagID == 22) { //PGP
                 firstArtifact = Positions.ARTIFACT.RED_C;
                 firstArtifactCollect = Positions.ARTIFACT.RED_C_COLLECT;
+                timeoutCycles = -1;
                 break;
             } else if (scannedTagID == 23) { //PPG
                 firstArtifact = Positions.ARTIFACT.RED_C;
                 firstArtifactCollect = Positions.ARTIFACT.RED_C_COLLECT;
+                timeoutCycles = -1;
                 break;
             } else {
                 scannedTagID = -1;
@@ -177,20 +141,23 @@ public class RedFarAutonomous extends Autonomous {
             }
         }
 
-        if (timeoutCycles == 0) {
-            firstArtifact = Positions.ARTIFACT.RED_C;
-            firstArtifactCollect = Positions.ARTIFACT.RED_C_COLLECT;
+        if (timeoutCycles == -1) {
+            postScanAction = new SequentialAction(
+                    Positions.linearSplineTrajectory(robot, obeliskPos, firstArtifact).build(),
+                    robot.collectBalls(Positions.line(robot, firstArtifact, firstArtifactCollect)),
+                    Positions.linearSplineTrajectory(robot, firstArtifactCollect, launchPos).build(),
+                    robot.shootBalls(firstArtifact.letter(), scannedTagID, isFar)
+            );
         }
 
-        postScanAction = new SequentialAction(
-                Positions.linearSplineTrajectory(robot, obeliskPos, firstArtifact).build(),
-                robot.collectBalls(Positions.line(robot, firstArtifact, firstArtifactCollect)),
-                Positions.linearSplineTrajectory(robot, firstArtifactCollect, launchPos).build(),
-                robot.shootBalls(firstArtifact.letter(), scannedTagID, isFar)
-        );
-
         Actions.runBlocking(
-                postScanAction
+                new ParallelAction(
+                        robot.intake.moveIntake(),
+                        robot.launch.moveLaunch(),
+                        new SequentialAction(
+                                postScanAction
+                        )
+                )
         );
     }
 }
