@@ -23,6 +23,8 @@ public class RedFarAutonomous extends Autonomous {
         Positions.OBELISK obeliskPos = Positions.OBELISK.RED_FAR;
         Positions.LAUNCH launchPos = Positions.LAUNCH.RED_FAR;
 
+        boolean isFar = true;
+
         Pose2d initialPose = startPos.getPose();
 
         Robot robot = new Robot(
@@ -33,8 +35,6 @@ public class RedFarAutonomous extends Autonomous {
                 new MecanumDrive(hardwareMap, initialPose),
                 new Camera(hardwareMap)
         );
-
-        boolean isFar = true;
 
 //        Positions.ARTIFACT detectedTag;
 //        if (artifactLetter == 'A') detectedTag = Positions.ARTIFACT.RED_A;
@@ -88,14 +88,15 @@ public class RedFarAutonomous extends Autonomous {
 
         Actions.runBlocking(robot.Init());
 
+        telemetry.addLine("Robot Initialized. Scanning for AprilTags");
+        telemetry.update();
+
         int scannedTagID = -1;
         while (!isStopRequested() && !opModeIsActive()) {
             int newScanID = robot.camera.scanTagInit();
-            if (newScanID == -1) {
-                continue;
-            } else {
+            if (newScanID != -1) {
                 scannedTagID = newScanID;
-                telemetry.addData("ID", scannedTagID);
+                telemetry.addData("Last Scanned AprilTag ID", scannedTagID);
                 telemetry.update();
             }
         }
@@ -127,14 +128,10 @@ public class RedFarAutonomous extends Autonomous {
         waitForStart();
         if (isStopRequested()) return;
 
-        TrajectoryActionBuilder startToArtifact = Positions.linearSplineTrajectory(robot, startPos, firstArtifact);
-        TrajectoryActionBuilder artifactToCollect = Positions.line(robot, firstArtifact, firstArtifactCollect);
-        TrajectoryActionBuilder collectToLaunch = Positions.linearSplineTrajectory(robot, firstArtifactCollect, launchPos);
-
         postScanAction = new SequentialAction(
-                startToArtifact.build(),
-                robot.collectBalls(artifactToCollect),
-                collectToLaunch.build(),
+                Positions.linearSplineTrajectory(robot, startPos, firstArtifact).build(),
+                robot.collectBalls(Positions.line(robot, firstArtifact, firstArtifactCollect)),
+                Positions.linearSplineTrajectory(robot, firstArtifactCollect, launchPos).build(),
                 robot.shootBalls(firstArtifact.letter(), scannedTagID, isFar)
         );
 
@@ -146,46 +143,51 @@ public class RedFarAutonomous extends Autonomous {
                 )
         );
 
-        if (scannedTagID == -1) {
-            int timeoutCycles = 500;
-            while (timeoutCycles > 0) {
-                int newScanID = robot.camera.scanTagInit();
-                if (newScanID == -1) {
-                    timeoutCycles--;
-                } else {
-                    scannedTagID = newScanID;
-                    if (scannedTagID == 21) { //GPP
-                        firstArtifact = Positions.ARTIFACT.RED_C;
-                        firstArtifactCollect = Positions.ARTIFACT.RED_C_COLLECT;
-                        break;
-                    } else if (scannedTagID == 22) { //PGP
-                        firstArtifact = Positions.ARTIFACT.RED_C;
-                        firstArtifactCollect = Positions.ARTIFACT.RED_C_COLLECT;
-                        break;
-                    } else if (scannedTagID == 23) { //PPG
-                        firstArtifact = Positions.ARTIFACT.RED_C;
-                        firstArtifactCollect = Positions.ARTIFACT.RED_C_COLLECT;
-                        break;
-                    } else {
-                        firstArtifact = Positions.ARTIFACT.RED_C;
-                        firstArtifactCollect = Positions.ARTIFACT.RED_C_COLLECT;
-                        break;
-                    }
-                }
+        int timeoutCycles = 500;
+        while (scannedTagID == -1 && timeoutCycles > 0) {
+            telemetry.addLine("Scanning for AprilTag");
+            telemetry.addData("Cycles remaining before timeout", timeoutCycles);
+            telemetry.update();
+
+            int newScanID = robot.camera.scanTagInit();
+            if (newScanID == -1) {
+                timeoutCycles--;
+                continue;
             }
-            if (timeoutCycles == 0) {
+
+            scannedTagID = newScanID;
+            telemetry.addData("New AprilTag identified. ID", scannedTagID);
+            telemetry.update();
+
+            if (scannedTagID == 21) { //GPP
                 firstArtifact = Positions.ARTIFACT.RED_C;
                 firstArtifactCollect = Positions.ARTIFACT.RED_C_COLLECT;
+                break;
+            } else if (scannedTagID == 22) { //PGP
+                firstArtifact = Positions.ARTIFACT.RED_C;
+                firstArtifactCollect = Positions.ARTIFACT.RED_C_COLLECT;
+                break;
+            } else if (scannedTagID == 23) { //PPG
+                firstArtifact = Positions.ARTIFACT.RED_C;
+                firstArtifactCollect = Positions.ARTIFACT.RED_C_COLLECT;
+                break;
+            } else {
+                scannedTagID = -1;
+                timeoutCycles--;
             }
-
-            postScanAction = new SequentialAction(
-                    Positions.linearSplineTrajectory(robot, obeliskPos, firstArtifact).build(),
-                    robot.collectBalls(Positions.line(robot, firstArtifact, firstArtifactCollect)),
-                    Positions.linearSplineTrajectory(robot, firstArtifactCollect, launchPos).build(),
-                    robot.shootBalls(firstArtifact.letter(), scannedTagID, isFar)
-            );
-
         }
+
+        if (timeoutCycles == 0) {
+            firstArtifact = Positions.ARTIFACT.RED_C;
+            firstArtifactCollect = Positions.ARTIFACT.RED_C_COLLECT;
+        }
+
+        postScanAction = new SequentialAction(
+                Positions.linearSplineTrajectory(robot, obeliskPos, firstArtifact).build(),
+                robot.collectBalls(Positions.line(robot, firstArtifact, firstArtifactCollect)),
+                Positions.linearSplineTrajectory(robot, firstArtifactCollect, launchPos).build(),
+                robot.shootBalls(firstArtifact.letter(), scannedTagID, isFar)
+        );
 
         Actions.runBlocking(
                 postScanAction

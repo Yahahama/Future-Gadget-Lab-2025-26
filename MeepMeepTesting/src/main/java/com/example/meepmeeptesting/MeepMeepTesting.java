@@ -91,7 +91,7 @@ public class MeepMeepTesting {
                 .build();
 
         // change these to test
-        Positions.START startPos = Positions.START.BLUE_FAR; // choose start
+        Positions.START startPos = Positions.START.BLUE_CLOSE; // choose start
         char artifactLetter = 'C'; // choose which artifact: 'A', 'B', or 'C'
 
         Pose2d initialPose = startPos.getPose();

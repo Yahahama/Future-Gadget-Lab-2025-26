@@ -34,7 +34,6 @@ import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 @Config
 @com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "AUTONOMOUS", group = "Autonomous")
@@ -122,10 +121,10 @@ public class Autonomous extends LinearOpMode {
         }
 
         enum OBELISK {
-            RED_CLOSE(new Pose2d(1, 2, Math.toRadians(3)), Math.toRadians(4), Math.toRadians(5)),
-            RED_FAR(new Pose2d(23, 12, Math.toRadians(187)), Math.toRadians(187), Math.toRadians(90)),
-            BLUE_CLOSE(new Pose2d(1, 2, Math.toRadians(3)), Math.toRadians(4), Math.toRadians(5)),
-            BLUE_FAR(new Pose2d(23, -12, Math.toRadians(-187)), Math.toRadians(-187), Math.toRadians(-90));
+            RED_CLOSE(new Pose2d(-32, 32, Math.toRadians(45)), Math.toRadians(-80), Math.toRadians(-90)),
+            RED_FAR(new Pose2d(23, 12, Math.toRadians(7)), Math.toRadians(-173), Math.toRadians(90)),
+            BLUE_CLOSE(new Pose2d(-32, -32, Math.toRadians(-45)), Math.toRadians(80), Math.toRadians(-90)),
+            BLUE_FAR(new Pose2d(23, -12, Math.toRadians(-7)), Math.toRadians(173), Math.toRadians(-90));
 
             private final Pose2d pose2d;
             private final double inHeading;
@@ -1042,7 +1041,8 @@ public class Autonomous extends LinearOpMode {
         while (!isStopRequested() && !opModeIsActive()) {
             int newScanID = robot.camera.scanTagInit();
             if (newScanID == -1) {
-                continue;
+                telemetry.addLine("Scanned some other tag");
+                telemetry.update();
             } else {
                 scannedTagID = newScanID;
                 telemetry.addData("ID", scannedTagID);
@@ -1101,12 +1101,19 @@ public class Autonomous extends LinearOpMode {
                 )
         );
 
-        int maxCycles = 500;
+        int maxCycles = 50;
         if (scannedTagID == -1) {
+            while (maxCycles > 0) {
+                maxCycles--;
+                if (maxCycles == 0) {
+                    telemetry.addData("How interesting", scannedTagID);
+                    break;
+                }
+            }
             //scan tag;
             //if not found
                 // --> Try again, cycles--;
-            //if found succes
+            //if found success
 
         }
 
