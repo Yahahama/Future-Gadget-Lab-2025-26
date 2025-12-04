@@ -78,7 +78,9 @@ public class BlueCloseAutonomous extends Autonomous {
         if (isStopRequested()) return;
 
         postScanAction = new SequentialAction(
-                Positions.linearSplineTrajectory(robot, startPos, firstArtifact).build(),
+                Positions.linearSplineTrajectory(robot, startPos, launchPos).build(),
+                robot.shootPreload(scannedTagID, isFar),
+                Positions.linearSplineTrajectory(robot, launchPos, firstArtifact).build(),
                 robot.collectBalls(Positions.line(robot, firstArtifact, firstArtifactCollect)),
                 Positions.linearSplineTrajectory(robot, firstArtifactCollect, launchPos).build(),
                 robot.shootBalls(firstArtifact.letter(), scannedTagID, isFar)
@@ -142,7 +144,9 @@ public class BlueCloseAutonomous extends Autonomous {
 
         if (timeoutCycles == -1) {
             postScanAction = new SequentialAction(
-                    Positions.linearSplineTrajectory(robot, obeliskPos, firstArtifact).build(),
+                    Positions.linearSplineTrajectory(robot, obeliskPos, launchPos).build(),
+                    robot.shootPreload(scannedTagID, isFar),
+                    Positions.linearSplineTrajectory(robot, launchPos, firstArtifact).build(),
                     robot.collectBalls(Positions.line(robot, firstArtifact, firstArtifactCollect)),
                     Positions.linearSplineTrajectory(robot, firstArtifactCollect, launchPos).build(),
                     robot.shootBalls(firstArtifact.letter(), scannedTagID, isFar)

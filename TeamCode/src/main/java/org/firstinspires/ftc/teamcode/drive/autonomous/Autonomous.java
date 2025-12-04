@@ -239,6 +239,12 @@ public class Autonomous extends LinearOpMode {
                     .setTangent(tangent)
                     .lineToXLinearHeading(launch.getPose().position.x, launch.getPose().heading);
         }
+
+        static TrajectoryActionBuilder linearSplineTrajectory(Robot robot, OBELISK obelisk, LAUNCH launch) {
+            return robot.drive.actionBuilder(obelisk.getPose())
+                    .setTangent(obelisk.out())
+                    .splineToLinearHeading(launch.getPose(), launch.in());
+        }
     }
 
     MecanumDrive.Params parameters = new MecanumDrive.Params();
@@ -698,97 +704,37 @@ public class Autonomous extends LinearOpMode {
             }
         }
 
-        public Action shootPreload(char artifactSet, int tagID, boolean isFar) {
+        public Action shootPreload(int tagID, boolean isFar) { // PGP
             if (isFar) {
-                if (artifactSet == 'A') { //PPG
-                    if (tagID == 21) { //GPP
-                        return new SequentialAction(
-                                shootPLLLFar()
-                        );
-                    } else if (tagID == 22) { //PGP
-                        return new SequentialAction(
-                                shootPLHLFar()
-                        );
-                    } else if (tagID == 23) { //PPG
-                        return new SequentialAction(
-                                shootPLLLFar()
-                        );
-                    }
-                } else if (artifactSet == 'B') { //PGP
-                    if (tagID == 21) { //GPP
-                        return new SequentialAction(
-                                shootPHLLFar()
-                        );
-                    } else if (tagID == 22) { //PGP
-                        return new SequentialAction(
-                                shootPLLLFar()
-                        );
-                    } else if (tagID == 23) { //PPG
-                        return new SequentialAction(
-                                shootPLHLFar()
-                        );
-                    }
-                } else if (artifactSet == 'C') { //GPP
-                    if (tagID == 21) { //GPP
-                        return new SequentialAction(
-                                shootPLLLFar()
-                        );
-                    } else if (tagID == 22) { //PGP
-                        return new SequentialAction(
-                                shootPHLLFar()
-                        );
-                    } else if (tagID == 23) { //PPG
-                        return new SequentialAction(
-                                shootPHHLFar()
-                        );
-                    }
+                if (tagID == 21) { //GPP
+                    return new SequentialAction(
+                            shootPHLLFar()
+                    );
+                } else if (tagID == 22) { //PGP
+                    return new SequentialAction(
+                            shootPLLLFar()
+                    );
+                } else if (tagID == 23) { //PPG
+                    return new SequentialAction(
+                            shootPLHLFar()
+                    );
                 }
                 return new SequentialAction(
                         shootPLLLFar()
                 );
             } else {
-                if (artifactSet == 'A') { //PPG
-                    if (tagID == 21) { //GPP
-                        return new SequentialAction(
-                                shootPLLLClose()
-                        );
-                    } else if (tagID == 22) { //PGP
-                        return new SequentialAction(
-                                shootPLHLClose()
-                        );
-                    } else if (tagID == 23) { //PPG
-                        return new SequentialAction(
-                                shootPLLLClose()
-                        );
-                    }
-                } else if (artifactSet == 'B') { //PGP
-                    if (tagID == 21) { //GPP
-                        return new SequentialAction(
-                                shootPHLLClose()
-                        );
-                    } else if (tagID == 22) { //PGP
-                        return new SequentialAction(
-                                shootPLLLClose()
-                        );
-                    } else if (tagID == 23) { //PPG
-                        return new SequentialAction(
-                                shootPLHLClose()
-                        );
-                    }
-                } else if (artifactSet == 'C') { //GPP
-                    if (tagID == 21) { //GPP
-                        return new SequentialAction(
-                                shootPLLLClose()
-                        );
-                    } else if (tagID == 22) { //PGP
-                        return new SequentialAction(
-                                shootPHLLClose()
-                        );
-                    } else if (tagID == 23) { //PPG
-                        return new SequentialAction(
-                                shootPHHLClose()
-                        );
-                    }
+                if (tagID == 21) { //GPP
+                    return new SequentialAction(
+                            shootPHLLClose()
+                    );
+                } else if (tagID == 22) { //PGP
+                    return new SequentialAction(
+                            shootPLLLClose()
+                    );
+                } else if (tagID == 23) { //PPG
+                    return new SequentialAction(
+                            shootPLHLClose()
+                    );
                 }
                 return new SequentialAction(
                         shootPHHLClose()
