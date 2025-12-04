@@ -33,9 +33,9 @@ public class MeepMeepTesting {
         }
 
         enum START {
-            RED_CLOSE(new Pose2d(-48, 47, Math.toRadians(-45)), Math.toRadians(-45)),
+            RED_CLOSE(new Pose2d(-49, 48, Math.toRadians(-45)), Math.toRadians(-45)),
             RED_FAR(new Pose2d(62, 23, Math.toRadians(0)), Math.toRadians(180)),
-            BLUE_CLOSE(new Pose2d(-48, -47, Math.toRadians(45)), Math.toRadians(45)),
+            BLUE_CLOSE(new Pose2d(-49, -48, Math.toRadians(45)), Math.toRadians(45)),
             BLUE_FAR(new Pose2d(62, -23, Math.toRadians(0)), Math.toRadians(180));
 
             private final Pose2d pose2d;
@@ -211,7 +211,7 @@ public class MeepMeepTesting {
                 .build();
 
         // change these to test
-        Positions.START startPos = Positions.START.RED_FAR; // choose start
+        Positions.START startPos = Positions.START.RED_CLOSE;
         Positions.OBELISK obeliskPos = Positions.OBELISK.BLUE_CLOSE;
         Positions.LAUNCH launchPos = Positions.LAUNCH.BLUE_CLOSE;
 

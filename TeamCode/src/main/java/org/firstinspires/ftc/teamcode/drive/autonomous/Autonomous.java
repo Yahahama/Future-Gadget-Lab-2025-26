@@ -55,9 +55,9 @@ public class Autonomous extends LinearOpMode {
         }
 
         enum START {
-            RED_CLOSE(new Pose2d(-48, 47, Math.toRadians(-45)), Math.toRadians(-45)),
+            RED_CLOSE(new Pose2d(-49, 48, Math.toRadians(-45)), Math.toRadians(-45)),
             RED_FAR(new Pose2d(62, 23, Math.toRadians(0)), Math.toRadians(180)),
-            BLUE_CLOSE(new Pose2d(-48, -47, Math.toRadians(45)), Math.toRadians(45)),
+            BLUE_CLOSE(new Pose2d(-49, -48, Math.toRadians(45)), Math.toRadians(45)),
             BLUE_FAR(new Pose2d(62, -23, Math.toRadians(0)), Math.toRadians(180));
 
             private final Pose2d pose2d;
