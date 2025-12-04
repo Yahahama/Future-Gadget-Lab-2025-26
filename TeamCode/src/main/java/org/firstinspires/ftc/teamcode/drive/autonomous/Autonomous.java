@@ -150,17 +150,19 @@ public class Autonomous extends LinearOpMode {
         }
 
         enum LAUNCH {
-            RED_CLOSE(new Pose2d(-12, 12, Math.toRadians(-45)), Math.toRadians(-135)),
-            RED_FAR(new Pose2d(60, 12, Math.toRadians(-15)), Math.toRadians(-10)),
-            BLUE_CLOSE(new Pose2d(-12, -12, Math.toRadians(45)), Math.toRadians(135)),
-            BLUE_FAR(new Pose2d(60, -12, Math.toRadians(15)), Math.toRadians(10));
+            RED_CLOSE(new Pose2d(-12, 12, Math.toRadians(-45)), Math.toRadians(-135), Math.toRadians(15)),
+            RED_FAR(new Pose2d(58, 14, Math.toRadians(-22)), Math.toRadians(-10), Math.toRadians(-170)),
+            BLUE_CLOSE(new Pose2d(-12, -12, Math.toRadians(45)), Math.toRadians(135), Math.toRadians(-15)),
+            BLUE_FAR(new Pose2d(58, -14, Math.toRadians(22)), Math.toRadians(10), Math.toRadians(170));
 
             private final Pose2d pose2d;
             private final double inHeading;
+            private final double outHeading;
 
-            LAUNCH(Pose2d _pose2d, double _inHeading) {
+            LAUNCH(Pose2d _pose2d, double _inHeading, double _outHeading) {
                 this.pose2d = _pose2d;
                 this.inHeading = _inHeading;
+                this.outHeading = _outHeading;
             }
 
             public Pose2d getPose() {
@@ -170,6 +172,9 @@ public class Autonomous extends LinearOpMode {
             public double in() {
                 return inHeading;
             }
+             public double out() {
+                return outHeading;
+             }
         }
 
         enum PARKING {
@@ -214,7 +219,25 @@ public class Autonomous extends LinearOpMode {
         static TrajectoryActionBuilder line(Robot robot, ARTIFACT artifact, ARTIFACT artifactCollect) {
             return robot.drive.actionBuilder(artifact.getPose())
                     .setTangent(artifact.out())
-                    .lineToY(artifactCollect.getPose().position.y, new TranslationalVelConstraint(8));
+                    .lineToY(artifactCollect.getPose().position.y, new TranslationalVelConstraint(9));
+        }
+
+        static TrajectoryActionBuilder linearSplineTrajectory(Robot robot, LAUNCH launch, ARTIFACT artifact) {
+            return robot.drive.actionBuilder(launch.getPose())
+                    .setTangent(launch.out())
+                    .splineToLinearHeading(artifact.getPose(), artifact.in());
+        }
+
+        static TrajectoryActionBuilder linearSplineTrajectory(Robot robot, START start, LAUNCH launch) {
+            double diffX = launch.getPose().position.x - start.getPose().position.x;
+            double diffY = launch.getPose().position.y - start.getPose().position.y;
+            double tangent = Math.toRadians(Math.atan2(diffX, diffY));
+            if (diffX < 0) {
+                tangent += Math.toRadians(180);
+            }
+            return robot.drive.actionBuilder(start.getPose())
+                    .setTangent(tangent)
+                    .lineToXLinearHeading(launch.getPose().position.x, launch.getPose().heading);
         }
     }
 
@@ -250,7 +273,7 @@ public class Autonomous extends LinearOpMode {
         public Action hitBall() {
             return new SequentialAction(
                     bunt.buntLaunch(),
-                    new SleepAction(1),
+                    new SleepAction(0.75f),
                     bunt.buntReset()
             );
         }
@@ -301,10 +324,34 @@ public class Autonomous extends LinearOpMode {
             );
         }
 
+        public Action lowerIntake(float intakeTime) {
+            return new SequentialAction(
+                    intake.intakeOut(),
+                    new SleepAction(intakeTime),
+                    intake.intakeOff()
+            );
+        }
+
+        public Action raiseIntake(float intakeTime) {
+            return new SequentialAction(
+                    intake.intakeIn(),
+                    new SleepAction(intakeTime),
+                    intake.intakeOff()
+            );
+        }
+
+        public Action loadIntake(float intakeTime) {
+            return new SequentialAction(
+                    intake.intakeLoad(),
+                    new SleepAction(intakeTime),
+                    intake.intakeOff()
+            );
+        }
+
         public Action nudgeIntake() {
             return new SequentialAction(
                     bunt.buntLoad(),
-                    new SleepAction(0.4),
+                    new SleepAction(0.3f),
                     bunt.buntReset()
             );
         }
@@ -328,24 +375,56 @@ public class Autonomous extends LinearOpMode {
             );
         }
 
-        public Action shootLLLFar() {
+        public Action shootLLLFar() { // FINISHED
             return new SequentialAction(
+                    load.loadReload(),
+                    lowerIntake(0.45f),
+                    loadIntakeIntoLow(0f),
                     launch.launchFarLow(),
-                    shootLow(2),
+                    shootLow(1.5f),
                     new SleepAction(1),
                     loadIntakeIntoLow(0.25f),
                     shootLow(1),
                     new SleepAction(1),
                     loadIntakeIntoLow(1f),
                     shootLow(1),
+                    new SleepAction(0.4f),
+                    launch.launchOff()
+            );
+        }
+
+        public Action shootPLLLFar() {
+            return new SequentialAction(
+                    launch.launchFarLow(),
+                    shootLow(1.5f),
+                    new SleepAction(0.5f),
+                    loadIntakeIntoLow(0.5f),
+                    shootLow(0),
+                    new SleepAction(0.5f),
+                    loadIntakeIntoLow(0.5f),
+                    shootLow(0),
+                    new SleepAction(0.4f),
                     launch.launchOff()
             );
         }
 
         public Action shootLLLClose() {
             return new SequentialAction(
+                    lowerIntake(0.75f),
                     launch.launchCloseLow(),
                     shootLow(2),
+                    loadIntakeIntoLow(0.25f),
+                    shootLow(1),
+                    loadIntakeIntoLow(1f),
+                    shootLow(1),
+                    launch.launchOff()
+            );
+        }
+
+        public Action shootPLLLClose() {
+            return new SequentialAction(
+                    launch.launchCloseLow(),
+                    shootLow(1.5f),
                     loadIntakeIntoLow(0.25f),
                     shootLow(1),
                     loadIntakeIntoLow(1f),
@@ -356,12 +435,27 @@ public class Autonomous extends LinearOpMode {
 
         public Action shootHLLFar() {
             return new SequentialAction(
+                    lowerIntake(0.1f),
                     launch.launchFarHigh(),
-                    shootHigh(0),
+                    shootHigh(1.5f),
                     launch.launchFarLow(),
                     shootLow(1),
                     loadIntakeIntoLow(1),
                     shootLow(1),
+                    new SleepAction(0.4f),
+                    launch.launchOff()
+            );
+        }
+
+        public Action shootPHLLFar() {
+            return new SequentialAction(
+                    launch.launchFarHigh(),
+                    shootHigh(1.5f),
+                    launch.launchFarLow(),
+                    shootLow(1),
+                    loadIntakeIntoLow(1),
+                    shootLow(1),
+                    new SleepAction(0.4f),
                     launch.launchOff()
             );
         }
@@ -369,11 +463,27 @@ public class Autonomous extends LinearOpMode {
         public Action shootHLLClose() {
             return new SequentialAction(
                     launch.launchCloseHigh(),
-                    shootHigh(0),
+                    shootHigh(1f),
                     launch.launchCloseLow(),
+                    new SleepAction(1),
                     shootLow(1),
                     loadIntakeIntoLow(1),
                     shootLow(1),
+                    new SleepAction(0.4),
+                    launch.launchOff()
+            );
+        }
+
+        public Action shootPHLLClose() {
+            return new SequentialAction(
+                    launch.launchCloseHigh(),
+                    shootHigh(1f),
+                    launch.launchCloseLow(),
+                    new SleepAction(1),
+                    shootLow(1),
+                    loadIntakeIntoLow(1),
+                    shootLow(1),
+                    new SleepAction(0.4),
                     launch.launchOff()
             );
         }
@@ -387,6 +497,21 @@ public class Autonomous extends LinearOpMode {
                     shootHigh(1),
                     launch.launchFarLow(),
                     shootLow(1),
+                    new SleepAction(0.4f),
+                    launch.launchOff()
+            );
+        }
+
+        public Action shootPLHLFar() {
+            return new SequentialAction(
+                    launch.launchFarLow(),
+                    shootLow(0),
+                    launch.launchFarHigh(),
+                    loadIntakeIntoHigh(2),
+                    shootHigh(1),
+                    launch.launchFarLow(),
+                    shootLow(1),
+                    new SleepAction(0.4f),
                     launch.launchOff()
             );
         }
@@ -400,6 +525,21 @@ public class Autonomous extends LinearOpMode {
                     shootHigh(1),
                     launch.launchCloseLow(),
                     shootLow(1),
+                    new SleepAction(0.4f),
+                    launch.launchOff()
+            );
+        }
+
+        public Action shootPLHLClose() {
+            return new SequentialAction(
+                    launch.launchCloseLow(),
+                    shootLow(0),
+                    launch.launchCloseHigh(),
+                    loadIntakeIntoHigh(2),
+                    shootHigh(1),
+                    launch.launchCloseLow(),
+                    shootLow(1),
+                    new SleepAction(0.4f),
                     launch.launchOff()
             );
         }
@@ -413,6 +553,21 @@ public class Autonomous extends LinearOpMode {
                     launch.launchFarLow(),
                     loadIntakeIntoLow(1),
                     shootLow(1),
+                    new SleepAction(0.4f),
+                    launch.launchOff()
+            );
+        }
+
+        public Action shootPHHLFar() {
+            return new SequentialAction(
+                    launch.launchFarHigh(),
+                    shootHigh(0),
+                    loadIntakeIntoHigh(1),
+                    shootHigh(1),
+                    launch.launchFarLow(),
+                    loadIntakeIntoLow(1),
+                    shootLow(1),
+                    new SleepAction(0.4f),
                     launch.launchOff()
             );
         }
@@ -426,6 +581,21 @@ public class Autonomous extends LinearOpMode {
                     launch.launchCloseLow(),
                     loadIntakeIntoLow(1),
                     shootLow(1),
+                    new SleepAction(0.4f),
+                    launch.launchOff()
+            );
+        }
+
+        public Action shootPHHLClose() {
+            return new SequentialAction(
+                    launch.launchCloseHigh(),
+                    shootHigh(0),
+                    loadIntakeIntoHigh(1),
+                    shootHigh(1),
+                    launch.launchCloseLow(),
+                    loadIntakeIntoLow(1),
+                    shootLow(1),
+                    new SleepAction(0.4f),
                     launch.launchOff()
             );
         }
@@ -524,6 +694,104 @@ public class Autonomous extends LinearOpMode {
                 }
                 return new SequentialAction(
                         shootHHLClose()
+                );
+            }
+        }
+
+        public Action shootPreload(char artifactSet, int tagID, boolean isFar) {
+            if (isFar) {
+                if (artifactSet == 'A') { //PPG
+                    if (tagID == 21) { //GPP
+                        return new SequentialAction(
+                                shootPLLLFar()
+                        );
+                    } else if (tagID == 22) { //PGP
+                        return new SequentialAction(
+                                shootPLHLFar()
+                        );
+                    } else if (tagID == 23) { //PPG
+                        return new SequentialAction(
+                                shootPLLLFar()
+                        );
+                    }
+                } else if (artifactSet == 'B') { //PGP
+                    if (tagID == 21) { //GPP
+                        return new SequentialAction(
+                                shootPHLLFar()
+                        );
+                    } else if (tagID == 22) { //PGP
+                        return new SequentialAction(
+                                shootPLLLFar()
+                        );
+                    } else if (tagID == 23) { //PPG
+                        return new SequentialAction(
+                                shootPLHLFar()
+                        );
+                    }
+                } else if (artifactSet == 'C') { //GPP
+                    if (tagID == 21) { //GPP
+                        return new SequentialAction(
+                                shootPLLLFar()
+                        );
+                    } else if (tagID == 22) { //PGP
+                        return new SequentialAction(
+                                shootPHLLFar()
+                        );
+                    } else if (tagID == 23) { //PPG
+                        return new SequentialAction(
+                                shootPHHLFar()
+                        );
+                    }
+                }
+                return new SequentialAction(
+                        shootPLLLFar()
+                );
+            } else {
+                if (artifactSet == 'A') { //PPG
+                    if (tagID == 21) { //GPP
+                        return new SequentialAction(
+                                shootPLLLClose()
+                        );
+                    } else if (tagID == 22) { //PGP
+                        return new SequentialAction(
+                                shootPLHLClose()
+                        );
+                    } else if (tagID == 23) { //PPG
+                        return new SequentialAction(
+                                shootPLLLClose()
+                        );
+                    }
+                } else if (artifactSet == 'B') { //PGP
+                    if (tagID == 21) { //GPP
+                        return new SequentialAction(
+                                shootPHLLClose()
+                        );
+                    } else if (tagID == 22) { //PGP
+                        return new SequentialAction(
+                                shootPLLLClose()
+                        );
+                    } else if (tagID == 23) { //PPG
+                        return new SequentialAction(
+                                shootPLHLClose()
+                        );
+                    }
+                } else if (artifactSet == 'C') { //GPP
+                    if (tagID == 21) { //GPP
+                        return new SequentialAction(
+                                shootPLLLClose()
+                        );
+                    } else if (tagID == 22) { //PGP
+                        return new SequentialAction(
+                                shootPHLLClose()
+                        );
+                    } else if (tagID == 23) { //PPG
+                        return new SequentialAction(
+                                shootPHHLClose()
+                        );
+                    }
+                }
+                return new SequentialAction(
+                        shootPHHLClose()
                 );
             }
         }
@@ -684,6 +952,18 @@ public class Autonomous extends LinearOpMode {
 
         public Action loadInit() {
             return new LoadInit();
+        }
+
+        public class LoadReload implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                load.setPosition(parameters.LOAD_RELOAD);
+                return false;
+            }
+        }
+
+        public Action loadReload() {
+            return new LoadReload();
         }
     }
 
@@ -1127,7 +1407,7 @@ public class Autonomous extends LinearOpMode {
 //                                robot.shootLow(1)
 //                                robot.camera.scanOrder(10000000),
 //                                robot.setOrder(),
-                                robot.shootLLLFar()
+                                robot.shootHLLFar()
                         )
                 )
         );

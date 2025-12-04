@@ -18,8 +18,11 @@ public class BlueCloseAutonomous extends Autonomous {
     @Override
     public void runOpMode() {
 
-        Autonomous.Positions.START startPos = Autonomous.Positions.START.BLUE_CLOSE;
-        char artifactLetter = 'C';
+        Positions.START startPos = Positions.START.BLUE_CLOSE;
+        Positions.OBELISK obeliskPos = Positions.OBELISK.BLUE_CLOSE;
+        Positions.LAUNCH launchPos = Positions.LAUNCH.BLUE_CLOSE;
+
+        boolean isFar = true;
 
         Pose2d initialPose = startPos.getPose();
 
@@ -32,111 +35,126 @@ public class BlueCloseAutonomous extends Autonomous {
                 new Camera(hardwareMap)
         );
 
-        boolean isRed = false;
-        boolean isClose = true;
-
-        // ARTIFACT
-        Positions.ARTIFACT detectedTag;
-        if (artifactLetter == 'A') detectedTag = Positions.ARTIFACT.BLUE_A;
-        else if (artifactLetter == 'B') detectedTag = Positions.ARTIFACT.BLUE_B;
-        else detectedTag = Positions.ARTIFACT.BLUE_C;
-
-        Pose2d target = detectedTag.getPose();
-
-        // APPROACH POINTS
-        Pose2d blueApproachPoint = new Pose2d(target.position.x, target.position.y + 20, Math.toRadians(270));
-
-        // OBELISK POSE
-        Pose2d blueCloseObeliskPose = new Pose2d(-32, -32, Math.toRadians(135));
-
-        Pose2d chosenObeliskPose = blueCloseObeliskPose;
-        Pose2d approachPoint = blueApproachPoint;
-
-        // -------------------------------
-        // NEW FINAL PARKING LOGIC (SWAPPED)
-        // -------------------------------
-        Pose2d finalPark = new Pose2d(-12, -12, Math.toRadians(225));
-
-        double approachHeading = Math.toRadians(270);
-        double secondsToWait = 1;
-
-        // ------------------- MOVEMENT SEQUENCE S1–S5 -------------------
-
-        Action s1 = robot.drive.actionBuilder(initialPose)
-                .setTangent(Math.toRadians(45))
-                .splineToLinearHeading(chosenObeliskPose, chosenObeliskPose.heading.real)
-                .waitSeconds(secondsToWait)
-                .build();
-
-        Action s2 = robot.drive.actionBuilder(chosenObeliskPose)
-                .setTangent(Math.toRadians(-45))
-                .splineToLinearHeading(approachPoint, approachHeading)
-                .build();
-
-        Action s3 = robot.drive.actionBuilder(approachPoint)
-                .setTangent(Math.toRadians(90))
-                .lineToY(target.position.y, new TranslationalVelConstraint(10))
-                .build();
-
-        Action s4 = robot.drive.actionBuilder(
-                        new Pose2d(approachPoint.position.x, target.position.y, approachHeading))
-                .setTangent(Math.toRadians(270))
-                .lineToY(approachPoint.position.y + 10)
-                .build();
-
-        // ✔ NEW FINAL SPLINE TO THE UPDATED PARK POSITION
-        Action s5 = robot.drive.actionBuilder(
-                        new Pose2d(
-                                approachPoint.position.x,
-                                approachPoint.position.y + 10,
-                                Math.toRadians(90)))
-                .setTangent(Math.toRadians(225))
-                .splineToLinearHeading(finalPark, finalPark.heading.real)
-                .build();
-
-        // -------------------- INIT --------------------
         Actions.runBlocking(robot.Init());
 
+        telemetry.addLine("Robot Initialized. Scanning for AprilTags");
+        telemetry.update();
+
+        int scannedTagID = -1;
         while (!isStopRequested() && !opModeIsActive()) {
-            telemetry.addData("Init X", robot.drive.pose.position.x);
-            telemetry.addData("Init Y", robot.drive.pose.position.y);
-            telemetry.addData("Init Heading", robot.drive.pose.heading.real);
-            telemetry.update();
+            int newScanID = robot.camera.scanTagInit();
+            if (newScanID != -1) {
+                scannedTagID = newScanID;
+                telemetry.addData("Last Scanned AprilTag ID", scannedTagID);
+                telemetry.update();
+            }
         }
 
+        Positions.ARTIFACT firstArtifact;
+        Positions.ARTIFACT firstArtifactCollect;
+        Action preScanAction = new SleepAction(0);
+        Action postScanAction;
+
+        //a == ppg
+        //b == pgp
+        //c = gpp
+        if (scannedTagID == 21) { //GPP
+            firstArtifact = Positions.ARTIFACT.BLUE_A;
+            firstArtifactCollect = Positions.ARTIFACT.BLUE_A_COLLECT;
+        } else if (scannedTagID == 22) { //PGP
+            firstArtifact = Positions.ARTIFACT.BLUE_A;
+            firstArtifactCollect = Positions.ARTIFACT.BLUE_A_COLLECT;
+        } else if (scannedTagID == 23) { //PPG
+            firstArtifact = Positions.ARTIFACT.BLUE_A;
+            firstArtifactCollect = Positions.ARTIFACT.BLUE_A_COLLECT;
+        } else {
+            preScanAction = new SequentialAction(
+                    Positions.linearSplineTrajectory(robot, startPos, obeliskPos).build()
+            );
+            firstArtifact = Positions.ARTIFACT.BLUE_A;
+            firstArtifactCollect = Positions.ARTIFACT.BLUE_A_COLLECT;
+        }
         waitForStart();
         if (isStopRequested()) return;
 
-        // -------------------- RUN FULL AUTO --------------------
+        postScanAction = new SequentialAction(
+                Positions.linearSplineTrajectory(robot, startPos, firstArtifact).build(),
+                robot.collectBalls(Positions.line(robot, firstArtifact, firstArtifactCollect)),
+                Positions.linearSplineTrajectory(robot, firstArtifactCollect, launchPos).build(),
+                robot.shootBalls(firstArtifact.letter(), scannedTagID, isFar)
+        );
+
+        Actions.runBlocking(
+                new ParallelAction(
+                        robot.launch.moveLaunch(),
+                        robot.intake.moveIntake(),
+                        new SequentialAction(
+                                preScanAction,
+                                robot.launch.stopLaunch(),
+                                robot.intake.stopIntake()
+                        )
+                )
+        );
+
+        int timeoutCycles = 500;
+        while (scannedTagID == -1 && timeoutCycles >= 0) {
+            if (timeoutCycles == 0) {
+                firstArtifact = Positions.ARTIFACT.BLUE_A;
+                firstArtifactCollect = Positions.ARTIFACT.BLUE_A_COLLECT;
+                timeoutCycles = -1;
+                break;
+            }
+
+            telemetry.addLine("Scanning for AprilTag");
+            telemetry.addData("Cycles remaining before timeout", timeoutCycles);
+            telemetry.update();
+
+            int newScanID = robot.camera.scanTagInit();
+            if (newScanID == -1) {
+                timeoutCycles--;
+                continue;
+            }
+
+            scannedTagID = newScanID;
+            telemetry.addData("New AprilTag identified. ID", scannedTagID);
+            telemetry.update();
+
+            if (scannedTagID == 21) { //GPP
+                firstArtifact = Positions.ARTIFACT.BLUE_A;
+                firstArtifactCollect = Positions.ARTIFACT.BLUE_A_COLLECT;
+                timeoutCycles = -1;
+                break;
+            } else if (scannedTagID == 22) { //PGP
+                firstArtifact = Positions.ARTIFACT.BLUE_A;
+                firstArtifactCollect = Positions.ARTIFACT.BLUE_A_COLLECT;
+                timeoutCycles = -1;
+                break;
+            } else if (scannedTagID == 23) { //PPG
+                firstArtifact = Positions.ARTIFACT.BLUE_A;
+                firstArtifactCollect = Positions.ARTIFACT.BLUE_A_COLLECT;
+                timeoutCycles = -1;
+                break;
+            } else {
+                scannedTagID = -1;
+                timeoutCycles--;
+            }
+        }
+
+        if (timeoutCycles == -1) {
+            postScanAction = new SequentialAction(
+                    Positions.linearSplineTrajectory(robot, obeliskPos, firstArtifact).build(),
+                    robot.collectBalls(Positions.line(robot, firstArtifact, firstArtifactCollect)),
+                    Positions.linearSplineTrajectory(robot, firstArtifactCollect, launchPos).build(),
+                    robot.shootBalls(firstArtifact.letter(), scannedTagID, isFar)
+            );
+        }
+
         Actions.runBlocking(
                 new ParallelAction(
                         robot.intake.moveIntake(),
                         robot.launch.moveLaunch(),
                         new SequentialAction(
-                                s1,
-                                s2,
-                                robot.intake.intakeLoad(),
-                                s3,
-                                robot.intake.intakeOff(),
-                                s4,
-                                s5,
-                                new SleepAction(1),
-                                robot.bunt.buntLaunch(),
-                                new SleepAction(1),
-                                robot.bunt.buntReset(),
-                                new SleepAction(1),
-                                robot.intake.intakeLoad(),
-                                new SleepAction(1.5),
-                                robot.intake.intakeOff(),
-                                new SleepAction(0.75),
-                                robot.bunt.buntLaunch(),
-                                new SleepAction(1),
-                                robot.bunt.buntReset(),
-                                robot.load.loadLoad(),
-                                new SleepAction(1),
-                                robot.bunt.buntLaunch(),
-                                new SleepAction(1),
-                                robot.bunt.buntReset()
+                                postScanAction
                         )
                 )
         );

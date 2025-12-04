@@ -128,17 +128,19 @@ public class MeepMeepTesting {
         }
 
         enum LAUNCH {
-            RED_CLOSE(new Pose2d(-12, 12, Math.toRadians(-45)), Math.toRadians(-135)),
-            RED_FAR(new Pose2d(60, 12, Math.toRadians(-15)), Math.toRadians(-10)),
-            BLUE_CLOSE(new Pose2d(-12, -12, Math.toRadians(45)), Math.toRadians(135)),
-            BLUE_FAR(new Pose2d(60, -12, Math.toRadians(15)), Math.toRadians(10));
+            RED_CLOSE(new Pose2d(-12, 12, Math.toRadians(-45)), Math.toRadians(-135), Math.toRadians(30)),
+            RED_FAR(new Pose2d(60, 12, Math.toRadians(-15)), Math.toRadians(-10), Math.toRadians(180)),
+            BLUE_CLOSE(new Pose2d(-12, -12, Math.toRadians(45)), Math.toRadians(135), Math.toRadians(-30)),
+            BLUE_FAR(new Pose2d(60, -12, Math.toRadians(15)), Math.toRadians(10), Math.toRadians(180));
 
             private final Pose2d pose2d;
             private final double inHeading;
+            private final double outHeading;
 
-            LAUNCH(Pose2d _pose2d, double _inHeading) {
+            LAUNCH(Pose2d _pose2d, double _inHeading, double _outHeading) {
                 this.pose2d = _pose2d;
                 this.inHeading = _inHeading;
+                this.outHeading = _outHeading;
             }
 
             public Pose2d getPose() {
@@ -147,6 +149,10 @@ public class MeepMeepTesting {
 
             public double in() {
                 return inHeading;
+            }
+
+            public double out() {
+                return outHeading;
             }
         }
 
@@ -205,17 +211,17 @@ public class MeepMeepTesting {
                 .build();
 
         // change these to test
-        Positions.START startPos = Positions.START.RED_CLOSE; // choose start
-        Positions.OBELISK obeliskPos = Positions.OBELISK.RED_CLOSE;
-        Positions.LAUNCH launchPos = Positions.LAUNCH.RED_CLOSE;
+        Positions.START startPos = Positions.START.RED_FAR; // choose start
+        Positions.OBELISK obeliskPos = Positions.OBELISK.BLUE_CLOSE;
+        Positions.LAUNCH launchPos = Positions.LAUNCH.BLUE_CLOSE;
 
         Pose2d initialPose = startPos.getPose();
 
         boolean isRed = (startPos == Positions.START.RED_CLOSE || startPos == Positions.START.RED_FAR);
         boolean isClose = (startPos == Positions.START.RED_CLOSE || startPos == Positions.START.BLUE_CLOSE);
 
-        Positions.ARTIFACT firstArtifact = Positions.ARTIFACT.RED_B;
-        Positions.ARTIFACT firstArtifactCollect = Positions.ARTIFACT.RED_B_COLLECT;
+        Positions.ARTIFACT firstArtifact = Positions.ARTIFACT.BLUE_A;
+        Positions.ARTIFACT firstArtifactCollect = Positions.ARTIFACT.BLUE_A_COLLECT;
 
         Pose2d target = firstArtifact.getPose();
 
@@ -287,12 +293,13 @@ public class MeepMeepTesting {
         );
 
         Action postScanAction = new SequentialAction(
+                Positions.linearSplineTrajectory(robot, startPos, obeliskPos).build(),
                 Positions.linearSplineTrajectory(robot, obeliskPos, firstArtifact).build(),
                 Positions.line(robot, firstArtifact, firstArtifactCollect).build(),
                 Positions.linearSplineTrajectory(robot, firstArtifactCollect, launchPos).build()
         );
 
-        robot.runAction(preScanAction);
+        robot.runAction(postScanAction);
 
         Image img = null;
         try {
