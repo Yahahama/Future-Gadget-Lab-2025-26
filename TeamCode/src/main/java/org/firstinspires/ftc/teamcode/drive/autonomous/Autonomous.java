@@ -219,7 +219,7 @@ public class Autonomous extends LinearOpMode {
         static TrajectoryActionBuilder line(Robot robot, ARTIFACT artifact, ARTIFACT artifactCollect) {
             return robot.drive.actionBuilder(artifact.getPose())
                     .setTangent(artifact.out())
-                    .lineToY(artifactCollect.getPose().position.y, new TranslationalVelConstraint(9));
+                    .lineToY(artifactCollect.getPose().position.y, new TranslationalVelConstraint(10));
         }
 
         static TrajectoryActionBuilder linearSplineTrajectory(Robot robot, LAUNCH launch, ARTIFACT artifact) {
@@ -231,7 +231,7 @@ public class Autonomous extends LinearOpMode {
         static TrajectoryActionBuilder linearSplineTrajectory(Robot robot, START start, LAUNCH launch) {
             double diffX = launch.getPose().position.x - start.getPose().position.x;
             double diffY = launch.getPose().position.y - start.getPose().position.y;
-            double tangent = Math.toRadians(Math.atan2(diffX, diffY));
+            double tangent = Math.atan2(diffX, diffY);
             if (diffX < 0) {
                 tangent += Math.toRadians(180);
             }
@@ -394,22 +394,23 @@ public class Autonomous extends LinearOpMode {
                     new SleepAction(1),
                     loadIntakeIntoLow(1f),
                     shootLow(1),
-                    new SleepAction(0.4f),
+                    new SleepAction(0.5f),
                     launch.launchOff()
             );
         }
 
         public Action shootPLLLFar() {
             return new SequentialAction(
+                    launch.launchFarHigh(),
+                    shootLow(1.25f),
                     launch.launchFarLow(),
-                    shootLow(1.5f),
                     new SleepAction(0.5f),
                     loadIntakeIntoLow(0.5f),
                     shootLow(0),
                     new SleepAction(0.5f),
                     loadIntakeIntoLow(0.5f),
                     shootLow(0),
-                    new SleepAction(0.4f),
+                    new SleepAction(0.5f),
                     launch.launchOff()
             );
         }
@@ -423,6 +424,7 @@ public class Autonomous extends LinearOpMode {
                     shootLow(1),
                     loadIntakeIntoLow(1f),
                     shootLow(1),
+                    new SleepAction(0.5f),
                     launch.launchOff()
             );
         }
@@ -435,6 +437,7 @@ public class Autonomous extends LinearOpMode {
                     shootLow(1),
                     loadIntakeIntoLow(1f),
                     shootLow(1),
+                    new SleepAction(0.5f),
                     launch.launchOff()
             );
         }
@@ -448,20 +451,21 @@ public class Autonomous extends LinearOpMode {
                     shootLow(1),
                     loadIntakeIntoLow(1),
                     shootLow(1),
-                    new SleepAction(0.4f),
+                    new SleepAction(0.5f),
                     launch.launchOff()
             );
         }
 
         public Action shootPHLLFar() {
             return new SequentialAction(
+                    loadIntakeIntoHigh(0.1f),
                     launch.launchFarHigh(),
                     shootHigh(1.5f),
                     launch.launchFarLow(),
                     shootLow(1),
                     loadIntakeIntoLow(1),
                     shootLow(1),
-                    new SleepAction(0.4f),
+                    new SleepAction(0.5f),
                     launch.launchOff()
             );
         }
@@ -475,7 +479,7 @@ public class Autonomous extends LinearOpMode {
                     shootLow(1),
                     loadIntakeIntoLow(1),
                     shootLow(1),
-                    new SleepAction(0.4),
+                    new SleepAction(0.5f),
                     launch.launchOff()
             );
         }
@@ -489,7 +493,7 @@ public class Autonomous extends LinearOpMode {
                     shootLow(1),
                     loadIntakeIntoLow(1),
                     shootLow(1),
-                    new SleepAction(0.4),
+                    new SleepAction(0.5f),
                     launch.launchOff()
             );
         }
@@ -503,21 +507,22 @@ public class Autonomous extends LinearOpMode {
                     shootHigh(1),
                     launch.launchFarLow(),
                     shootLow(1),
-                    new SleepAction(0.4f),
+                    new SleepAction(0.5f),
                     launch.launchOff()
             );
         }
 
         public Action shootPLHLFar() {
             return new SequentialAction(
-                    launch.launchFarLow(),
-                    shootLow(0),
                     launch.launchFarHigh(),
-                    loadIntakeIntoHigh(2),
-                    shootHigh(1),
+                    shootLow(1.25f),
+                    new SleepAction(0.2f),
+                    launch.launchFarHigh(),
+                    loadIntakeIntoHigh(1.25f),
+                    shootHigh(0.75f),
                     launch.launchFarLow(),
-                    shootLow(1),
-                    new SleepAction(0.4f),
+                    shootLow(0.6f),
+                    new SleepAction(0.5f),
                     launch.launchOff()
             );
         }
@@ -531,7 +536,7 @@ public class Autonomous extends LinearOpMode {
                     shootHigh(1),
                     launch.launchCloseLow(),
                     shootLow(1),
-                    new SleepAction(0.4f),
+                    new SleepAction(0.5f),
                     launch.launchOff()
             );
         }
@@ -545,7 +550,7 @@ public class Autonomous extends LinearOpMode {
                     shootHigh(1),
                     launch.launchCloseLow(),
                     shootLow(1),
-                    new SleepAction(0.4f),
+                    new SleepAction(0.5f),
                     launch.launchOff()
             );
         }
@@ -559,7 +564,7 @@ public class Autonomous extends LinearOpMode {
                     launch.launchFarLow(),
                     loadIntakeIntoLow(1),
                     shootLow(1),
-                    new SleepAction(0.4f),
+                    new SleepAction(0.5f),
                     launch.launchOff()
             );
         }
@@ -573,7 +578,7 @@ public class Autonomous extends LinearOpMode {
                     launch.launchFarLow(),
                     loadIntakeIntoLow(1),
                     shootLow(1),
-                    new SleepAction(0.4f),
+                    new SleepAction(0.5f),
                     launch.launchOff()
             );
         }
@@ -587,7 +592,7 @@ public class Autonomous extends LinearOpMode {
                     launch.launchCloseLow(),
                     loadIntakeIntoLow(1),
                     shootLow(1),
-                    new SleepAction(0.4f),
+                    new SleepAction(0.5f),
                     launch.launchOff()
             );
         }
@@ -601,7 +606,7 @@ public class Autonomous extends LinearOpMode {
                     launch.launchCloseLow(),
                     loadIntakeIntoLow(1),
                     shootLow(1),
-                    new SleepAction(0.4f),
+                    new SleepAction(0.5f),
                     launch.launchOff()
             );
         }
