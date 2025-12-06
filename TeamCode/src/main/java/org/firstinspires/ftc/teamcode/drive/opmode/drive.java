@@ -1,12 +1,10 @@
 package org.firstinspires.ftc.teamcode.drive.opmode;
 
 import com.acmerobotics.roadrunner.Pose2d;
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -15,7 +13,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.drive.PoseStorage;
 import org.firstinspires.ftc.teamcode.vision.pipelines.AprilTagDetectionPipeline;
@@ -90,22 +87,9 @@ public class drive extends LinearOpMode {
         Servo load = hardwareMap.get(Servo.class, "load");
         Servo bunt = hardwareMap.get(Servo.class, "bunt");
 
-        // Initialize IMU
-        IMU imu = hardwareMap.get(IMU.class, "imu");
-        IMU.Parameters myIMUparameters = new IMU.Parameters(
-                new RevHubOrientationOnRobot(
-                        RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
-                        RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
-                )
-        );
-
-        imu = hardwareMap.get(IMU.class, "imu");
-
         // Initialize localizer and robot position variables. Get position constants
         MecanumDrive drive = new MecanumDrive(hardwareMap, PoseStorage.currentPose);
         MecanumDrive.Params parameters = new MecanumDrive.Params();
-        double robotAngle = 0;
-        YawPitchRollAngles robotOrientation;
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewID", "id", hardwareMap.appContext.getPackageName());
         OpenCvCamera camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "FGLs Webcam 2025!"), cameraMonitorViewId);
@@ -151,18 +135,6 @@ public class drive extends LinearOpMode {
             // Get Pose
             drive.updatePoseEstimate();
             Pose2d myPose = drive.pose;
-
-            // Get IMU data
-            robotOrientation = imu.getRobotYawPitchRollAngles();
-
-            // What are these used for?
-            // Now use these simple methods to extract each angle
-            // (Java type double) from the object you just created:
-            double Yaw = robotOrientation.getYaw(AngleUnit.DEGREES);
-            double Pitch = robotOrientation.getPitch(AngleUnit.DEGREES);
-            double Roll = robotOrientation.getRoll(AngleUnit.DEGREES);
-
-            if (myPose != null) robotAngle = myPose.heading.toDouble(); // TODO: Change to right one
 
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
             double axial_target = -gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
