@@ -169,7 +169,7 @@ public class drive extends LinearOpMode {
             double lateral_target = gamepad1.left_stick_x * 1.1;
             double yaw = -gamepad1.right_stick_x;
 
-            double theta = isIntakeCentric ? 180 : Math.toRadians(0); // Change this to use robot-centric soon
+            double theta = isIntakeCentric ? Math.toRadians(180) : Math.toRadians(0); // Change this to use robot-centric soon
             double cosine = Math.cos(theta);
             double sine = Math.sin(theta);
 
@@ -288,7 +288,13 @@ public class drive extends LinearOpMode {
                 AprilTagDetection detection = detections.get(0);
                 Orientation rot = Orientation.getOrientation(detection.pose.R, AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
                 double bearing = Math.toDegrees(Math.atan2(detection.pose.x, detection.pose.z));
-                if (bearing < 1) {
+                double threshold = 0;
+                if (detection.id == 24) {
+                    threshold = -4.76;
+                } else if (detection.id == 20) {
+                    threshold = 1;
+                }
+                if (bearing < threshold) {
                     leftFrontDrive.setPower(-0.2f);
                     rightFrontDrive.setPower(0.2f);
                     leftBackDrive.setPower(-0.2f);

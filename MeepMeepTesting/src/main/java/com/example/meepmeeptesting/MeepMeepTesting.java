@@ -127,6 +127,29 @@ public class MeepMeepTesting {
             }
         }
 
+        enum PARK {
+            RED_CLOSE(new Pose2d(0, 24, Math.toRadians(-45)), Math.toRadians(45)),
+            RED_FAR(new Pose2d(36, 12, Math.toRadians(0)), Math.toRadians(180)),
+            BLUE_CLOSE(new Pose2d(0, -24, Math.toRadians(45)), Math.toRadians(-45)),
+            BLUE_FAR(new Pose2d(36, -12, Math.toRadians(0)), Math.toRadians(180));
+
+            private final Pose2d pose2d;
+            private final double inHeading;
+
+            PARK(Pose2d _pose2d, double _inHeading) {
+                this.pose2d = _pose2d;
+                this.inHeading = _inHeading;
+            }
+
+            public Pose2d getPose() {
+                return pose2d;
+            }
+
+            public double in() {
+                return inHeading;
+            }
+        }
+
         enum LAUNCH {
             RED_CLOSE(new Pose2d(-12, 12, Math.toRadians(-45)), Math.toRadians(-135), Math.toRadians(30)),
             RED_FAR(new Pose2d(60, 12, Math.toRadians(-15)), Math.toRadians(-10), Math.toRadians(180)),
@@ -200,6 +223,24 @@ public class MeepMeepTesting {
                     .setTangent(artifact.out())
                     .lineToY(artifactCollect.getPose().position.y, new TranslationalVelConstraint(8));
         }
+
+        static TrajectoryActionBuilder linearSplineTrajectory(RoadRunnerBotEntity robot, LAUNCH launch, PARK park) {
+            return robot.getDrive().actionBuilder(launch.getPose())
+                    .setTangent(launch.out())
+                    .splineToLinearHeading(park.getPose(), park.in());
+        }
+
+        static TrajectoryActionBuilder linearSplineTrajectory(RoadRunnerBotEntity robot, START start, LAUNCH launch) {
+            double diffX = launch.getPose().position.x - start.getPose().position.x;
+            double diffY = launch.getPose().position.y - start.getPose().position.y;
+            double tangent = Math.atan2(diffY, diffX);
+            if (diffX < 0) {
+                tangent += Math.toRadians(180);
+            }
+            return robot.getDrive().actionBuilder(start.getPose())
+                    .setTangent(tangent)
+                    .lineToXLinearHeading(0, launch.getPose().heading);
+        }
     }
 
     public static void main(String[] args) {
@@ -211,9 +252,9 @@ public class MeepMeepTesting {
                 .build();
 
         // change these to test
-        Positions.START startPos = Positions.START.RED_CLOSE;
-        Positions.OBELISK obeliskPos = Positions.OBELISK.BLUE_CLOSE;
-        Positions.LAUNCH launchPos = Positions.LAUNCH.BLUE_CLOSE;
+        Positions.START startPos = Positions.START.BLUE_FAR;
+        Positions.OBELISK obeliskPos = Positions.OBELISK.BLUE_FAR;
+        Positions.LAUNCH launchPos = Positions.LAUNCH.BLUE_FAR;
 
         Pose2d initialPose = startPos.getPose();
 
@@ -289,17 +330,18 @@ public class MeepMeepTesting {
                 .build();
 
         Action preScanAction = new SequentialAction(
-                Positions.linearSplineTrajectory(robot, startPos, obeliskPos).build()
+                Positions.linearSplineTrajectory(robot, startPos, launchPos).build()
         );
 
         Action postScanAction = new SequentialAction(
                 Positions.linearSplineTrajectory(robot, startPos, obeliskPos).build(),
                 Positions.linearSplineTrajectory(robot, obeliskPos, firstArtifact).build(),
                 Positions.line(robot, firstArtifact, firstArtifactCollect).build(),
-                Positions.linearSplineTrajectory(robot, firstArtifactCollect, launchPos).build()
+                Positions.linearSplineTrajectory(robot, firstArtifactCollect, launchPos).build(),
+                Positions.linearSplineTrajectory(robot, launchPos, Positions.PARK.BLUE_FAR).build()
         );
 
-        robot.runAction(postScanAction);
+        robot.runAction(preScanAction);
 
         Image img = null;
         try {

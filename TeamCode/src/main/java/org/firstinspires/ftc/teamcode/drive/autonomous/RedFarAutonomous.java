@@ -22,6 +22,7 @@ public class RedFarAutonomous extends Autonomous {
         Positions.START startPos = Positions.START.RED_FAR;
         Positions.OBELISK obeliskPos = Positions.OBELISK.RED_FAR;
         Positions.LAUNCH launchPos = Positions.LAUNCH.RED_FAR;
+        Positions.PARK parkPos = Positions.PARK.RED_FAR;
 
         boolean isFar = true;
 
@@ -84,7 +85,8 @@ public class RedFarAutonomous extends Autonomous {
                 Positions.linearSplineTrajectory(robot, launchPos, firstArtifact).build(),
                 robot.collectBalls(Positions.line(robot, firstArtifact, firstArtifactCollect)),
                 Positions.linearSplineTrajectory(robot, firstArtifactCollect, launchPos).build(),
-                robot.shootBalls(firstArtifact.letter(), scannedTagID, isFar)
+                robot.shootBalls(firstArtifact.letter(), scannedTagID, isFar),
+                Positions.linearSplineTrajectory(robot, launchPos, parkPos).build()
         );
 
         Actions.runBlocking(
@@ -150,7 +152,8 @@ public class RedFarAutonomous extends Autonomous {
                     Positions.linearSplineTrajectory(robot, launchPos, firstArtifact).build(),
                     robot.collectBalls(Positions.line(robot, firstArtifact, firstArtifactCollect)),
                     Positions.linearSplineTrajectory(robot, firstArtifactCollect, launchPos).build(),
-                    robot.shootBalls(firstArtifact.letter(), scannedTagID, isFar)
+                    robot.shootBalls(firstArtifact.letter(), scannedTagID, isFar),
+                    Positions.linearSplineTrajectory(robot, launchPos, parkPos).build()
             );
         }
 

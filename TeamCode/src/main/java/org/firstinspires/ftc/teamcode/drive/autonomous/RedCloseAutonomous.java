@@ -21,6 +21,7 @@ public class RedCloseAutonomous extends Autonomous {
         Positions.START startPos = Positions.START.RED_CLOSE;
         Positions.OBELISK obeliskPos = Positions.OBELISK.RED_CLOSE;
         Positions.LAUNCH launchPos = Positions.LAUNCH.RED_CLOSE;
+        Positions.PARK parkPos = Positions.PARK.RED_CLOSE;
 
         boolean isFar = false;
 
@@ -83,7 +84,8 @@ public class RedCloseAutonomous extends Autonomous {
                 Positions.linearSplineTrajectory(robot, launchPos, firstArtifact).build(),
                 robot.collectBalls(Positions.line(robot, firstArtifact, firstArtifactCollect)),
                 Positions.linearSplineTrajectory(robot, firstArtifactCollect, launchPos).build(),
-                robot.shootBalls(firstArtifact.letter(), scannedTagID, isFar)
+                robot.shootBalls(firstArtifact.letter(), scannedTagID, isFar),
+                Positions.linearSplineTrajectory(robot, launchPos, parkPos).build()
         );
 
         Actions.runBlocking(
@@ -149,7 +151,8 @@ public class RedCloseAutonomous extends Autonomous {
                     Positions.linearSplineTrajectory(robot, launchPos, firstArtifact).build(),
                     robot.collectBalls(Positions.line(robot, firstArtifact, firstArtifactCollect)),
                     Positions.linearSplineTrajectory(robot, firstArtifactCollect, launchPos).build(),
-                    robot.shootBalls(firstArtifact.letter(), scannedTagID, isFar)
+                    robot.shootBalls(firstArtifact.letter(), scannedTagID, isFar),
+                    Positions.linearSplineTrajectory(robot, launchPos, parkPos).build()
             );
         }
 

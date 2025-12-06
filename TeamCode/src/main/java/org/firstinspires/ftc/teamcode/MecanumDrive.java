@@ -99,7 +99,8 @@ public final class MecanumDrive {
         public final float LAUNCH_SPEED_CLOSE_LOW = 9.9f;
         public final float LAUNCH_SPEED_FAR_HIGH = 10.3f; //10
         public final float LAUNCH_SPEED_DROP = -2;
-        public final float LAUNCH_SPEED_FAR_LOW = 10.67f;
+        public final float LAUNCH_SPEED_FAR_LOW = 10.4f;
+        public final float LAUNCH_SPEED_FAR_AUTON = 10.7f;
 
         // Control Parameters
         public final int INTAKE_DIRECTION_START = 0;
@@ -109,7 +110,7 @@ public final class MecanumDrive {
         public final float LOAD_FALL = 0.4f;
         public final float LOAD_RELOAD = 0.74f;
         public final float LOAD_RESET = 0.48f;
-        public final float BUNT_RESET = 0.73f;
+        public final float BUNT_RESET = 0.8f;
         public final float BUNT_LOAD = 0.5f;
         public final float BUNT_LAUNCH = 0f;
 

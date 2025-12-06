@@ -151,9 +151,9 @@ public class Autonomous extends LinearOpMode {
 
         enum LAUNCH {
             RED_CLOSE(new Pose2d(-12, 12, Math.toRadians(-45)), Math.toRadians(-135), Math.toRadians(15)),
-            RED_FAR(new Pose2d(58, 14, Math.toRadians(-22)), Math.toRadians(-10), Math.toRadians(-170)),
+            RED_FAR(new Pose2d(58, 15, Math.toRadians(-22)), Math.toRadians(-10), Math.toRadians(-170)),
             BLUE_CLOSE(new Pose2d(-12, -12, Math.toRadians(45)), Math.toRadians(135), Math.toRadians(-15)),
-            BLUE_FAR(new Pose2d(58, -14, Math.toRadians(22)), Math.toRadians(10), Math.toRadians(170));
+            BLUE_FAR(new Pose2d(58, -15, Math.toRadians(22)), Math.toRadians(10), Math.toRadians(170));
 
             private final Pose2d pose2d;
             private final double inHeading;
@@ -177,18 +177,26 @@ public class Autonomous extends LinearOpMode {
              }
         }
 
-        enum PARKING {
-            PARK_RED(new Pose2d(38.25f, 32, Math.toRadians(0))),
-            PARK_BLUE(new Pose2d(38.25f, -32, Math.toRadians(0)));
+        enum PARK {
+            RED_CLOSE(new Pose2d(0, 24, Math.toRadians(-45)), Math.toRadians(45)),
+            RED_FAR(new Pose2d(36, 12, Math.toRadians(0)), Math.toRadians(180)),
+            BLUE_CLOSE(new Pose2d(0, -24, Math.toRadians(45)), Math.toRadians(-45)),
+            BLUE_FAR(new Pose2d(36, -12, Math.toRadians(0)), Math.toRadians(180));
 
             private final Pose2d pose2d;
+            private final double inHeading;
 
-            PARKING(Pose2d _pose2d) {
+            PARK(Pose2d _pose2d, double _inHeading) {
                 this.pose2d = _pose2d;
+                this.inHeading = _inHeading;
             }
 
             public Pose2d getPose() {
                 return pose2d;
+            }
+
+            public double in() {
+                return inHeading;
             }
         }
 
@@ -231,19 +239,25 @@ public class Autonomous extends LinearOpMode {
         static TrajectoryActionBuilder linearSplineTrajectory(Robot robot, START start, LAUNCH launch) {
             double diffX = launch.getPose().position.x - start.getPose().position.x;
             double diffY = launch.getPose().position.y - start.getPose().position.y;
-            double tangent = Math.atan2(diffX, diffY);
+            double tangent = Math.atan2(diffY, diffX);
             if (diffX < 0) {
                 tangent += Math.toRadians(180);
             }
             return robot.drive.actionBuilder(start.getPose())
-                    .setTangent(tangent)
-                    .lineToXLinearHeading(launch.getPose().position.x, launch.getPose().heading);
+                    .setTangent(Math.toRadians(180))
+                    .splineToLinearHeading(launch.getPose(), tangent);
         }
 
         static TrajectoryActionBuilder linearSplineTrajectory(Robot robot, OBELISK obelisk, LAUNCH launch) {
             return robot.drive.actionBuilder(obelisk.getPose())
                     .setTangent(obelisk.out())
                     .splineToLinearHeading(launch.getPose(), launch.in());
+        }
+
+        static TrajectoryActionBuilder linearSplineTrajectory(Robot robot, LAUNCH launch, PARK park) {
+            return robot.drive.actionBuilder(launch.getPose())
+                    .setTangent(launch.out())
+                    .splineToLinearHeading(park.getPose(), park.in());
         }
     }
 
@@ -256,7 +270,6 @@ public class Autonomous extends LinearOpMode {
         final Bunt bunt;
         final MecanumDrive drive;
         final Camera camera;
-        int id;
 
         public Robot(Intake intake, Launch launch, Load load, Bunt bunt, MecanumDrive drive, Camera camera) {
             this.intake = intake;
@@ -300,22 +313,13 @@ public class Autonomous extends LinearOpMode {
             );
         }
 
-        public Action shootHighDouble(float timeToWait) {
-            return new SequentialAction(
-                    load.loadReset(),
-                    new SleepAction(timeToWait),
-                    intake.intakeOut(),
-                    hitBall(),
-                    intake.intakeOff()
-            );
-        }
-
         public Action loadIntakeIntoHigh(float intakeTime) {
             return new SequentialAction(
                     load.loadReset(),
                     intake.intakeLoad(),
                     new SleepAction(intakeTime),
                     nudgeIntake(),
+                    new SleepAction(0.25),
                     intake.intakeOff()
             );
         }
@@ -346,6 +350,14 @@ public class Autonomous extends LinearOpMode {
             );
         }
 
+        public Action wiggleLoadHigh() {
+            return new SequentialAction(
+                    load.loadReload(),
+                    new SleepAction(0.2f),
+                    load.loadLoad()
+            );
+        }
+
         public Action loadIntake(float intakeTime) {
             return new SequentialAction(
                     intake.intakeLoad(),
@@ -357,7 +369,7 @@ public class Autonomous extends LinearOpMode {
         public Action nudgeIntake() {
             return new SequentialAction(
                     bunt.buntLoad(),
-                    new SleepAction(0.3f),
+                    new SleepAction(0.35f),
                     bunt.buntReset()
             );
         }
@@ -384,10 +396,12 @@ public class Autonomous extends LinearOpMode {
         public Action shootLLLFar() { // FINISHED
             return new SequentialAction(
                     load.loadReload(),
-                    lowerIntake(0.45f),
-                    loadIntakeIntoLow(0f),
+                    lowerIntake(0.35f),
+                    load.loadLoad(),
+                    loadIntake(0.2f),
                     launch.launchFarLow(),
                     shootLow(1.5f),
+                    launch.launchAuton(),
                     new SleepAction(1),
                     loadIntakeIntoLow(0.25f),
                     shootLow(1),
@@ -405,12 +419,14 @@ public class Autonomous extends LinearOpMode {
                     shootLow(1.25f),
                     launch.launchFarLow(),
                     new SleepAction(0.5f),
-                    loadIntakeIntoLow(0.5f),
+                    loadIntake(0.2f),
                     shootLow(0),
+                    wiggleLoadHigh(),
+                    launch.launchAuton(),
                     new SleepAction(0.5f),
                     loadIntakeIntoLow(0.5f),
-                    shootLow(0),
-                    new SleepAction(0.5f),
+                    shootLow(0.2f),
+                    new SleepAction(0.4f),
                     launch.launchOff()
             );
         }
@@ -444,11 +460,13 @@ public class Autonomous extends LinearOpMode {
 
         public Action shootHLLFar() {
             return new SequentialAction(
+                    loadIntakeIntoHigh(0.1f),
                     lowerIntake(0.1f),
                     launch.launchFarHigh(),
                     shootHigh(1.5f),
                     launch.launchFarLow(),
                     shootLow(1),
+                    new SleepAction(0.7),
                     loadIntakeIntoLow(1),
                     shootLow(1),
                     new SleepAction(0.5f),
@@ -459,10 +477,13 @@ public class Autonomous extends LinearOpMode {
         public Action shootPHLLFar() {
             return new SequentialAction(
                     loadIntakeIntoHigh(0.1f),
+                    lowerIntake(0.1f),
                     launch.launchFarHigh(),
                     shootHigh(1.5f),
                     launch.launchFarLow(),
                     shootLow(1),
+                    launch.launchAuton(),
+                    wiggleLoadHigh(),
                     loadIntakeIntoLow(1),
                     shootLow(1),
                     new SleepAction(0.5f),
@@ -505,7 +526,7 @@ public class Autonomous extends LinearOpMode {
                     launch.launchFarHigh(),
                     loadIntakeIntoHigh(2),
                     shootHigh(1),
-                    launch.launchFarLow(),
+                    launch.launchAuton(),
                     shootLow(1),
                     new SleepAction(0.5f),
                     launch.launchOff()
@@ -514,7 +535,7 @@ public class Autonomous extends LinearOpMode {
 
         public Action shootPLHLFar() {
             return new SequentialAction(
-                    launch.launchFarHigh(),
+                    launch.launchCloseLow(),
                     shootLow(1.25f),
                     new SleepAction(0.2f),
                     launch.launchFarHigh(),
@@ -556,20 +577,6 @@ public class Autonomous extends LinearOpMode {
         }
 
         public Action shootHHLFar() {
-            return new SequentialAction(
-                    launch.launchFarHigh(),
-                    shootHigh(0),
-                    loadIntakeIntoHigh(1),
-                    shootHigh(1),
-                    launch.launchFarLow(),
-                    loadIntakeIntoLow(1),
-                    shootLow(1),
-                    new SleepAction(0.5f),
-                    launch.launchOff()
-            );
-        }
-
-        public Action shootPHHLFar() {
             return new SequentialAction(
                     launch.launchFarHigh(),
                     shootHigh(0),
@@ -1018,6 +1025,9 @@ public class Autonomous extends LinearOpMode {
                 } else if (launchState == 5) {
                     launch1.setVelocity(parameters.LAUNCH_SPEED_CLOSE_LOW, AngleUnit.RADIANS);
                     launch2.setVelocity(parameters.LAUNCH_SPEED_CLOSE_LOW, AngleUnit.RADIANS);
+                } else if (launchState == 6) {
+                    launch1.setVelocity(parameters.LAUNCH_SPEED_FAR_AUTON, AngleUnit.RADIANS);
+                    launch2.setVelocity(parameters.LAUNCH_SPEED_FAR_AUTON, AngleUnit.RADIANS);
                 }
 
                 return runMove;
@@ -1112,6 +1122,18 @@ public class Autonomous extends LinearOpMode {
             return new LaunchDrop();
         }
 
+        public class LaunchAuton implements Action {
+            @Override
+            public boolean run (@NonNull TelemetryPacket packet) {
+                launchState = 6;
+                return false;
+            }
+        }
+
+        public Action launchAuton() {
+            return new LaunchAuton();
+        }
+
         public class LaunchInit implements Action {
             private boolean initialized = false;
 
@@ -1187,113 +1209,11 @@ public class Autonomous extends LinearOpMode {
         */
 
         Positions.START startPos = Positions.START.BLUE_FAR; // choose start
-        char artifactLetter = 'C'; // choose which artifact: 'A', 'B', or 'C'
-
         Pose2d initialPose = startPos.getPose();
 
         Robot robot = new Robot(
                 new Intake(hardwareMap), new Launch(hardwareMap), new Load(hardwareMap), new Bunt(hardwareMap),
                 new MecanumDrive(hardwareMap, initialPose), new Camera(hardwareMap));
-
-        boolean isRed = (startPos == Positions.START.RED_CLOSE || startPos == Positions.START.RED_FAR);
-        boolean isClose = (startPos == Positions.START.RED_CLOSE || startPos == Positions.START.BLUE_CLOSE);
-
-        // pick correct artifact automatically
-        Positions.ARTIFACT detectedTag;
-        if (isRed) {
-            if (artifactLetter == 'A') detectedTag = Positions.ARTIFACT.RED_A;
-            else if (artifactLetter == 'B') detectedTag = Positions.ARTIFACT.RED_B;
-            else detectedTag = Positions.ARTIFACT.RED_C;
-        } else {
-            if (artifactLetter == 'A') detectedTag = Positions.ARTIFACT.BLUE_A;
-            else if (artifactLetter == 'B') detectedTag = Positions.ARTIFACT.BLUE_B;
-            else detectedTag = Positions.ARTIFACT.BLUE_C;
-        }
-
-        Pose2d target = detectedTag.getPose();
-
-        // approach points (up for red, down for blue)
-        Pose2d redApproachPoint = new Pose2d(target.position.x, target.position.y - 20, Math.toRadians(90));
-        Pose2d blueApproachPoint = new Pose2d(target.position.x, target.position.y + 20, Math.toRadians(270));
-
-        // obelisk poses
-        Pose2d redCloseObeliskPose = new Pose2d(-32, 32, Math.toRadians(225));
-        Pose2d redFarObeliskPose = new Pose2d(23, 12, Math.toRadians(187));
-        Pose2d blueCloseObeliskPose = new Pose2d(-32, -32, Math.toRadians(135));
-        Pose2d blueFarObeliskPose = new Pose2d(23, -12, Math.toRadians(173));
-
-        // team goals
-        Pose2d redGoal = Positions.GOAL.RED.getPose();
-        Pose2d blueGoal = Positions.GOAL.BLUE.getPose();
-
-        Pose2d approachPoint;
-        Pose2d chosenObeliskPose;
-
-        double secondsToWait = 1f;
-
-        if (isRed && isClose) {
-            approachPoint = redApproachPoint;
-            chosenObeliskPose = redCloseObeliskPose;
-        } else if (!isRed && isClose) {
-            approachPoint = blueApproachPoint;
-            chosenObeliskPose = blueCloseObeliskPose;
-        } else if (isRed && !isClose) {
-            approachPoint = redApproachPoint;
-            chosenObeliskPose = redFarObeliskPose;
-        } else {
-            approachPoint = blueApproachPoint;
-            chosenObeliskPose = blueFarObeliskPose;
-        }
-
-        // new goal selection using XOR
-        boolean goToRedGoal = (isRed ^ isClose);
-        Pose2d teamGoal = goToRedGoal ? redGoal : blueGoal;
-
-        double firstTangent = isRed ? Math.toRadians(225) : Math.toRadians(135);
-        double approachHeading = isRed ? Math.toRadians(90) : Math.toRadians(270);
-
-        // make a point in front of the goal (stop before entering)
-        double stopDistance = 22; // how far to stop before goal
-        Pose2d goalFront = new Pose2d(
-                teamGoal.position.x + stopDistance + 21,
-                teamGoal.position.y + (isRed? -stopDistance : +stopDistance),
-                teamGoal.heading.real
-        );
-
-        // build the sequence (view obelisk -> artifact -> back out -> goal front -> stop)
-        Action fullSequence = robot.drive.actionBuilder(initialPose)
-                // 1. go to obelisk
-                .setTangent(Math.toRadians(isRed ? (isClose ? -45 : 197) : (isClose ?  45 : 163)))
-                .splineToLinearHeading(chosenObeliskPose, isClose ? chosenObeliskPose.heading.real : (isRed ? Math.toRadians(225) : Math.toRadians(135)))
-                .waitSeconds(secondsToWait)
-                // 2. go to artifact
-                .setTangent(Math.toRadians(isRed ? 45 : -45))
-                .splineToLinearHeading(approachPoint, approachHeading)
-                .lineToY(target.position.y)
-                // 3. back out (along Y axis)
-                .lineToY(approachPoint.position.y + (isRed ? -10 : 10))
-                // 4. move in front of goal (stop before entering)
-                .setTangent(Math.toRadians(isRed ? -90 : 90))
-                .splineTo(goalFront.position, Math.toRadians(isRed ? 135 : 225))
-                .build();
-
-        Action s1 = robot.drive.actionBuilder(initialPose)
-                // 1. go to obelisk
-                .setTangent(Math.toRadians(isRed ? (isClose ? -45 : 197) : (isClose ?  45 : 163)))
-                .splineToLinearHeading(chosenObeliskPose, isClose ? chosenObeliskPose.heading.real : (isRed ? Math.toRadians(225) : Math.toRadians(135))).waitSeconds(secondsToWait).build();
-
-        Action s2 = robot.drive.actionBuilder(chosenObeliskPose).setTangent(Math.toRadians(isRed ? 45 : -45))
-                .splineToLinearHeading(approachPoint, approachHeading).build();
-
-        Action s3 = robot.drive.actionBuilder(approachPoint).setTangent(Math.toRadians(90)).lineToY(target.position.y, new TranslationalVelConstraint(10)).build();
-        TrajectoryActionBuilder t3 = robot.drive.actionBuilder(approachPoint).setTangent(Math.toRadians(90)).lineToY(target.position.y, new TranslationalVelConstraint(10));
-
-
-        Action s4 = robot.drive.actionBuilder(new Pose2d(approachPoint.position.x, target.position.y, approachPoint.heading.real)).setTangent(Math.toRadians(270)).lineToY(approachPoint.position.y + (isRed ? -10 : 10)).build();
-
-        Action s5 = robot.drive.actionBuilder(new Pose2d(approachPoint.position.x, approachPoint.position.y + (isRed ? -10 : 10), Math.toRadians(90))).setTangent(Math.toRadians(isRed ? -225 : 225))
-                .splineTo(goalFront.position, Math.toRadians(isRed ? 135 : 225)).turnTo(Math.toRadians(240)).build();
-
 
         // Initialization Actions
         Actions.runBlocking(robot.Init());
@@ -1312,7 +1232,7 @@ public class Autonomous extends LinearOpMode {
         }
 
         Action preScanTrajectory;
-        Action postScanTrajectory;
+        Action postScanTrajectory = new SleepAction(0);
 
         //a == ppg
         if (scannedTagID == 21) { //GPP
@@ -1328,7 +1248,15 @@ public class Autonomous extends LinearOpMode {
             preScanTrajectory = new SequentialAction(
                     robot.bunt.buntLaunch()
             );
+            postScanTrajectory = new SequentialAction(
+                    robot.shootLLLFar()
+            );
         }
+        
+        Action fullSequence = new SequentialAction(
+                preScanTrajectory,
+                postScanTrajectory
+        );
 
         telemetry.update();
         waitForStart();
@@ -1340,48 +1268,8 @@ public class Autonomous extends LinearOpMode {
                 new ParallelAction(
                         robot.intake.moveIntake(),
                         robot.launch.moveLaunch(),
-//                        fullSequence
-                        new SequentialAction(
-//                                s1,
-//                                s2,
-//                                robot.collectBalls(t3),
-//                                s4,
-//                                s5,
-//                                robot.launch.launchClose(),
-//                                new SleepAction(1),
-//                                robot.shootHigh(0),
-//                                new SleepAction(1),
-//                                robot.loadIntakeIntoHigh(1),
-//                                new SleepAction(0.75),
-//                                robot.shootHigh(0),
-//                                robot.load.loadLoad(),
-//                                robot.shootLow(1)
-//                                robot.camera.scanOrder(10000000),
-//                                robot.setOrder(),
-                                robot.shootHLLFar()
-                        )
+                        fullSequence
                 )
         );
-
-        int maxCycles = 50;
-        if (scannedTagID == -1) {
-            while (maxCycles > 0) {
-                maxCycles--;
-                if (maxCycles == 0) {
-                    telemetry.addData("How interesting", scannedTagID);
-                    break;
-                }
-            }
-            //scan tag;
-            //if not found
-                // --> Try again, cycles--;
-            //if found success
-
-        }
-
-//        Actions.runBlocking(
-//                robot.load.loadLoad()
-//        );
-
     }
 }

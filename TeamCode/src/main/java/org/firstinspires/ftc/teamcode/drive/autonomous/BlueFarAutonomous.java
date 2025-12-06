@@ -21,6 +21,7 @@ public class BlueFarAutonomous extends Autonomous {
         Positions.START startPos = Positions.START.BLUE_FAR;
         Positions.OBELISK obeliskPos = Positions.OBELISK.BLUE_FAR;
         Positions.LAUNCH launchPos = Positions.LAUNCH.BLUE_FAR;
+        Positions.PARK parkPos = Positions.PARK.BLUE_FAR;
 
         boolean isFar = true;
 
@@ -83,7 +84,8 @@ public class BlueFarAutonomous extends Autonomous {
                 Positions.linearSplineTrajectory(robot, launchPos, firstArtifact).build(),
                 robot.collectBalls(Positions.line(robot, firstArtifact, firstArtifactCollect)),
                 Positions.linearSplineTrajectory(robot, firstArtifactCollect, launchPos).build(),
-                robot.shootBalls(firstArtifact.letter(), scannedTagID, isFar)
+                robot.shootBalls(firstArtifact.letter(), scannedTagID, isFar),
+                Positions.linearSplineTrajectory(robot, launchPos, parkPos).build()
         );
 
         Actions.runBlocking(
@@ -149,7 +151,8 @@ public class BlueFarAutonomous extends Autonomous {
                     Positions.linearSplineTrajectory(robot, launchPos, firstArtifact).build(),
                     robot.collectBalls(Positions.line(robot, firstArtifact, firstArtifactCollect)),
                     Positions.linearSplineTrajectory(robot, firstArtifactCollect, launchPos).build(),
-                    robot.shootBalls(firstArtifact.letter(), scannedTagID, isFar)
+                    robot.shootBalls(firstArtifact.letter(), scannedTagID, isFar),
+                    Positions.linearSplineTrajectory(robot, launchPos, parkPos).build()
             );
         }
 
