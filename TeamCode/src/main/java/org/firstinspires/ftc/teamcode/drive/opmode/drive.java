@@ -248,17 +248,12 @@ public class drive extends LinearOpMode {
                     if (newDetections.get(0).pose.z < parameters.THRESHOLD_HIGH_DECIMATION_RANGE_METERS) {
                         aprilTagDetectionPipeline.setDecimation(parameters.DECIMATION_HIGH);
                     }
-
-                    for (AprilTagDetection detection : newDetections) {
-                        Orientation rot = Orientation.getOrientation(detection.pose.R, AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
-                    }
                 }
             }
 
             // Power Wheels
             if (gamepad1.right_bumper && !detections.isEmpty()) {
                 AprilTagDetection detection = detections.get(0);
-                Orientation rot = Orientation.getOrientation(detection.pose.R, AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
                 double bearing = Math.toDegrees(Math.atan2(detection.pose.x, detection.pose.z));
                 double threshold = 0;
                 if (detection.id == 24) {
