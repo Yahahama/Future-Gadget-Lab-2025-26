@@ -4,8 +4,6 @@ import androidx.annotation.NonNull;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.AngularVelConstraint;
-import com.acmerobotics.roadrunner.MinVelConstraint;
 import com.acmerobotics.roadrunner.ParallelAction;
 
 import com.acmerobotics.roadrunner.Pose2d;
@@ -14,7 +12,6 @@ import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.ftc.Actions;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -23,7 +20,6 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
@@ -39,21 +35,6 @@ import java.util.ArrayList;
 @com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "AUTONOMOUS", group = "Autonomous")
 public class Autonomous extends LinearOpMode {
     public static class Positions {
-        enum GOAL {
-            RED(new Pose2d(-53, 48, Math.toRadians(135))),
-            BLUE(new Pose2d(-53, -48, Math.toRadians(225)));
-
-            private final Pose2d pose2d;
-
-            GOAL(Pose2d _pose2d) {
-                this.pose2d = _pose2d;
-            }
-
-            public Pose2d getPose() {
-                return pose2d;
-            }
-        }
-
         enum START {
             RED_CLOSE(new Pose2d(-49, 48, Math.toRadians(-45)), Math.toRadians(-45)),
             RED_FAR(new Pose2d(62, 23, Math.toRadians(0)), Math.toRadians(180)),
@@ -374,16 +355,6 @@ public class Autonomous extends LinearOpMode {
             );
         }
 
-        public Action shuffleIntakeIntoHigh(float intakeTime) {
-            return new SequentialAction(
-                    load.loadReset(),
-                    intake.intakeOut(),
-                    new SleepAction(0.25),
-                    intake.intakeLoad(),
-                    new SleepAction(intakeTime),
-                    intake.intakeOff()
-            );
-        }
 
         public Action collectBalls(TrajectoryActionBuilder forwardTrajectory) {
             return new SequentialAction(
