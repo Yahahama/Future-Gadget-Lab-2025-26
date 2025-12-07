@@ -99,7 +99,7 @@ public final class MecanumDrive {
         public final float LAUNCH_SPEED_CLOSE_LOW = 9.9f;
         public final float LAUNCH_SPEED_FAR_HIGH = 10.3f; //10
         public final float LAUNCH_SPEED_DROP = -2;
-        public final float LAUNCH_SPEED_FAR_LOW = 10.4f;
+        public final float LAUNCH_SPEED_FAR_LOW = 10.35f;
         public final float LAUNCH_SPEED_FAR_AUTON = 10.7f;
 
         // Control Parameters

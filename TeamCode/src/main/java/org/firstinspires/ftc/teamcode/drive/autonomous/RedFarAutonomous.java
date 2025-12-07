@@ -82,6 +82,7 @@ public class RedFarAutonomous extends Autonomous {
         postScanAction = new SequentialAction(
                 Positions.linearSplineTrajectory(robot, startPos, launchPos).build(),
                 robot.shootPreload(scannedTagID, isFar),
+                robot.load.loadReset(),
                 Positions.linearSplineTrajectory(robot, launchPos, firstArtifact).build(),
                 robot.collectBalls(Positions.line(robot, firstArtifact, firstArtifactCollect)),
                 Positions.linearSplineTrajectory(robot, firstArtifactCollect, launchPos).build(),
@@ -149,6 +150,7 @@ public class RedFarAutonomous extends Autonomous {
             postScanAction = new SequentialAction(
                     Positions.linearSplineTrajectory(robot, obeliskPos, launchPos).build(),
                     robot.shootPreload(scannedTagID, isFar),
+                    robot.load.loadReset(),
                     Positions.linearSplineTrajectory(robot, launchPos, firstArtifact).build(),
                     robot.collectBalls(Positions.line(robot, firstArtifact, firstArtifactCollect)),
                     Positions.linearSplineTrajectory(robot, firstArtifactCollect, launchPos).build(),

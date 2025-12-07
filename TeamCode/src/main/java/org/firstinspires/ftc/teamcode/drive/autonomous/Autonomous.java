@@ -350,7 +350,7 @@ public class Autonomous extends LinearOpMode {
         public Action nudgeIntake() {
             return new SequentialAction(
                     bunt.buntLoad(),
-                    new SleepAction(0.35f),
+                    new SleepAction(0.375f),
                     bunt.buntReset()
             );
         }
@@ -366,10 +366,8 @@ public class Autonomous extends LinearOpMode {
 
         public Action shootLLLFar() { // FINISHED
             return new SequentialAction(
-                    load.loadReload(),
-                    lowerIntake(0.35f),
                     load.loadLoad(),
-                    loadIntake(0.2f),
+                    lowerIntake(0.35f),
                     launch.launchFarLow(),
                     shootLow(1.5f),
                     launch.launchAuton(),
@@ -391,12 +389,10 @@ public class Autonomous extends LinearOpMode {
                     launch.launchFarLow(),
                     new SleepAction(0.5f),
                     loadIntake(0.2f),
-                    shootLow(0),
-                    wiggleLoadHigh(),
-                    launch.launchAuton(),
+                    shootLow(0.5f),
                     new SleepAction(0.5f),
                     loadIntakeIntoLow(0.5f),
-                    shootLow(0.2f),
+                    shootLow(0.5f),
                     new SleepAction(0.4f),
                     launch.launchOff()
             );
@@ -431,9 +427,10 @@ public class Autonomous extends LinearOpMode {
 
         public Action shootHLLFar() {
             return new SequentialAction(
-                    loadIntakeIntoHigh(0.1f),
-                    lowerIntake(0.1f),
+                    load.loadReset(),
+                    loadIntake(0.2f),
                     launch.launchFarHigh(),
+                    lowerIntake(0.1f),
                     shootHigh(1.5f),
                     launch.launchFarLow(),
                     shootLow(1),
@@ -507,7 +504,7 @@ public class Autonomous extends LinearOpMode {
         public Action shootPLHLFar() {
             return new SequentialAction(
                     launch.launchCloseLow(),
-                    shootLow(1.25f),
+                    shootLow(1.5f),
                     new SleepAction(0.2f),
                     launch.launchFarHigh(),
                     loadIntakeIntoHigh(1.25f),
@@ -549,12 +546,15 @@ public class Autonomous extends LinearOpMode {
 
         public Action shootHHLFar() {
             return new SequentialAction(
+                    load.loadReset(),
+                    raiseIntake(0.4f),
                     launch.launchFarHigh(),
-                    shootHigh(0),
-                    loadIntakeIntoHigh(1),
+                    lowerIntake(0.2f),
+                    shootHigh(1.25f),
+                    new SleepAction(0.2f),
+                    loadIntakeIntoHigh(1.5f),
                     shootHigh(1),
                     launch.launchFarLow(),
-                    loadIntakeIntoLow(1),
                     shootLow(1),
                     new SleepAction(0.5f),
                     launch.launchOff()
@@ -1217,10 +1217,10 @@ public class Autonomous extends LinearOpMode {
             preScanTrajectory = new SleepAction(1);
         } else {
             preScanTrajectory = new SequentialAction(
-                    robot.bunt.buntLaunch()
+                    new SleepAction(2)
             );
             postScanTrajectory = new SequentialAction(
-                    robot.shootLLLFar()
+                    robot.shootHLLFar()
             );
         }
         
