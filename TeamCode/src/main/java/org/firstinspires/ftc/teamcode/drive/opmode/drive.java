@@ -76,12 +76,16 @@ public class drive extends LinearOpMode {
         // Initialize and configure launch motor
         DcMotorEx launch1 = hardwareMap.get(DcMotorEx.class, "launch1");
         DcMotorEx launch2 = hardwareMap.get(DcMotorEx.class, "launch2");
-        launch1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        launch2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        launch1.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        launch2.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         launch1.setDirection(DcMotorEx.Direction.FORWARD);
         launch2.setDirection(DcMotorEx.Direction.REVERSE);
         launch1.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         launch2.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+
+        DcMotor kickstand = hardwareMap.get(DcMotor.class, "pl");
+        kickstand.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        kickstand.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Initialize servos
         Servo load = hardwareMap.get(Servo.class, "load");
@@ -232,6 +236,14 @@ public class drive extends LinearOpMode {
                 bunt.setPosition(parameters.BUNT_RESET);
             }
 
+            if (gamepad1.dpad_left) {
+                kickstand.setPower(1.0f);
+            } else if (gamepad1.dpad_right) {
+                kickstand.setPower(-1.0f);
+            } else {
+                kickstand.setPower(0f);
+            }
+
             ArrayList<AprilTagDetection> newDetections = aprilTagDetectionPipeline.getDetectionsUpdate();
 
             if (newDetections != null) {
@@ -252,13 +264,27 @@ public class drive extends LinearOpMode {
             }
 
             // Power Wheels
-            if (gamepad1.right_bumper && !detections.isEmpty()) {
-                AprilTagDetection detection = detections.get(0);
-                double bearing = Math.toDegrees(Math.atan2(detection.pose.x, detection.pose.z));
+            AprilTagDetection targetDetection = null;
+            int targetID = -1;
+            if (!detections.isEmpty()) {
+                targetDetection = detections.get(0);
+                if (targetDetection.id == 20) {
+                    targetID = 20;
+                } else if (targetDetection.id == 24) {
+                    targetID = 24;
+                }
+            }
+            if (targetID == -1 || !gamepad1.right_bumper) {
+                leftFrontDrive.setPower(-leftFrontPower);
+                rightFrontDrive.setPower(-rightFrontPower);
+                leftBackDrive.setPower(-leftBackPower);
+                rightBackDrive.setPower(-rightBackPower);
+            } else {
+                double bearing = Math.toDegrees(Math.atan2(targetDetection.pose.x, targetDetection.pose.z));
                 double threshold = 0;
-                if (detection.id == 24) {
+                if (targetID == 24) {
                     threshold = -4.76;
-                } else if (detection.id == 20) {
+                } else if (targetID == 20) {
                     threshold = 1;
                 }
                 if (bearing < threshold) {
@@ -272,11 +298,6 @@ public class drive extends LinearOpMode {
                     leftBackDrive.setPower(0.2f);
                     rightBackDrive.setPower(-0.2f);
                 }
-            } else {
-                leftFrontDrive.setPower(-leftFrontPower);
-                rightFrontDrive.setPower(-rightFrontPower);
-                leftBackDrive.setPower(-leftBackPower);
-                rightBackDrive.setPower(-rightBackPower);
             }
 
             if (gamepad1.dpad_down && !previousDown) {
@@ -293,6 +314,8 @@ public class drive extends LinearOpMode {
             telemetry.addData("Intake", "Direction: " + intakeDirection);
             telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
             telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
+            telemetry.addData("Launch1 Speed", launch1.getVelocity(AngleUnit.RADIANS));
+            telemetry.addData("Launch2 Speed", launch2.getVelocity(AngleUnit.RADIANS));
             telemetry.addData("Load Up", isLoadUp);
             if (newDetections != null) {
                 telemetry.addData("Overhead ms", camera.getOverheadTimeMs());

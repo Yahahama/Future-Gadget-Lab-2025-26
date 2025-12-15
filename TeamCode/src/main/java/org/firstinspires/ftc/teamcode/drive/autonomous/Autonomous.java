@@ -961,9 +961,11 @@ public class Autonomous extends LinearOpMode {
 
         public Launch(HardwareMap hardwareMap) {
             launch1 = hardwareMap.get(DcMotorEx.class, "launch1");
+            launch1.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
             launch1.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
             launch1.setDirection(DcMotorEx.Direction.FORWARD);
             launch2 = hardwareMap.get(DcMotorEx.class, "launch2");
+            launch2.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
             launch2.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
             launch2.setDirection(DcMotorEx.Direction.REVERSE);
         }
