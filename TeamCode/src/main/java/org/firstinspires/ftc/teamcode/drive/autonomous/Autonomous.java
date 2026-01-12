@@ -18,6 +18,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -132,9 +133,9 @@ public class Autonomous extends LinearOpMode {
 
         enum LAUNCH {
             RED_CLOSE(new Pose2d(-12, 12, Math.toRadians(-45)), Math.toRadians(-135), Math.toRadians(15)),
-            RED_FAR(new Pose2d(58, 15, Math.toRadians(-22)), Math.toRadians(-10), Math.toRadians(-170)),
+            RED_FAR(new Pose2d(58, 13, Math.toRadians(-23.5)), Math.toRadians(-10), Math.toRadians(-170)),
             BLUE_CLOSE(new Pose2d(-12, -12, Math.toRadians(45)), Math.toRadians(135), Math.toRadians(-15)),
-            BLUE_FAR(new Pose2d(58, -15, Math.toRadians(22)), Math.toRadians(10), Math.toRadians(170));
+            BLUE_FAR(new Pose2d(58, -13, Math.toRadians(23.5)), Math.toRadians(10), Math.toRadians(170));
 
             private final Pose2d pose2d;
             private final double inHeading;
@@ -963,11 +964,19 @@ public class Autonomous extends LinearOpMode {
             launch1 = hardwareMap.get(DcMotorEx.class, "launch1");
             launch1.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
             launch1.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-            launch1.setDirection(DcMotorEx.Direction.FORWARD);
+            launch1.setDirection(DcMotorEx.Direction.REVERSE);
             launch2 = hardwareMap.get(DcMotorEx.class, "launch2");
             launch2.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
             launch2.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-            launch2.setDirection(DcMotorEx.Direction.REVERSE);
+            launch2.setDirection(DcMotorEx.Direction.FORWARD);
+
+            float kP = 12.7f;
+            float kI = 0.55f;
+            float kD = 2;
+            float kF = 12;
+
+            launch1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(kP, kI, kD, kF));
+            launch2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(kP, kI, kD, kF));
         }
 
         public class LaunchMove implements Action {
@@ -987,20 +996,20 @@ public class Autonomous extends LinearOpMode {
                     launch1.setVelocity(parameters.LAUNCH_SPEED_CLOSE_HIGH, AngleUnit.RADIANS);
                     launch2.setVelocity(parameters.LAUNCH_SPEED_CLOSE_HIGH, AngleUnit.RADIANS);
                 } else if (launchState == 2) {
-                    launch1.setVelocity(parameters.LAUNCH_SPEED_FAR_HIGH, AngleUnit.RADIANS);
-                    launch2.setVelocity(parameters.LAUNCH_SPEED_FAR_HIGH, AngleUnit.RADIANS);
+                    launch1.setVelocity(212f / 2f / 3.14159f * 28f);
+                    launch2.setVelocity(212f / 2f / 3.14159f * 28f);
                 } else if (launchState == 3) {
                     launch1.setVelocity(parameters.LAUNCH_SPEED_DROP, AngleUnit.RADIANS);
                     launch2.setVelocity(parameters.LAUNCH_SPEED_DROP, AngleUnit.RADIANS);
                 } else if (launchState == 4) {
-                    launch1.setVelocity(parameters.LAUNCH_SPEED_FAR_LOW, AngleUnit.RADIANS);
-                    launch2.setVelocity(parameters.LAUNCH_SPEED_FAR_LOW, AngleUnit.RADIANS);
+                    launch1.setVelocity(212f / 2f / 3.14159f * 28f);
+                    launch2.setVelocity(212f / 2f / 3.14159f * 28f);
                 } else if (launchState == 5) {
                     launch1.setVelocity(parameters.LAUNCH_SPEED_CLOSE_LOW, AngleUnit.RADIANS);
                     launch2.setVelocity(parameters.LAUNCH_SPEED_CLOSE_LOW, AngleUnit.RADIANS);
                 } else if (launchState == 6) {
-                    launch1.setVelocity(parameters.LAUNCH_SPEED_FAR_AUTON, AngleUnit.RADIANS);
-                    launch2.setVelocity(parameters.LAUNCH_SPEED_FAR_AUTON, AngleUnit.RADIANS);
+                    launch1.setVelocity(212f / 2f / 3.14159f * 28f);
+                    launch2.setVelocity(212f / 2f / 3.14159f * 28f);
                 }
 
                 return runMove;

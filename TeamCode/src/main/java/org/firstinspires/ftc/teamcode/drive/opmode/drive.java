@@ -1,10 +1,16 @@
 package org.firstinspires.ftc.teamcode.drive.opmode;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.InstantAction;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.arcrobotics.ftclib.controller.PIDFController;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -14,6 +20,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
+import org.firstinspires.ftc.teamcode.drive.AimAssist;
 import org.firstinspires.ftc.teamcode.drive.PoseStorage;
 import org.firstinspires.ftc.teamcode.vision.pipelines.AprilTagDetectionPipeline;
 import org.openftc.apriltag.AprilTagDetection;
@@ -22,6 +29,7 @@ import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @TeleOp(name="Basic Drive", group="Linear OpMode")
 public class drive extends LinearOpMode {
@@ -49,6 +57,9 @@ public class drive extends LinearOpMode {
      * Macros (2):
      *    NONE
      */
+
+    private ArrayList<AprilTagDetection> detections = new ArrayList<>();
+    private FtcDashboard dash = FtcDashboard.getInstance();
 
     @Override
     public void runOpMode() {
@@ -78,10 +89,26 @@ public class drive extends LinearOpMode {
         DcMotorEx launch2 = hardwareMap.get(DcMotorEx.class, "launch2");
         launch1.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         launch2.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        launch1.setDirection(DcMotorEx.Direction.FORWARD);
-        launch2.setDirection(DcMotorEx.Direction.REVERSE);
+        launch1.setDirection(DcMotorEx.Direction.REVERSE);
+        launch2.setDirection(DcMotorEx.Direction.FORWARD);
         launch1.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         launch2.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+
+        float kP = 12.7f;
+        float kI = 0.55f;
+        float kD = 2;
+        float kF = 12;
+
+        float akP = 0.5f;
+        float akI = 0f;
+        float akD = 0.05f;
+        float akF = 0;
+
+        launch1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(kP, kI, kD, kF));
+        launch2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(kP, kI, kD, kF));
+
+        PIDFController pidf = new PIDFController(akP, akI, akD, akF);
+        double target = 0;
 
         DcMotor kickstand = hardwareMap.get(DcMotor.class, "pl");
         kickstand.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -94,6 +121,7 @@ public class drive extends LinearOpMode {
         // Initialize localizer and robot position variables. Get position constants
         MecanumDrive drive = new MecanumDrive(hardwareMap, PoseStorage.currentPose);
         MecanumDrive.Params parameters = new MecanumDrive.Params();
+        AimAssist aimAssist = new AimAssist(new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0)));
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewID", "id", hardwareMap.appContext.getPackageName());
         OpenCvCamera camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "FGLs Webcam 2025!"), cameraMonitorViewId);
@@ -111,7 +139,9 @@ public class drive extends LinearOpMode {
             }
         });
         int numFramesWithoutDetection = 0;
-        ArrayList<AprilTagDetection> detections = new ArrayList<>();
+
+
+        List<Action> runningActions = new ArrayList<>();
 
         // Initialize control parameters
         int intakeDirection = parameters.INTAKE_DIRECTION_START;
@@ -135,6 +165,7 @@ public class drive extends LinearOpMode {
 
         // Run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
+            TelemetryPacket packet = new TelemetryPacket();
 
             // Get Pose
             drive.updatePoseEstimate();
@@ -143,7 +174,7 @@ public class drive extends LinearOpMode {
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
             double axial_target = -gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
             double lateral_target = gamepad1.left_stick_x * 1.1;
-            double yaw = -gamepad1.right_stick_x;
+            double yaw = -gamepad1.right_stick_x * 1.5;
 
             double theta = isIntakeCentric ? Math.toRadians(180) : Math.toRadians(0); // Change this to use robot-centric soon
             double cosine = Math.cos(theta);
@@ -198,11 +229,11 @@ public class drive extends LinearOpMode {
 
             // Power Launch
             if (gamepad2.right_trigger > 0.5f) {
-                launch1.setVelocity(isLoadUp ? parameters.LAUNCH_SPEED_CLOSE_LOW : parameters.LAUNCH_SPEED_CLOSE_HIGH, AngleUnit.RADIANS);
-                launch2.setVelocity(isLoadUp ? parameters.LAUNCH_SPEED_CLOSE_LOW : parameters.LAUNCH_SPEED_CLOSE_HIGH, AngleUnit.RADIANS);
+                launch1.setVelocity(200f / 2f / 3.14159f * 28f);
+                launch2.setVelocity(200f / 2f / 3.14159f * 28f);
             } else if (gamepad2.left_trigger > 0.5f) {
-                launch1.setVelocity(isLoadUp ? parameters.LAUNCH_SPEED_FAR_LOW : parameters.LAUNCH_SPEED_FAR_HIGH, AngleUnit.RADIANS);
-                launch2.setVelocity(isLoadUp ? parameters.LAUNCH_SPEED_FAR_LOW : parameters.LAUNCH_SPEED_FAR_HIGH, AngleUnit.RADIANS);
+                launch1.setVelocity(219f / 2f / 3.14159f * 28f);
+                launch2.setVelocity(219f / 2f / 3.14159f * 28f);
             } else if (gamepad2.left_stick_button) {
                 launch1.setVelocity(parameters.LAUNCH_SPEED_DROP, AngleUnit.RADIANS);
                 launch2.setVelocity(parameters.LAUNCH_SPEED_DROP, AngleUnit.RADIANS);
@@ -263,41 +294,68 @@ public class drive extends LinearOpMode {
                 }
             }
 
+
+            List<Action> newActions = new ArrayList<>();
+            for (Action action : runningActions) {
+                action.preview(packet.fieldOverlay());
+                if (action.run(packet)) {
+                    newActions.add(action);
+                }
+            }
+            runningActions = newActions;
+            dash.sendTelemetryPacket(packet);
             // Power Wheels
             AprilTagDetection targetDetection = null;
             int targetID = -1;
-            if (!detections.isEmpty()) {
+            if (newDetections != null && !newDetections.isEmpty()) {
                 targetDetection = detections.get(0);
                 if (targetDetection.id == 20) {
                     targetID = 20;
                 } else if (targetDetection.id == 24) {
                     targetID = 24;
                 }
+                double difference;
+                double angle = Math.toDegrees(myPose.heading.toDouble());
+                if (targetID != -1) {
+                    double bearing = Math.toDegrees(Math.atan2(targetDetection.pose.x, targetDetection.pose.z));
+                    double threshold = 0;
+                    if (targetID == 24) {
+                        threshold = -4.76;
+                    } else if (targetID == 20) {
+                        threshold = 1;
+                    }
+                    difference = threshold - bearing;
+                    target = angle + difference;
+                    pidf.setSetPoint(target);
+                }
             }
-            if (targetID == -1 || !gamepad1.right_bumper) {
+            double power  = 0;
+            if (!gamepad1.right_bumper) {
                 leftFrontDrive.setPower(-leftFrontPower);
                 rightFrontDrive.setPower(-rightFrontPower);
                 leftBackDrive.setPower(-leftBackPower);
                 rightBackDrive.setPower(-rightBackPower);
-            } else {
-                double bearing = Math.toDegrees(Math.atan2(targetDetection.pose.x, targetDetection.pose.z));
-                double threshold = 0;
-                if (targetID == 24) {
-                    threshold = -4.76;
-                } else if (targetID == 20) {
-                    threshold = 1;
-                }
-                if (bearing < threshold) {
-                    leftFrontDrive.setPower(-0.2f);
-                    rightFrontDrive.setPower(0.2f);
-                    leftBackDrive.setPower(-0.2f);
-                    rightBackDrive.setPower(0.2f);
-                } else {
-                    leftFrontDrive.setPower(0.2f);
-                    rightFrontDrive.setPower(-0.2f);
-                    leftBackDrive.setPower(0.2f);
-                    rightBackDrive.setPower(-0.2f);
-                }
+            } else if (!pidf.atSetPoint()||gamepad1.left_bumper) {
+                 power = pidf.calculate(Math.toDegrees(myPose.heading.toDouble()), target);
+                 power /= 10f;
+
+                 power = Math.min(power, 0.5f);
+                    leftFrontDrive.setPower(-power);
+                    rightFrontDrive.setPower(power);
+                    leftBackDrive.setPower(-power);
+                    rightBackDrive.setPower(power);
+                    telemetry.addData("power", power);
+//                if (bearing < threshold) {
+//                    leftFrontDrive.setPower(-0.2f);
+//                    rightFrontDrive.setPower(0.2f);
+//                    leftBackDrive.setPower(-0.2f);
+//                    rightBackDrive.setPower(0.2f);
+//                } else {
+//                    leftFrontDrive.setPower(0.2f);
+//                    rightFrontDrive.setPower(-0.2f);
+//                    leftBackDrive.setPower(0.2f);
+//                    rightBackDrive.setPower(-0.2f);
+//                }
             }
 
             if (gamepad1.dpad_down && !previousDown) {
@@ -306,6 +364,9 @@ public class drive extends LinearOpMode {
              previousDown = gamepad1.dpad_down;
 
             // Show the elapsed game time and wheel power.
+            telemetry.addData("power", power);
+            telemetry.addData("target", target);
+            telemetry.addData("rot", Math.toDegrees(myPose.heading.toDouble()));
             telemetry.addData("Status", "Run Time: " + runtime);
             if (myPose != null) {
                 telemetry.addData("Position", "x: " + myPose.position.x + "y: " + myPose.position.y);

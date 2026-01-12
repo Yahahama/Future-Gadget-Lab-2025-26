@@ -35,4 +35,7 @@ dependencies {
     // EasyOpenCV
     implementation "org.openftc:easyopencv:1.7.3"
     implementation 'org.openftc:apriltag:2.1.0'
+
+    //FTCLib
+    implementation 'org.ftclib.ftclib:core:2.1.1'
 }
