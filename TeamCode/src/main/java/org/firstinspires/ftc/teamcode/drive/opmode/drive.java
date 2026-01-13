@@ -42,6 +42,7 @@ public class drive extends LinearOpMode {
      *    NONE
      */
 
+    // TODO: CONSIDER CHANGING TO "waspressed" for more accurate button presses
     private final MecanumDrive.Params PARAMS = new MecanumDrive.Params();
     private final PIDFCoefficients launchPIDFCoefficients = new PIDFCoefficients(PARAMS.LAUNCH_kP, PARAMS.LAUNCH_kI, PARAMS.LAUNCH_kD, PARAMS.LAUNCH_kF);
 
