@@ -72,8 +72,6 @@ public class drive extends LinearOpMode {
         AimAssist aimAssist = new AimAssist(hardwareMap);
 
         // Initialize control parameters
-        int intakeDirection = parameters.INTAKE_DIRECTION_START;
-        double intakeSpeed = 0f;
         boolean isIntakeCentric = true;
         boolean isLoadUp = false;
         boolean previousDown = false;
@@ -131,27 +129,15 @@ public class drive extends LinearOpMode {
                 rightBackPower /= max;
             }
 
-            // Intake
-            if (gamepad1.y || gamepad2.y) {
-                intakeDirection = 0;
-            } else if (gamepad1.a || gamepad2.a) {
-                intakeDirection = 1;
-                intakeSpeed = parameters.INTAKE_SPEED_IN;
-            } else if (gamepad1.b || gamepad2.b) {
-                intakeDirection = -1;
-                intakeSpeed = parameters.INTAKE_SPEED_OUT;
-            } else if (gamepad1.x || gamepad2.x) {
-                intakeDirection = 1;
-                intakeSpeed = parameters.INTAKE_SPEED_LOAD;
-            }
-
             // Power Intake
-            if (intakeDirection == 1) {
-                intake.setPower(intakeSpeed);
-            } else if (intakeDirection == -1) {
-                intake.setPower(intakeSpeed);
-            } else {
-                intake.setPower(0f);
+            if (gamepad1.y || gamepad2.y) {
+                intake.setPower(0);
+            } else if (gamepad1.a || gamepad2.a) {
+                intake.setPower(parameters.INTAKE_SPEED_IN);
+            } else if (gamepad1.b || gamepad2.b) {
+                intake.setPower(parameters.INTAKE_SPEED_OUT);
+            } else if (gamepad1.x || gamepad2.x) {
+                intake.setPower(parameters.INTAKE_SPEED_LOAD);
             }
 
             // Power Launch
@@ -231,7 +217,7 @@ public class drive extends LinearOpMode {
             telemetry.addData("Status", "Run Time: " + runtime);
             telemetry.addData("Position", "x: " + myPose.position.x + "y: " + myPose.position.y);
             telemetry.addData("Heading", "Angle: " + heading);
-            telemetry.addData("Intake", "Direction: " + intakeDirection);
+            telemetry.addData("Intake", "Direction: " + (intake.getPower() >= 0 ? 1 : -1));
             telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
             telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
             telemetry.addData("Launch1 Speed", launch1.getVelocity(AngleUnit.RADIANS));
