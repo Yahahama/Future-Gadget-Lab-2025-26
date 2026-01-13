@@ -13,7 +13,6 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 
 import java.util.ArrayList;
 
-//24 is red
 public class AimAssist {
     private static final MecanumDrive.Params PARAMS = new MecanumDrive.Params();
     private final PIDFController PIDF = new PIDFController(PARAMS.DRIVE_kP, PARAMS.DRIVE_kI, PARAMS.DRIVE_kD, PARAMS.DRIVE_kF, 0, 0);
