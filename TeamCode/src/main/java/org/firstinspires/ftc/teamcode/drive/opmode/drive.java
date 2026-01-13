@@ -1,11 +1,6 @@
 package org.firstinspires.ftc.teamcode.drive.opmode;
 
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.InstantAction;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.arcrobotics.ftclib.controller.PIDFController;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -14,22 +9,10 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.drive.AimAssist;
 import org.firstinspires.ftc.teamcode.drive.PoseStorage;
-import org.firstinspires.ftc.teamcode.vision.pipelines.AprilTagDetectionPipeline;
-import org.openftc.apriltag.AprilTagDetection;
-import org.openftc.easyopencv.OpenCvCamera;
-import org.openftc.easyopencv.OpenCvCameraFactory;
-import org.openftc.easyopencv.OpenCvCameraRotation;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @TeleOp(name="Basic Drive", group="Linear OpMode")
 public class drive extends LinearOpMode {
@@ -58,61 +41,27 @@ public class drive extends LinearOpMode {
      *    NONE
      */
 
-    private ArrayList<AprilTagDetection> detections = new ArrayList<>();
-    private FtcDashboard dash = FtcDashboard.getInstance();
+    private final MecanumDrive.Params parameters = new MecanumDrive.Params();
+    private final PIDFCoefficients launchPIDFCoefficients = new PIDFCoefficients(parameters.LAUNCH_kP, parameters.LAUNCH_kI, parameters.LAUNCH_kD, parameters.LAUNCH_kF);
 
     @Override
     public void runOpMode() {
         ElapsedTime runtime = new ElapsedTime();
 
         // Initialize and configure drive motor variables
-        DcMotor leftFrontDrive = hardwareMap.get(DcMotor.class, "lfMtr"); // CH 2
-        DcMotor leftBackDrive = hardwareMap.get(DcMotor.class, "lbMtr"); // CH 3
-        DcMotor rightFrontDrive = hardwareMap.get(DcMotor.class, "rfMtr"); // CH 0
-        DcMotor rightBackDrive = hardwareMap.get(DcMotor.class, "rbMtr"); // CH 1
-        leftFrontDrive.setDirection(DcMotor.Direction.FORWARD);
-        leftBackDrive.setDirection(DcMotor.Direction.FORWARD);
-        rightFrontDrive.setDirection(DcMotor.Direction.REVERSE);
-        rightBackDrive.setDirection(DcMotor.Direction.REVERSE);
-        leftFrontDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        leftBackDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rightFrontDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rightBackDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        DcMotor leftFrontDrive = initializeMotor("lfMtr", DcMotor.Direction.FORWARD);
+        DcMotor leftBackDrive = initializeMotor("lbMtr", DcMotor.Direction.FORWARD);
+        DcMotor rightFrontDrive = initializeMotor("rfMtr", DcMotor.Direction.REVERSE);
+        DcMotor rightBackDrive = initializeMotor("rbMtr", DcMotor.Direction.REVERSE);
 
         // Initialize and configure intake motor
-        DcMotor intake = hardwareMap.get(DcMotor.class, "intake");
-        intake.setDirection(DcMotor.Direction.FORWARD);
-        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        DcMotor intake = initializeMotor("intake", DcMotor.Direction.FORWARD);
 
         // Initialize and configure launch motor
-        DcMotorEx launch1 = hardwareMap.get(DcMotorEx.class, "launch1");
-        DcMotorEx launch2 = hardwareMap.get(DcMotorEx.class, "launch2");
-        launch1.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        launch2.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        launch1.setDirection(DcMotorEx.Direction.REVERSE);
-        launch2.setDirection(DcMotorEx.Direction.FORWARD);
-        launch1.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-        launch2.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        DcMotorEx launch1 = initializeLaunchMotor("launch1", DcMotorEx.Direction.REVERSE);
+        DcMotorEx launch2 = initializeLaunchMotor("launch2", DcMotorEx.Direction.FORWARD);
 
-        float kP = 12.7f;
-        float kI = 0.55f;
-        float kD = 2;
-        float kF = 12;
-
-        float akP = 0.5f;
-        float akI = 0f;
-        float akD = 0.05f;
-        float akF = 0;
-
-        launch1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(kP, kI, kD, kF));
-        launch2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(kP, kI, kD, kF));
-
-        PIDFController pidf = new PIDFController(akP, akI, akD, akF);
-        double target = 0;
-
-        DcMotor kickstand = hardwareMap.get(DcMotor.class, "pl");
-        kickstand.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        kickstand.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        DcMotor kickstand = initializeMotor("pl", DcMotor.Direction.FORWARD);
 
         // Initialize servos
         Servo load = hardwareMap.get(Servo.class, "load");
@@ -120,32 +69,11 @@ public class drive extends LinearOpMode {
 
         // Initialize localizer and robot position variables. Get position constants
         MecanumDrive drive = new MecanumDrive(hardwareMap, PoseStorage.currentPose);
-        MecanumDrive.Params parameters = new MecanumDrive.Params();
-        AimAssist aimAssist = new AimAssist(new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0)));
-
-        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewID", "id", hardwareMap.appContext.getPackageName());
-        OpenCvCamera camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "FGLs Webcam 2025!"), cameraMonitorViewId);
-        AprilTagDetectionPipeline aprilTagDetectionPipeline = new AprilTagDetectionPipeline(parameters.TAGSIZE_METERS, parameters.WEBCAM_FOCAL_X, parameters.WEBCAM_FOCAL_Y, parameters.WEBCAM_PRINCIPAL_POINT_X, parameters.WEBCAM_PRINCIPAL_POINT_Y);
-        camera.setPipeline(aprilTagDetectionPipeline);
-        camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener(){
-            @Override
-            public void onOpened() {
-                camera.startStreaming(640, 480, OpenCvCameraRotation.UPRIGHT);
-            }
-
-            @Override
-            public void onError(int errorCode) {
-
-            }
-        });
-        int numFramesWithoutDetection = 0;
-
-
-        List<Action> runningActions = new ArrayList<>();
+        AimAssist aimAssist = new AimAssist(hardwareMap);
 
         // Initialize control parameters
         int intakeDirection = parameters.INTAKE_DIRECTION_START;
-        float intakeSpeed = 0f;
+        double intakeSpeed = 0f;
         boolean isIntakeCentric = true;
         boolean isLoadUp = false;
         boolean previousDown = false;
@@ -165,11 +93,10 @@ public class drive extends LinearOpMode {
 
         // Run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
-            TelemetryPacket packet = new TelemetryPacket();
-
             // Get Pose
             drive.updatePoseEstimate();
             Pose2d myPose = drive.pose;
+            double heading = Math.toDegrees(myPose.heading.toDouble());
 
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
             double axial_target = -gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
@@ -229,11 +156,12 @@ public class drive extends LinearOpMode {
 
             // Power Launch
             if (gamepad2.right_trigger > 0.5f) {
-                launch1.setVelocity(200f / 2f / 3.14159f * 28f);
-                launch2.setVelocity(200f / 2f / 3.14159f * 28f);
+                double power = isLoadUp ? parameters.LAUNCH_SPEED_CLOSE : parameters.LAUNCH_SPEED_CLOSE + 0;
+                launch1.setVelocity(power);
+                launch2.setVelocity(power);
             } else if (gamepad2.left_trigger > 0.5f) {
-                launch1.setVelocity(219f / 2f / 3.14159f * 28f);
-                launch2.setVelocity(219f / 2f / 3.14159f * 28f);
+                launch1.setVelocity(parameters.LAUNCH_SPEED_FAR);
+                launch2.setVelocity(parameters.LAUNCH_SPEED_FAR);
             } else if (gamepad2.left_stick_button) {
                 launch1.setVelocity(parameters.LAUNCH_SPEED_DROP, AngleUnit.RADIANS);
                 launch2.setVelocity(parameters.LAUNCH_SPEED_DROP, AngleUnit.RADIANS);
@@ -275,126 +203,56 @@ public class drive extends LinearOpMode {
                 kickstand.setPower(0f);
             }
 
-            ArrayList<AprilTagDetection> newDetections = aprilTagDetectionPipeline.getDetectionsUpdate();
+            // Scan AprilTags
+            aimAssist.detect(heading);
 
-            if (newDetections != null) {
-                if (newDetections.isEmpty()) {
-                    numFramesWithoutDetection++;
-
-                    if (numFramesWithoutDetection >= parameters.THRESHOLD_NUM_FRAMES_NO_DETECTION_BEFORE_LOW_DECIMATION) {
-                        aprilTagDetectionPipeline.setDecimation(parameters.DECIMATION_LOW);
-                    }
-                } else {
-                    numFramesWithoutDetection = 0;
-                    detections = newDetections;
-
-                    if (newDetections.get(0).pose.z < parameters.THRESHOLD_HIGH_DECIMATION_RANGE_METERS) {
-                        aprilTagDetectionPipeline.setDecimation(parameters.DECIMATION_HIGH);
-                    }
-                }
-            }
-
-
-            List<Action> newActions = new ArrayList<>();
-            for (Action action : runningActions) {
-                action.preview(packet.fieldOverlay());
-                if (action.run(packet)) {
-                    newActions.add(action);
-                }
-            }
-            runningActions = newActions;
-            dash.sendTelemetryPacket(packet);
             // Power Wheels
-            AprilTagDetection targetDetection = null;
-            int targetID = -1;
-            if (newDetections != null && !newDetections.isEmpty()) {
-                targetDetection = detections.get(0);
-                if (targetDetection.id == 20) {
-                    targetID = 20;
-                } else if (targetDetection.id == 24) {
-                    targetID = 24;
-                }
-                double difference;
-                double angle = Math.toDegrees(myPose.heading.toDouble());
-                if (targetID != -1) {
-                    double bearing = Math.toDegrees(Math.atan2(targetDetection.pose.x, targetDetection.pose.z));
-                    double threshold = 0;
-                    if (targetID == 24) {
-                        threshold = -4.76;
-                    } else if (targetID == 20) {
-                        threshold = 1;
-                    }
-                    difference = threshold - bearing;
-                    target = angle + difference;
-                    pidf.setSetPoint(target);
-                }
-            }
-            double power  = 0;
             if (!gamepad1.right_bumper) {
                 leftFrontDrive.setPower(-leftFrontPower);
                 rightFrontDrive.setPower(-rightFrontPower);
                 leftBackDrive.setPower(-leftBackPower);
                 rightBackDrive.setPower(-rightBackPower);
-            } else if (!pidf.atSetPoint()||gamepad1.left_bumper) {
-                 power = pidf.calculate(Math.toDegrees(myPose.heading.toDouble()), target);
-                 power /= 10f;
-
-                 power = Math.min(power, 0.5f);
-                    leftFrontDrive.setPower(-power);
-                    rightFrontDrive.setPower(power);
-                    leftBackDrive.setPower(-power);
-                    rightBackDrive.setPower(power);
-                    telemetry.addData("power", power);
-//                if (bearing < threshold) {
-//                    leftFrontDrive.setPower(-0.2f);
-//                    rightFrontDrive.setPower(0.2f);
-//                    leftBackDrive.setPower(-0.2f);
-//                    rightBackDrive.setPower(0.2f);
-//                } else {
-//                    leftFrontDrive.setPower(0.2f);
-//                    rightFrontDrive.setPower(-0.2f);
-//                    leftBackDrive.setPower(0.2f);
-//                    rightBackDrive.setPower(-0.2f);
-//                }
+            } else {
+                double power = aimAssist.calculate(heading);
+                leftFrontDrive.setPower(-power);
+                rightFrontDrive.setPower(power);
+                leftBackDrive.setPower(-power);
+                rightBackDrive.setPower(power);
+                telemetry.addData("power", power);
             }
 
+            // Change Robot facing-direction
             if (gamepad1.dpad_down && !previousDown) {
                 isIntakeCentric = !isIntakeCentric;
             }
-             previousDown = gamepad1.dpad_down;
+            previousDown = gamepad1.dpad_down;
 
             // Show the elapsed game time and wheel power.
-            telemetry.addData("power", power);
-            telemetry.addData("target", target);
-            telemetry.addData("rot", Math.toDegrees(myPose.heading.toDouble()));
             telemetry.addData("Status", "Run Time: " + runtime);
-            if (myPose != null) {
-                telemetry.addData("Position", "x: " + myPose.position.x + "y: " + myPose.position.y);
-                telemetry.addData("Heading", "Angle: " + myPose.heading.toDouble());
-            }
+            telemetry.addData("Position", "x: " + myPose.position.x + "y: " + myPose.position.y);
+            telemetry.addData("Heading", "Angle: " + heading);
             telemetry.addData("Intake", "Direction: " + intakeDirection);
             telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
             telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
             telemetry.addData("Launch1 Speed", launch1.getVelocity(AngleUnit.RADIANS));
             telemetry.addData("Launch2 Speed", launch2.getVelocity(AngleUnit.RADIANS));
-            telemetry.addData("Load Up", isLoadUp);
-            if (newDetections != null) {
-                telemetry.addData("Overhead ms", camera.getOverheadTimeMs());
-            } else {
-                telemetry.addLine("No new frame");
-            }
-            for (AprilTagDetection detection : detections) {
-                Orientation rot = Orientation.getOrientation(detection.pose.R, AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
-                telemetry.addData("Detected Tag ID", detection.id);
-                telemetry.addData("Translation X: ", detection.pose.x*parameters.FEET_PER_METER);
-                telemetry.addData("Translation Y: ", detection.pose.y*parameters.FEET_PER_METER);
-                telemetry.addData("Translation Z: ", detection.pose.z*parameters.FEET_PER_METER);
-                telemetry.addData("Rotation Yaw: ", rot.firstAngle);
-                telemetry.addData("Rotation Pitch: ", rot.secondAngle);
-                telemetry.addData("Rotation Roll: ", rot.thirdAngle);
-                telemetry.addData("Bearing ", Math.toDegrees(Math.atan2(detection.pose.x, detection.pose.z)));
-            }
             telemetry.update();
         }
+    }
+
+    private DcMotor initializeMotor(String name, DcMotor.Direction direction) {
+        DcMotor motor = hardwareMap.get(DcMotorEx.class, name);
+        motor.setDirection(direction);
+        motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        return motor;
+    }
+
+    private DcMotorEx initializeLaunchMotor(String name, DcMotorEx.Direction direction) {
+        DcMotorEx motor = hardwareMap.get(DcMotorEx.class, name);
+        motor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        motor.setDirection(direction);
+        motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        motor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, launchPIDFCoefficients);
+        return motor;
     }
 }
