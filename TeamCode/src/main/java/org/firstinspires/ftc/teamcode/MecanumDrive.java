@@ -106,8 +106,6 @@ public final class MecanumDrive {
         public final double LAUNCH_SPEED_FAR_AUTON = 212 * SPEED_CONVERSION;
 
         // Control Parameters
-        public final int INTAKE_DIRECTION_START = 0;
-        public final boolean LAUNCH_START = false;
         public final double LOAD_INIT = 0.48;
         public final double LOAD_LOAD = 0.69;
         public final double LOAD_FALL = 0.4;
