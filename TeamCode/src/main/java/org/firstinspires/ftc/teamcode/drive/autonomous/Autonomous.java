@@ -996,20 +996,20 @@ public class Autonomous extends LinearOpMode {
                     launch1.setVelocity(parameters.LAUNCH_SPEED_CLOSE_HIGH, AngleUnit.RADIANS);
                     launch2.setVelocity(parameters.LAUNCH_SPEED_CLOSE_HIGH, AngleUnit.RADIANS);
                 } else if (launchState == 2) {
-                    launch1.setVelocity(212f / 2f / 3.14159f * 28f);
-                    launch2.setVelocity(212f / 2f / 3.14159f * 28f);
+                    launch1.setVelocity(parameters.LAUNCH_SPEED_FAR_AUTON);
+                    launch2.setVelocity(parameters.LAUNCH_SPEED_FAR_AUTON);
                 } else if (launchState == 3) {
                     launch1.setVelocity(parameters.LAUNCH_SPEED_DROP, AngleUnit.RADIANS);
                     launch2.setVelocity(parameters.LAUNCH_SPEED_DROP, AngleUnit.RADIANS);
                 } else if (launchState == 4) {
-                    launch1.setVelocity(212f / 2f / 3.14159f * 28f);
-                    launch2.setVelocity(212f / 2f / 3.14159f * 28f);
+                    launch1.setVelocity(parameters.LAUNCH_SPEED_FAR_AUTON);
+                    launch2.setVelocity(parameters.LAUNCH_SPEED_FAR_AUTON);
                 } else if (launchState == 5) {
                     launch1.setVelocity(parameters.LAUNCH_SPEED_CLOSE_LOW, AngleUnit.RADIANS);
                     launch2.setVelocity(parameters.LAUNCH_SPEED_CLOSE_LOW, AngleUnit.RADIANS);
                 } else if (launchState == 6) {
-                    launch1.setVelocity(212f / 2f / 3.14159f * 28f);
-                    launch2.setVelocity(212f / 2f / 3.14159f * 28f);
+                    launch1.setVelocity(parameters.LAUNCH_SPEED_FAR_AUTON);
+                    launch2.setVelocity(parameters.LAUNCH_SPEED_FAR_AUTON);
                 }
 
                 return runMove;
@@ -1137,7 +1137,7 @@ public class Autonomous extends LinearOpMode {
         public Camera (HardwareMap hardwareMap) {
             int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
             camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "FGLs Webcam 2025!"), cameraMonitorViewId);
-            aprilTagDetectionPipeline = new AprilTagDetectionPipeline(parameters.TAGSIZE_METERS, parameters.WEBCAM_FOCAL_X, parameters.WEBCAM_FOCAL_Y, parameters.WEBCAM_PRINCIPAL_POINT_X, parameters.WEBCAM_PRINCIPAL_POINT_Y);
+            aprilTagDetectionPipeline = new AprilTagDetectionPipeline(parameters.TAG_SIZE_METERS, parameters.WEBCAM_FOCAL_X, parameters.WEBCAM_FOCAL_Y, parameters.WEBCAM_PRINCIPAL_POINT_X, parameters.WEBCAM_PRINCIPAL_POINT_Y);
             camera.setPipeline(aprilTagDetectionPipeline);
             camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
                 @Override
@@ -1176,20 +1176,6 @@ public class Autonomous extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        // Trajectories to select from
-
-        /*
-        Naming scheme for TrajectoryActionBuilders that go from buckets to blocks:
-        {color of team}BucketTo{distance of target block from wall}{color of target block}Block
-        ex.
-        blueBucketToMiddleNeutralBlock
-
-        Naming scheme for TrajectoryActionBuilders that go from blocks to buckets:
-        {color of team}{distance of current block from wall}{color of block}BlockToBucket
-        ex.
-        blueMiddleNeutralBlockToBucket
-        */
-
         Positions.START startPos = Positions.START.BLUE_FAR; // choose start
         Pose2d initialPose = startPos.getPose();
 
