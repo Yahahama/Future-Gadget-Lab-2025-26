@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcode.drive.PoseStorage;
 public class drive extends LinearOpMode {
     /*
      * Driving (1):
-     *    FLIP                - Right Stick
+     *    FLIP                - Dpad Down
      * Intake (BOTH):
      *    COLLECT             - A
      *    OUT                 - B
@@ -27,7 +27,7 @@ public class drive extends LinearOpMode {
      * Launcher (2):
      *    FAST                - Left Trigger
      *    SLOW                - Right Trigger
-     *    BACK                - Left Stick
+     *    BACK                - Left Button
      * Load (2):
      *    RAISE               - Dpad Up
      *    LOWER               - Dpad Down
@@ -35,14 +35,15 @@ public class drive extends LinearOpMode {
      * Bunt (2):
      *    RESET               - Left Trigger
      *    LAUNCH              - Right Trigger
+     *    MANUAL              - Left Stick
      * Macros (1):
      *    NONE
      * Macros (2):
      *    NONE
      */
 
-    private final MecanumDrive.Params parameters = new MecanumDrive.Params();
-    private final PIDFCoefficients launchPIDFCoefficients = new PIDFCoefficients(parameters.LAUNCH_kP, parameters.LAUNCH_kI, parameters.LAUNCH_kD, parameters.LAUNCH_kF);
+    private final MecanumDrive.Params PARAMS = new MecanumDrive.Params();
+    private final PIDFCoefficients launchPIDFCoefficients = new PIDFCoefficients(PARAMS.LAUNCH_kP, PARAMS.LAUNCH_kI, PARAMS.LAUNCH_kD, PARAMS.LAUNCH_kF);
 
     @Override
     public void runOpMode() {
@@ -82,8 +83,8 @@ public class drive extends LinearOpMode {
         telemetry.setMsTransmissionInterval(50);
 
         //Initialization Actions
-        load.setPosition(parameters.LOAD_INIT);
-        bunt.setPosition(parameters.BUNT_RESET);
+        load.setPosition(PARAMS.LOAD_INIT);
+        bunt.setPosition(PARAMS.BUNT_RESET);
 
         // Wait for the game to start (driver presses START)
         waitForStart();
@@ -133,54 +134,56 @@ public class drive extends LinearOpMode {
             if (gamepad1.y || gamepad2.y) {
                 intake.setPower(0);
             } else if (gamepad1.a || gamepad2.a) {
-                intake.setPower(parameters.INTAKE_SPEED_IN);
+                intake.setPower(PARAMS.INTAKE_SPEED_IN);
             } else if (gamepad1.b || gamepad2.b) {
-                intake.setPower(parameters.INTAKE_SPEED_OUT);
+                intake.setPower(PARAMS.INTAKE_SPEED_OUT);
             } else if (gamepad1.x || gamepad2.x) {
-                intake.setPower(parameters.INTAKE_SPEED_LOAD);
+                intake.setPower(PARAMS.INTAKE_SPEED_LOAD);
             }
 
             // Power Launch
             if (gamepad2.right_trigger > 0.5f) {
-                double power = isLoadUp ? parameters.LAUNCH_SPEED_CLOSE : parameters.LAUNCH_SPEED_CLOSE + 0;
+                double power = isLoadUp ? PARAMS.LAUNCH_SPEED_CLOSE : PARAMS.LAUNCH_SPEED_CLOSE + 0;
                 launch1.setVelocity(power);
                 launch2.setVelocity(power);
             } else if (gamepad2.left_trigger > 0.5f) {
-                launch1.setVelocity(parameters.LAUNCH_SPEED_FAR);
-                launch2.setVelocity(parameters.LAUNCH_SPEED_FAR);
+                launch1.setVelocity(PARAMS.LAUNCH_SPEED_FAR);
+                launch2.setVelocity(PARAMS.LAUNCH_SPEED_FAR);
             } else if (gamepad2.left_stick_button) {
-                launch1.setVelocity(parameters.LAUNCH_SPEED_DROP, AngleUnit.RADIANS);
-                launch2.setVelocity(parameters.LAUNCH_SPEED_DROP, AngleUnit.RADIANS);
+                launch1.setVelocity(PARAMS.LAUNCH_SPEED_DROP, AngleUnit.RADIANS);
+                launch2.setVelocity(PARAMS.LAUNCH_SPEED_DROP, AngleUnit.RADIANS);
             } else {
                 launch1.setVelocity(0, AngleUnit.RADIANS);
                 launch2.setVelocity(0, AngleUnit.RADIANS);
             }
 
-            // Loader Servo
+            // Power Load
             if (gamepad2.dpad_up) {
-                load.setPosition(parameters.LOAD_LOAD);
+                load.setPosition(PARAMS.LOAD_LOAD);
                 isLoadUp = true;
             } else if (gamepad2.dpad_down) {
-                load.setPosition(parameters.LOAD_RESET);
+                load.setPosition(PARAMS.LOAD_RESET);
                 isLoadUp = false;
             } else if (gamepad2.dpad_right) {
-                load.setPosition(parameters.LOAD_RELOAD);
+                load.setPosition(PARAMS.LOAD_RELOAD);
                 isLoadUp = false;
             } else if (gamepad2.dpad_left) {
-                load.setPosition(parameters.LOAD_FALL);
+                load.setPosition(PARAMS.LOAD_FALL);
                 isLoadUp = false;
             }
 
+            // Power Bunt
             if (gamepad2.left_bumper) {
-                bunt.setPosition(parameters.BUNT_RESET);
+                bunt.setPosition(PARAMS.BUNT_RESET);
             } else if (gamepad2.right_bumper) {
-                bunt.setPosition(parameters.BUNT_LAUNCH);
+                bunt.setPosition(PARAMS.BUNT_LAUNCH);
             } else if (gamepad2.left_stick_y > 0.5f) {
-                bunt.setPosition(parameters.BUNT_LOAD);
+                bunt.setPosition(PARAMS.BUNT_LOAD);
             } else if (gamepad2.left_stick_y < -0.5f) {
-                bunt.setPosition(parameters.BUNT_RESET);
+                bunt.setPosition(PARAMS.BUNT_RESET);
             }
 
+            // Power Kickstand
             if (gamepad1.dpad_left) {
                 kickstand.setPower(1.0f);
             } else if (gamepad1.dpad_right) {
