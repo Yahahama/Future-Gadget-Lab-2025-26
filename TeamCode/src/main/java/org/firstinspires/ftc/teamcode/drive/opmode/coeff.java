@@ -1,6 +1,9 @@
 package org.firstinspires.ftc.teamcode.drive.opmode;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -12,6 +15,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.drive.PoseStorage;
 
+@Disabled
 @TeleOp(name="coeff", group="Linear OpMode")
 public class coeff extends LinearOpMode {
     /*
@@ -42,6 +46,7 @@ public class coeff extends LinearOpMode {
     @Override
     public void runOpMode() {
         ElapsedTime runtime = new ElapsedTime();
+        FtcDashboard dashboard = FtcDashboard.getInstance();
 
         // Initialize and configure drive motor variables
         DcMotor leftFrontDrive = hardwareMap.get(DcMotor.class, "lfMtr"); // CH 2
@@ -106,7 +111,6 @@ public class coeff extends LinearOpMode {
 
         // Initialize control parameters
         boolean isIntakeCentric = true;
-        boolean isLoadUp = false;
         boolean previousDown = false;
 
         float[] change = {0.1f, 1f, 10f};
@@ -192,17 +196,21 @@ public class coeff extends LinearOpMode {
             if (gamepad1.a && !previousA) {
                 kF -= change[index];
             }
+            double speed;
             if (gamepad1.right_trigger > 0.5f) {
-                launch1.setVelocity(200f / 2f / 3.14159f * 28f);
-                launch2.setVelocity(200f / 2f / 3.14159f * 28f);
+                speed = parameters.LAUNCH_SPEED_CLOSE;
+            } else if (gamepad1.left_trigger > 0.5) {
+                speed = parameters.LAUNCH_SPEED_FAR;
             } else {
-                launch1.setVelocity(0);
-                launch2.setVelocity(0);
+                speed = 0;
             }
             if (gamepad1.right_bumper) {
                 index += 1;
                 index %= 3;
             }
+
+            launch1.setVelocity(speed);
+            launch2.setVelocity(speed);
 
             previousL = gamepad1.dpad_left;
             previousU = gamepad1.dpad_up;
@@ -222,8 +230,13 @@ public class coeff extends LinearOpMode {
             if (gamepad1.dpad_down && !previousDown) {
                 isIntakeCentric = !isIntakeCentric;
             }
-             previousDown = gamepad1.dpad_down;
+            previousDown = gamepad1.dpad_down;
 
+            TelemetryPacket packet = new TelemetryPacket();
+            packet.put("Target", speed);
+            packet.put("Motor 1 Speed", launch1.getVelocity());
+            packet.put("Motor 2 Speed", launch2.getVelocity());
+            dashboard.sendTelemetryPacket(packet);
             float target = 200f / 2f / 3.14159f * 28f;
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime);
