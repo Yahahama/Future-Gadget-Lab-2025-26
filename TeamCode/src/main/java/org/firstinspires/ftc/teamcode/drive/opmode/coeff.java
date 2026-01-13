@@ -5,25 +5,12 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.drive.PoseStorage;
-import org.firstinspires.ftc.teamcode.vision.pipelines.AprilTagDetectionPipeline;
-import org.openftc.apriltag.AprilTagDetection;
-import org.openftc.easyopencv.OpenCvCamera;
-import org.openftc.easyopencv.OpenCvCameraFactory;
-import org.openftc.easyopencv.OpenCvCameraRotation;
-
-import java.util.ArrayList;
 
 @TeleOp(name="coeff", group="Linear OpMode")
 public class coeff extends LinearOpMode {
@@ -118,8 +105,6 @@ public class coeff extends LinearOpMode {
         MecanumDrive.Params parameters = new MecanumDrive.Params();
 
         // Initialize control parameters
-        int intakeDirection = parameters.INTAKE_DIRECTION_START;
-        float intakeSpeed = 0f;
         boolean isIntakeCentric = true;
         boolean isLoadUp = false;
         boolean previousDown = false;
