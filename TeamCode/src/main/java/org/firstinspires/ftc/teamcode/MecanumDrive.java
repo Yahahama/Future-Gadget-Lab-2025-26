@@ -81,7 +81,6 @@ public final class MecanumDrive {
         // turn profile parameters (in radians)
         public double maxAngVel = Math.PI; // shared with path
         public double maxAngAccel = Math.PI;
-        public double minAngAccel = 0;
 
         // path controller gains
         public double axialGain = 8.0;
@@ -93,37 +92,50 @@ public final class MecanumDrive {
         public double headingVelGain = 1.0; // shared with turn
 
         // Speed Parameters
-        public final float INTAKE_SPEED_IN = 0.5f;
-        public final float INTAKE_SPEED_OUT = -0.4f;
-        public final float INTAKE_SPEED_LOAD = 1.0f;
-        public final float LAUNCH_SPEED_CLOSE_HIGH = 9.4f;
-        public final float LAUNCH_SPEED_CLOSE_LOW = 9.9f;
-        public final float LAUNCH_SPEED_FAR_HIGH = 10.3f; //10
-        public final float LAUNCH_SPEED_DROP = -2;
-        public final float LAUNCH_SPEED_FAR_LOW = 10.35f;
-        public final float LAUNCH_SPEED_FAR_AUTON = 10.7f;
+        private final double SPEED_CONVERSION = (double) 28 / 6.28318530718;
+        public final double INTAKE_SPEED_IN = 0.5;
+        public final double INTAKE_SPEED_OUT = -0.4;
+        public final double INTAKE_SPEED_LOAD = 1.0;
+        public final double LAUNCH_SPEED_CLOSE_HIGH = 9.4;
+        public final double LAUNCH_SPEED_CLOSE_LOW = 9.9;
+        public final double LAUNCH_SPEED_CLOSE = 200 * SPEED_CONVERSION;
+        public final double LAUNCH_SPEED_FAR_HIGH = 10.3; //10
+        public final double LAUNCH_SPEED_FAR = 219 * SPEED_CONVERSION;
+        public final double LAUNCH_SPEED_DROP = -2;
+        public final double LAUNCH_SPEED_FAR_LOW = 10.35;
+        public final double LAUNCH_SPEED_FAR_AUTON = 212 * SPEED_CONVERSION;
 
         // Control Parameters
         public final int INTAKE_DIRECTION_START = 0;
         public final boolean LAUNCH_START = false;
-        public final float LOAD_INIT = 0.48f;
-        public final float LOAD_LOAD = 0.69f;
-        public final float LOAD_FALL = 0.4f;
-        public final float LOAD_RELOAD = 0.74f;
-        public final float LOAD_RESET = 0.48f;
-        public final float BUNT_RESET = 0.8f;
-        public final float BUNT_LOAD = 0.5f;
-        public final float BUNT_LAUNCH = 0f;
+        public final double LOAD_INIT = 0.48;
+        public final double LOAD_LOAD = 0.69;
+        public final double LOAD_FALL = 0.4;
+        public final double LOAD_RELOAD = 0.74;
+        public final double LOAD_RESET = 0.48;
+        public final double BUNT_RESET = 0.8;
+        public final double BUNT_LOAD = 0.5;
+        public final double BUNT_LAUNCH = 0;
 
         public final float WEBCAM_FOCAL_X = 822.315f;
         public final float WEBCAM_FOCAL_Y = 822.315f;
         public final float WEBCAM_PRINCIPAL_POINT_X = 319.495f;
         public final float WEBCAM_PRINCIPAL_POINT_Y = 242.502f;
-        public final double TAGSIZE_METERS = 0.166;
+        public final double TAG_SIZE_METERS = 0.166;
         public final float DECIMATION_HIGH = 3f;
         public final float DECIMATION_LOW = 1f;
         public final float THRESHOLD_HIGH_DECIMATION_RANGE_METERS = 1.0f;
         public final int THRESHOLD_NUM_FRAMES_NO_DETECTION_BEFORE_LOW_DECIMATION = 4;
+
+        public final double LAUNCH_kP = 12.7;
+        public final double LAUNCH_kI = 0.55;
+        public final double LAUNCH_kD = 2;
+        public final double LAUNCH_kF = 12;
+
+        public final double DRIVE_kP = 0.5;
+        public final double DRIVE_kI = 0;
+        public final double DRIVE_kD = 0.05;
+        public final double DRIVE_kF = 0;
     }
 
     public static MecanumDrive.Params PARAMS = new Params();
