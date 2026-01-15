@@ -264,8 +264,6 @@ public class Autonomous extends LinearOpMode {
 
         public Action Init() {
             return new SequentialAction(
-                    intake.intakeInit(),
-                    launch.launchInit(),
                     load.loadInit(),
                     bunt.buntInit()
             );
@@ -731,7 +729,7 @@ public class Autonomous extends LinearOpMode {
         private final DcMotorEx intake;
         private boolean runMove = true;
 
-        int intakeDirection = parameters.INTAKE_DIRECTION_START;
+        int intakeDirection = parameters.INTAKE_AUTON_INIT;
 
         public Intake(HardwareMap hardwareMap) {
             intake = hardwareMap.get(DcMotorEx.class, "intake");
@@ -826,19 +824,6 @@ public class Autonomous extends LinearOpMode {
         }
 
         public Action intakeLoad() {return new IntakeLoad();}
-
-        public class IntakeInit implements Action {
-            private boolean initialized = false;
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                return false;
-            }
-        }
-
-        public Action intakeInit() {
-            return new IntakeInit();
-        }
     }
 
     public class Load {
@@ -970,10 +955,10 @@ public class Autonomous extends LinearOpMode {
             launch2.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
             launch2.setDirection(DcMotorEx.Direction.FORWARD);
 
-            float kP = 12.7f;
-            float kI = 0.55f;
-            float kD = 2;
-            float kF = 12;
+            double kP = parameters.LAUNCH_kP;
+            double kI = parameters.LAUNCH_kI;
+            double kD = parameters.LAUNCH_kD;
+            double kF = parameters.LAUNCH_kF;
 
             launch1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(kP, kI, kD, kF));
             launch2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(kP, kI, kD, kF));
@@ -1115,19 +1100,6 @@ public class Autonomous extends LinearOpMode {
         public Action launchAuton() {
             return new LaunchAuton();
         }
-
-        public class LaunchInit implements Action {
-            private boolean initialized = false;
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                return false;
-            }
-        }
-
-        public Action launchInit() {
-            return new LaunchInit();
-        }
     }
 
     public class Camera {
@@ -1171,6 +1143,18 @@ public class Autonomous extends LinearOpMode {
                 }
             }
             return -1;
+        }
+
+        public AprilTagDetection scanTag() {
+            int maxCycles = 10000;
+            ArrayList<AprilTagDetection> detections = aprilTagDetectionPipeline.getDetectionsUpdate();
+            while (detections == null || detections.isEmpty()) {
+                if (maxCycles-- == 0) {
+                    return null;
+                }
+                detections = aprilTagDetectionPipeline.getDetectionsUpdate();
+            }
+            return detections.get(0);
         }
     }
 

@@ -14,6 +14,10 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import java.util.ArrayList;
 
 public class AimAssist {
+    private static final double RED_BEARING = -4.76;
+    private static final double BLUE_BEARING = 1;
+
+
     private static final MecanumDrive.Params PARAMS = new MecanumDrive.Params();
     private final PIDFController PIDF = new PIDFController(PARAMS.DRIVE_kP, PARAMS.DRIVE_kI, PARAMS.DRIVE_kD, PARAMS.DRIVE_kF, 0, 0);
 
@@ -66,7 +70,7 @@ public class AimAssist {
                 continue;
             }
             double bearing = Math.toDegrees(Math.atan2(detection.pose.x, detection.pose.z));
-            double threshold = detection.id == 24 ? -4.76 : 1;
+            double threshold = detection.id == 24 ? RED_BEARING : BLUE_BEARING;
             double target = heading + threshold - bearing;
             PIDF.setSetPoint(target);
         }

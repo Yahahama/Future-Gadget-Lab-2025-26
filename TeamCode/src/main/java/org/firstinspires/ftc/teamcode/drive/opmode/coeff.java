@@ -15,7 +15,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.drive.PoseStorage;
 
-@Disabled
 @TeleOp(name="coeff", group="Linear OpMode")
 public class coeff extends LinearOpMode {
     /*

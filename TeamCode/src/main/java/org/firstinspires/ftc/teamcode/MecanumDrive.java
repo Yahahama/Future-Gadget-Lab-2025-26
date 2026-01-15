@@ -93,6 +93,7 @@ public final class MecanumDrive {
 
         // Speed Parameters
         private final double SPEED_CONVERSION = (double) 28 / 6.28318530718;
+        public final int INTAKE_AUTON_INIT = 0;
         public final double INTAKE_SPEED_IN = 0.5;
         public final double INTAKE_SPEED_OUT = -0.4;
         public final double INTAKE_SPEED_LOAD = 1.0;
